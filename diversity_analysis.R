@@ -155,11 +155,11 @@ colnames(results)[colnames(results)=="Total.cells.1"|colnames(results)=="HNA.cel
 ### Make some plots
 ##############################################################################
 result.tmp <- results
-results <- result.tmp[!result.tmp$Treatment=="Feeding - S", ]
+results <- result.tmp[!result.tmp$Treatment=="Feeding - T", ]
 p1 <- ggplot(data=results, aes(x=factor(Time), y=D2, fill=Treatment)) + 
   # geom_boxplot(alpha=0.9)+
   geom_point(shape=21, size=5,alpha=0.9)+
-  scale_fill_manual(values=myColours[c(1,3)])+
+  scale_fill_manual(values=myColours[c(1,2)])+
   # geom_smooth(formula=y ~ x, color="black")+
   # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
   theme_bw()+
@@ -173,7 +173,7 @@ p2 <- ggplot(data=results, aes(x=factor(Time), y=Total.cells, fill=Treatment)) +
   # geom_boxplot(alpha=0.9)+
   geom_point(shape=21, size=5,alpha=0.9)+
   geom_line()+
-  scale_fill_manual(values=myColours[c(1,3)])+
+  scale_fill_manual(values=myColours[c(1,2)])+
   # geom_smooth(formula=y ~ x, color="black")+
   theme_bw()+
   labs(y="Cells/µL", x="Time (h)", title="Cell density")+
