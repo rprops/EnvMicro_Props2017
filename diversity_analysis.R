@@ -61,7 +61,7 @@ fbasis <- flowBasis(flowData_transformed, param, nbin=128,
 ### Densities will be normalized to the interval [0,1]
 ### d = rounding factor
 # Diversity.fbasis <- Diversity(fbasis, d = 3, plot = TRUE, R = 999)
-Diversity.fbasis <- Diversity_rf(flowData_transformed, d=3, param = param, R = 3)
+Diversity.fbasis <- Diversity_rf(flowData_transformed, d=3, param = param, R = 100)
 
 
 ### make metadata table
@@ -163,7 +163,7 @@ p1 <- ggplot(data=results, aes(x=factor(Time), y=D2, fill=Treatment)) +
   # geom_smooth(formula=y ~ x, color="black")+
   # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
   theme_bw()+
-  labs(y="Phenotypic diversity - D2", x="Time (h)", title="Phenotypic alpha diversity")+
+  labs(y="Phenotypic diversity - D2", x="Time (h)", title="A. Phenotypic alpha diversity")+
   theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
         title=element_text(size=20), legend.text=element_text(size=14))+ 
   guides(fill=FALSE)+
@@ -176,7 +176,7 @@ p2 <- ggplot(data=results, aes(x=factor(Time), y=Total.cells, fill=Treatment)) +
   scale_fill_manual(values=myColours[c(1,2)])+
   # geom_smooth(formula=y ~ x, color="black")+
   theme_bw()+
-  labs(y="Cells/µL", x="Time (h)", title="Cell density")+
+  labs(y="Cells/µL", x="Time (h)", title="B. Cell density")+
   theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
         title=element_text(size=20), legend.text=element_text(size=14))+ 
   guides(fill=FALSE)+
@@ -193,7 +193,7 @@ p.beta <- ggplot(data=beta.div.data, aes(x=X1, y=X2, fill=Treatment, size=Time))
   # guides(fill = guide_legend(override.aes = list(size=5)))+
   theme_bw()+
   scale_fill_brewer(palette="Accent")+
-  labs(x = paste0("Axis1 (",var[1], "%)"), y = paste0("Axis2 (",var[2], "%)"), title="Phenotypic beta diversity")+
+  labs(x = paste0("Axis1 (",var[1], "%)"), y = paste0("Axis2 (",var[2], "%)"), title="C. Phenotypic beta diversity")+
   theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
         title=element_text(size=20), legend.text=element_text(size=14))
 print(p.beta)
@@ -212,7 +212,7 @@ p.beta.S <- ggplot(data=beta.div.data.S, aes(x=X1, y=X2, fill=Treatment, size=Ti
   guides(fill = guide_legend(override.aes = list(size=5)))+
   theme_bw()+
   scale_fill_manual(values=myColours[c(1,2)])+
-  labs(x = paste0("Axis1 (",var[1], "%)"), y = paste0("Axis2 (",var[2], "%)"), title="Phenotypic beta diversity")+
+  labs(x = paste0("Axis1 (",var[1], "%)"), y = paste0("Axis2 (",var[2], "%)"), title="C. Phenotypic beta diversity")+
   theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
         title=element_text(size=20), legend.text=element_text(size=14))
 print(p.beta.S)
@@ -227,7 +227,7 @@ p.beta.T <- ggplot(data=beta.div.data.T, aes(x=X1, y=X2, fill=Treatment, size=Ti
   guides(fill = guide_legend(override.aes = list(size=5)))+
   theme_bw()+
   scale_fill_manual(values=myColours[c(1,3)])+
-  labs(x = paste0("Axis1 (",var[1], "%)"), y = paste0("Axis2 (",var[2], "%)"), title="Phenotypic beta diversity")+
+  labs(x = paste0("Axis1 (",var[1], "%)"), y = paste0("Axis2 (",var[2], "%)"), title="C. Phenotypic beta diversity")+
   theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
         title=element_text(size=20), legend.text=element_text(size=14))
 print(p.beta.T)
