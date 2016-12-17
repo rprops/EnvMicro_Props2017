@@ -81,10 +81,21 @@ Diversity.fbasis <- cbind(Diversity.fbasis, meta.div)
 fbasis@basis <- fbasis@basis[Diversity.fbasis$D2>1600,]
 flowData_transformed <- flowData_transformed[Diversity.fbasis$D2>1600]
 
+sqrcut1 <- matrix(c(asinh(12500),asinh(12500),15,15,3,9.55,14,3)/max,ncol=2, nrow=4)
+colnames(sqrcut1) <- c("FL1-H","FL3-H")
+rGate_HNA <- polygonGate(.gate=sqrcut1, filterId = "HNA")
+sqrcut1 <- matrix(c(8.5,8.5,asinh(12500),asinh(12500),3,8,9.55,3)/max,ncol=2, nrow=4)
+colnames(sqrcut1) <- c("FL1-H","FL3-H")
+rGate_LNA <- polygonGate(.gate=sqrcut1, filterId = "LNA")
+
+### Diversities of HNA/LNA populations
+flowData_HNA <- split(flowData_transformed, rGate_HNA)$`HNA+`
+flowData_LNA <- split(flowData_transformed, rGate_LNA)$`LNA+`
+
+Diversity.HNA <- Diversity_rf(flowData_HNA, d=3, param = param, R = 3)
+Diversity.LNA <- Diversity_rf(flowData_LNA, d=3, param = param, R = 3)
+
 ### Counts
-### Creating a rectangle gate for counting HNA and LNA cells
-rGate_HNA <- rectangleGate("FL1-H"=c(asinh(13500), 20)/max,"FL3-H"=c(0,20)/max, 
-                           filterId = "HNA bacteria")
 ### Normalize total cell gate
 sqrcut1 <- matrix(c(8.5,8.5,15,15,3,8,14,3)/max,ncol=2, nrow=4)
 colnames(sqrcut1) <- c("FL1-H","FL3-H")
@@ -110,12 +121,13 @@ for(i in 1:length(flowData_transformed)){
 
 ### Save counts
 counts <- data.frame(Samples=flowCore::sampleNames(flowData_transformed), 
-                     Total.cells = dilution*TotalCount$true/vol, HNA.cells = dilution*HNACount$true/vol)
+                     Total.cells = dilution*TotalCount$true/vol, HNA.cells = dilution*HNACount$true/vol,
+                     LNA.cells = dilution*(TotalCount$true-HNACount$true)/vol)
 
 ### Pool results
 Diversity.fbasis <- Diversity.fbasis[Diversity.fbasis$D2>1600,]
 Storage <- c(); Storage[Diversity.fbasis$Treatment=="T"] <- "Covered"; Storage[Diversity.fbasis$Treatment=="S"] <- "Submerged"
-results <- cbind(Diversity.fbasis,counts, Storage)
+results <- cbind(Diversity.fbasis,counts, Storage, Diversity.HNA, Diversity.LNA)
 
 ### Add an extra column for biological replicates
 bio_rep <- c(rep(1,21),rep(2,21),rep(1,41),rep(2,41),rep(3,41))
@@ -132,7 +144,7 @@ pos <- gsub(rownames(fbasis@basis),pattern="_rep1", replacement="")
 pos <- gsub(pos,pattern="_rep2", replacement="")
 pos <- gsub(pos,pattern="_rep3", replacement="")
 pos <- factor(pos)
-tmp <- results[,c(8,9,10,15,16)]
+tmp <- results[,c(8,9,10,16,31)]
 tmp <- by(tmp, INDICES=pos, FUN=unique)
 tmp <- do.call(rbind, tmp)
 
@@ -146,16 +158,31 @@ beta.div.S <- beta_div_fcm(fbasis1, INDICES=pos[!Diversity.fbasis$Treatment=="T"
 beta.div.T <- beta_div_fcm(fbasis2, INDICES=pos[!Diversity.fbasis$Treatment=="S"], ord.type="PCoA")
 rm(fbasis1,fbasis2)
 
-results <- data.frame(cbind(Sample_names=levels(pos), do.call(rbind,by(results[,c(2,3,4,13,14)], INDICES=pos, FUN=colMeans)), 
-                   do.call(rbind,by(results[,c(5,6,7)], INDICES=pos, FUN = function(x) sqrt(colSums(x^2))/ncol(x))),
-                   do.call(rbind,by(results[,c(13,14)], INDICES=pos, FUN = function(x) apply(x,2,sd))),
+results <- data.frame(cbind(Sample_names=levels(pos), do.call(rbind,by(results[,c(2,3,4,13,14,15,18,19,20,25,26,27)], INDICES=pos, FUN=colMeans)), 
+                   do.call(rbind,by(results[,c(5,6,7,21,22,23,28,29,30)], INDICES=pos, FUN = function(x) sqrt(colSums(x^2))/ncol(x))),
+                   do.call(rbind,by(results[,c(13,14,15)], INDICES=pos, FUN = function(x) apply(x,2,sd))),
                    tmp))
-colnames(results)[colnames(results)=="Total.cells.1"|colnames(results)=="HNA.cells.1"] <- c("sd.Total.cells","sd.HNA.cells")
+
+colnames(results)[colnames(results)=="Total.cells.1"|colnames(results)=="HNA.cells.1"|colnames(results)=="LNA.cells.1"] <- 
+  c("sd.Total.cells","sd.HNA.cells","sd.LNA.cells")
+
+colnames(results)[colnames(results)=="sd.D0.1"|colnames(results)=="sd.D1.1"|colnames(results)=="sd.D2.1"] <- 
+  c("sd.D0.HNA","sd.D1.HNA","sd.D2.HNA")
+colnames(results)[colnames(results)=="D0.1"|colnames(results)=="D1.1"|colnames(results)=="D2.1"] <- 
+  c("D0.HNA","D1.HNA","D2.HNA")
+
+colnames(results)[colnames(results)=="sd.D0.2"|colnames(results)=="sd.D1.2"|colnames(results)=="sd.D2.2"] <- 
+  c("sd.D0.LNA","sd.D1.LNA","sd.D2.LNA")
+colnames(results)[colnames(results)=="D0.2"|colnames(results)=="D1.2"|colnames(results)=="D2.2"] <- 
+  c("D0.LNA","D1.LNA","D2.LNA")
+
+
 ##############################################################################
 ### Make some plots
 ##############################################################################
 result.tmp <- results
 results <- result.tmp[!result.tmp$Treatment=="Feeding - T", ]
+results$Treatment <- droplevels(plyr::revalue(results$Treatment, c("Feeding - S"="Feeding")))
 p1 <- ggplot(data=results, aes(x=factor(Time), y=D2, fill=Treatment)) + 
   # geom_boxplot(alpha=0.9)+
   geom_point(shape=21, size=5,alpha=0.9)+
@@ -163,9 +190,10 @@ p1 <- ggplot(data=results, aes(x=factor(Time), y=D2, fill=Treatment)) +
   # geom_smooth(formula=y ~ x, color="black")+
   # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
   theme_bw()+
-  labs(y="Phenotypic diversity - D2", x="Time (h)", title="A. Phenotypic alpha diversity")+
+  labs(y="Phenotypic diversity - D2", x="Time (h)", title="B. Phenotypic alpha diversity")+
   theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
-        title=element_text(size=20), legend.text=element_text(size=14))+ 
+        title=element_text(size=20), legend.text=element_text(size=14),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank())+ 
   guides(fill=FALSE)+
   geom_errorbar(aes(ymin=D2-sd.D2, ymax=D2+sd.D2), width=0.075)
 
@@ -176,9 +204,10 @@ p2 <- ggplot(data=results, aes(x=factor(Time), y=Total.cells, fill=Treatment)) +
   scale_fill_manual(values=myColours[c(1,2)])+
   # geom_smooth(formula=y ~ x, color="black")+
   theme_bw()+
-  labs(y="Cells/µL", x="Time (h)", title="B. Cell density")+
+  labs(y="Cells/µL", x="Time (h)", title="A. Cell density")+
   theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
-        title=element_text(size=20), legend.text=element_text(size=14))+ 
+        title=element_text(size=20), legend.text=element_text(size=14),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank())+ 
   guides(fill=FALSE)+
   geom_errorbar(aes(ymin=Total.cells-sd.Total.cells, ymax=Total.cells+sd.Total.cells), width=0.075)
 
@@ -199,12 +228,13 @@ p.beta <- ggplot(data=beta.div.data, aes(x=X1, y=X2, fill=Treatment, size=Time))
 print(p.beta)
   
 png(file="Submerged.fcm_pooled.png",width=12,height=12,res=500,units="in", pointsize=12)
-grid.arrange(arrangeGrob(p1,p2, ncol=2), p.beta.S, heights=c(4/4, 4/4), ncol=1)
+grid.arrange(arrangeGrob(p2,p1, ncol=2), p.beta.S, heights=c(4/4, 4/4), ncol=1)
 dev.off()
 
 ### Separate S
 beta.div.data.S <- data.frame(beta.div.S$points, tmp[!tmp$Treatment=="Feeding - T",])
 beta.div.data.S <- droplevels(beta.div.data.S)
+beta.div.data.S$Treatment <- plyr::revalue(beta.div.data.S$Treatment, c("Feeding - S"="Feeding"))
 var <- round(vegan::eigenvals(beta.div.S)/sum(vegan::eigenvals(beta.div.S))*100,1)
 p.beta.S <- ggplot(data=beta.div.data.S, aes(x=X1, y=X2, fill=Treatment, size=Time))+
   geom_point(shape=21, alpha=1)+
@@ -214,7 +244,8 @@ p.beta.S <- ggplot(data=beta.div.data.S, aes(x=X1, y=X2, fill=Treatment, size=Ti
   scale_fill_manual(values=myColours[c(1,2)])+
   labs(x = paste0("Axis1 (",var[1], "%)"), y = paste0("Axis2 (",var[2], "%)"), title="C. Phenotypic beta diversity")+
   theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
-        title=element_text(size=20), legend.text=element_text(size=14))
+        title=element_text(size=20), legend.text=element_text(size=14),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 print(p.beta.S)
 
 ### Separate T
@@ -232,3 +263,73 @@ p.beta.T <- ggplot(data=beta.div.data.T, aes(x=X1, y=X2, fill=Treatment, size=Ti
         title=element_text(size=20), legend.text=element_text(size=14))
 print(p.beta.T)
 
+###################################################################################################
+### Evaluate effect on HNA/LNA bacteria over time 
+###################################################################################################
+
+p12 <- ggplot(data=results, aes(x=factor(Time), y=HNA.cells, fill=Treatment)) + 
+  # geom_boxplot(alpha=0.9)+
+  geom_point(shape=21, size=5,alpha=0.9)+
+  scale_fill_manual(values=myColours[c(1,2)])+
+  # geom_smooth(formula=y ~ x, color="black")+
+  # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
+  theme_bw()+
+  labs(y="Cells/µL", x="Time (h)", title="HNA cell density")+
+  theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
+        title=element_text(size=20), legend.text=element_text(size=14))+ 
+  guides(fill=FALSE)+
+  geom_errorbar(aes(ymin=HNA.cells-sd.HNA.cells, ymax=HNA.cells+sd.HNA.cells), width=0.075)+
+  ylim(200,1300)
+
+p13 <- ggplot(data=results, aes(x=factor(Time), y=LNA.cells, fill=Treatment)) + 
+  # geom_boxplot(alpha=0.9)+
+  geom_point(shape=21, size=5,alpha=0.9)+
+  scale_fill_manual(values=myColours[c(1,2)])+
+  # geom_smooth(formula=y ~ x, color="black")+
+  # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
+  theme_bw()+
+  labs(y="Cells/µL", x="Time (h)", title="LNA cell density")+
+  theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
+        title=element_text(size=20), legend.text=element_text(size=14))+ 
+  guides(fill=FALSE)+
+  geom_errorbar(aes(ymin=LNA.cells-sd.LNA.cells, ymax=LNA.cells+sd.LNA.cells), width=0.075)+
+  ylim(200,1300)
+
+png(file="HNA.LNA.png",width=12,height=5,res=500,units="in", pointsize=12)
+grid.arrange(p12, p13, ncol=2)
+dev.off()
+
+### No effect on D2 within populations
+# p14 <- ggplot(data=results, aes(x=factor(Time), y=D2.HNA, fill=Treatment)) + 
+#   # geom_boxplot(alpha=0.9)+
+#   geom_point(shape=21, size=5,alpha=0.9)+
+#   scale_fill_manual(values=myColours[c(1,2)])+
+#   # geom_smooth(formula=y ~ x, color="black")+
+#   # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
+#   theme_bw()+
+#   labs(y="Phenotypic diversity D2", x="Time (h)", title="HNA population")+
+#   theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
+#         title=element_text(size=20), legend.text=element_text(size=14))+ 
+#   guides(fill=FALSE)+
+#   geom_errorbar(aes(ymin=D2.HNA -sd.D2.HNA , ymax=D2.HNA +sd.D2.HNA ), width=0.075)+
+#   ylim(1000,1350)
+# 
+# p15 <- ggplot(data=results, aes(x=factor(Time), y=LNA.cells, fill=Treatment)) + 
+#   # geom_boxplot(alpha=0.9)+
+#   geom_point(shape=21, size=5,alpha=0.9)+
+#   scale_fill_manual(values=myColours[c(1,2)])+
+#   # geom_smooth(formula=y ~ x, color="black")+
+#   # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
+#   theme_bw()+
+#   labs(y="Phenotypic diversity D2", x="Time (h)", title="LNA population")+
+#   theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
+#         title=element_text(size=20), legend.text=element_text(size=14))+ 
+#   guides(fill=FALSE)+
+#   geom_errorbar(aes(ymin=LNA.cells-sd.LNA.cells, ymax=LNA.cells+sd.LNA.cells), width=0.075)+
+#   ylim(1000,1350)
+# 
+# png(file="HNA.LNA.png",width=12,height=5,res=500,units="in", pointsize=12)
+# grid.arrange(p14, p15, ncol=2)
+# dev.off()
+# 
+# 
