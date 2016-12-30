@@ -139,11 +139,12 @@ p12 <- ggplot(data=results, aes(x=factor(Time), y=HNA.cells, fill=Treatment)) +
   geom_point(shape=21, size=5,alpha=0.9)+
   scale_fill_manual(values=myColours[c(1,2)])+
   theme_bw()+
-  labs(y="HNA cells/µL", x="Time (h)", title="B")+
+  labs(y="HNA cells/µL", x="Time (h)", title="B", fill="")+
   theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
         title=element_text(size=20), legend.text=element_text(size=14),
         legend.title=element_text(size=15),
         # panel.grid.major = element_blank(), panel.grid.minor = element_blank()
+        legend.direction = "horizontal",legend.position = "bottom"
         )+ 
   # guides(fill=FALSE)+
   geom_errorbar(aes(ymin=HNA.cells-sd.HNA.cells, ymax=HNA.cells+sd.HNA.cells), width=0.075)
@@ -155,10 +156,11 @@ p13 <- ggplot(data=results, aes(x=factor(Time), y=LNA.cells, fill=Treatment)) +
   # geom_smooth(formula=y ~ x, color="black")+
   # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
   theme_bw()+
-  labs(y="LNA cells/µL", x="Time (h)", title="C")+
+  labs(y="LNA cells/µL", x="Time (h)", title="C", fill="")+
   theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
         title=element_text(size=20), legend.text=element_text(size=14),
-        legend.title=element_text(size=15))+ 
+        legend.title=element_text(size=15),
+        legend.direction = "horizontal",legend.position = "bottom")+ 
   # guides(fill=FALSE)+
   geom_errorbar(aes(ymin=LNA.cells-sd.LNA.cells, ymax=LNA.cells+sd.LNA.cells), width=0.075)
 
@@ -187,7 +189,9 @@ png(file = "contrasts_0.04.png", width = 12, height = 6, res = 500,
 print(vtot)
 dev.off()
 
-png(file = "contrasts_0.04_combined_cells_grid.png", width = 12, height = 18, res = 500, 
+png(file = "contrasts_0.04_combined_cells_grid_B.png", width = 12, height = 12, res = 500, 
     units = "in", pointsize = 10)
-grid.arrange(vtot,p12,p13, nrow=3)
+# grid.arrange(vtot,p12,p13, nrow=3)
+grid.arrange(vtot,arrangeGrob(p12,p13, ncol=2), heights=c(4/4, 4/4), ncol=1)
+
 dev.off()

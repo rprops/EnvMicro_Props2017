@@ -61,7 +61,7 @@ fbasis <- flowBasis(flowData_transformed, param, nbin=128,
 ### Densities will be normalized to the interval [0,1]
 ### d = rounding factor
 # Diversity.fbasis <- Diversity(fbasis, d = 3, plot = TRUE, R = 999)
-Diversity.fbasis <- Diversity_rf(flowData_transformed, d=3, param = param, R = 100)
+Diversity.fbasis <- Diversity_rf(flowData_transformed, d=3, param = param, R = 3)
 
 
 ### make metadata table
@@ -159,7 +159,7 @@ beta.div.T <- beta_div_fcm(fbasis2, INDICES=pos[!Diversity.fbasis$Treatment=="S"
 rm(fbasis1,fbasis2)
 
 results <- data.frame(cbind(Sample_names=levels(pos), do.call(rbind,by(results[,c(2,3,4,13,14,15,18,19,20,25,26,27)], INDICES=pos, FUN=colMeans)), 
-                   do.call(rbind,by(results[,c(5,6,7,21,22,23,28,29,30)], INDICES=pos, FUN = function(x) sqrt(colSums(x^2))/ncol(x))),
+                   do.call(rbind,by(results[,c(5,6,7,21,22,23,28,29,30)], INDICES=pos, FUN = function(x) sqrt(colSums(x^2))/nrow(x))),
                    do.call(rbind,by(results[,c(13,14,15)], INDICES=pos, FUN = function(x) apply(x,2,sd))),
                    tmp))
 
@@ -190,26 +190,28 @@ p1 <- ggplot(data=results, aes(x=factor(Time), y=D2, fill=Treatment)) +
   # geom_smooth(formula=y ~ x, color="black")+
   # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
   theme_bw()+
-  labs(y="Phenotypic diversity - D2", x="Time (h)", title="B. Phenotypic alpha diversity")+
+  labs(y=expression('Phenotypic Diversity - D'[2]), x="Time (h)", title="A",
+       fill="")+
   theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
         title=element_text(size=20), legend.text=element_text(size=14),
-        panel.grid.major = element_blank(), panel.grid.minor = element_blank())+ 
-  guides(fill=FALSE)+
+        # panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        legend.direction = "horizontal",legend.position = "bottom")+ 
   geom_errorbar(aes(ymin=D2-sd.D2, ymax=D2+sd.D2), width=0.075)
 
-p2 <- ggplot(data=results, aes(x=factor(Time), y=Total.cells, fill=Treatment)) + 
-  # geom_boxplot(alpha=0.9)+
-  geom_point(shape=21, size=5,alpha=0.9)+
-  geom_line()+
-  scale_fill_manual(values=myColours[c(1,2)])+
-  # geom_smooth(formula=y ~ x, color="black")+
-  theme_bw()+
-  labs(y="Cells/µL", x="Time (h)", title="A. Cell density")+
-  theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
-        title=element_text(size=20), legend.text=element_text(size=14),
-        panel.grid.major = element_blank(), panel.grid.minor = element_blank())+ 
-  guides(fill=FALSE)+
-  geom_errorbar(aes(ymin=Total.cells-sd.Total.cells, ymax=Total.cells+sd.Total.cells), width=0.075)
+
+# p2 <- ggplot(data=results, aes(x=factor(Time), y=Total.cells, fill=Treatment)) + 
+#   # geom_boxplot(alpha=0.9)+
+#   geom_point(shape=21, size=5,alpha=0.9)+
+#   geom_line()+
+#   scale_fill_manual(values=myColours[c(1,2)])+
+#   # geom_smooth(formula=y ~ x, color="black")+
+#   theme_bw()+
+#   labs(y="Cells/µL", x="Time (h)", title="A. Cell density")+
+#   theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
+#         title=element_text(size=20), legend.text=element_text(size=14),
+#         panel.grid.major = element_blank(), panel.grid.minor = element_blank())+ 
+#   guides(fill=FALSE)+
+#   geom_errorbar(aes(ymin=Total.cells-sd.Total.cells, ymax=Total.cells+sd.Total.cells), width=0.075)
 
 ### Beta diversity
 beta.div.data <- data.frame(beta.div$points, tmp)
@@ -227,8 +229,9 @@ p.beta <- ggplot(data=beta.div.data, aes(x=X1, y=X2, fill=Treatment, size=Time))
         title=element_text(size=20), legend.text=element_text(size=14))
 print(p.beta)
   
-png(file="Submerged.fcm_pooled.png",width=12,height=12,res=500,units="in", pointsize=12)
-grid.arrange(arrangeGrob(p2,p1, ncol=2), p.beta.S, heights=c(4/4, 4/4), ncol=1)
+png(file="Submerged.fcm_pooledC.png",width=12,height=6,res=500,units="in", pointsize=12)
+# grid.arrange(arrangeGrob(p2,p1, ncol=2), p.beta.S, heights=c(4/4, 4/4), ncol=1)
+grid.arrange(p1,p.beta.S, ncol=2)
 dev.off()
 
 ### Separate S
@@ -239,13 +242,15 @@ var <- round(vegan::eigenvals(beta.div.S)/sum(vegan::eigenvals(beta.div.S))*100,
 p.beta.S <- ggplot(data=beta.div.data.S, aes(x=X1, y=X2, fill=Treatment, size=Time))+
   geom_point(shape=21, alpha=1)+
   scale_size(range=c(4,10), breaks=c(0,0.5,1,1.5,2,2.5,3))+ 
-  guides(fill = guide_legend(override.aes = list(size=5)))+
+  guides(fill = guide_legend(override.aes = list(size=5)), size=FALSE)+
   theme_bw()+
   scale_fill_manual(values=myColours[c(1,2)])+
-  labs(x = paste0("Axis1 (",var[1], "%)"), y = paste0("Axis2 (",var[2], "%)"), title="C. Phenotypic beta diversity")+
+  labs(x = paste0("Axis1 (",var[1], "%)"), y = paste0("Axis2 (",var[2], "%)"), title="B",
+       fill="")+
   theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
         title=element_text(size=20), legend.text=element_text(size=14),
-        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+        # panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        legend.direction = "horizontal",legend.position = "bottom")
 print(p.beta.S)
 
 ### Separate T
@@ -298,6 +303,16 @@ p13 <- ggplot(data=results, aes(x=factor(Time), y=LNA.cells, fill=Treatment)) +
 png(file="HNA.LNA.png",width=12,height=5,res=500,units="in", pointsize=12)
 grid.arrange(p12, p13, ncol=2)
 dev.off()
+
+### Calculate coefficient of variation within LNA and DNA of control/treatment
+# CV for control in LNA population
+100*sd(results$LNA[results$Treatment=="Control"])/mean(results$LNA[results$Treatment=="Control"])
+# CV for treatment in LNA population
+100*sd(results$LNA[results$Treatment=="Feeding"])/mean(results$LNA[results$Treatment=="Feeding"])
+# CV for control in HNA population
+100*sd(results$HNA[results$Treatment=="Control"])/mean(results$HNA[results$Treatment=="Control"])
+# CV for treatment in HNA population
+100*sd(results$HNA[results$Treatment=="Feeding"])/mean(results$HNA[results$Treatment=="Feeding"])
 
 ### No effect on D2 within populations
 # p14 <- ggplot(data=results, aes(x=factor(Time), y=D2.HNA, fill=Treatment)) + 
