@@ -72,8 +72,8 @@ my_grob2 = grobTree(textGrob(bquote(r[p] == .(round(cor(y=log2(data.total.final$
 ### Plot D2
 png("alpha-div_D2_FREE_log.png",width=7*1.65,height=5*1.5,res=500,units="in")
 p5 <- ggplot(data=data.total.final,aes(x=D2.fcm,y=D2, fill=Lake))+ scale_fill_brewer(palette="Paired") +geom_point(shape=21,size=6,alpha=0.6,aes(fill=Lake))+
-  theme_bw()+labs(y="Taxonomic diversity (D2) - 16S",x="Phenotypic diversity (D2) - FCM", fill="Environment")+
-  theme(axis.text=element_text(size=15),axis.title=element_text(size=18,face="bold"),legend.text=element_text(size=15),legend.title=element_text(size=16),strip.text.x = element_text(size = 22))+
+  theme_bw()+labs(y=expression('Taxonomic diversity - D'[2]),x=expression('Phenotypic diversity - D'[2]), fill="Environment")+
+  theme(axis.text=element_text(size=15),axis.title=element_text(size=20,face="bold"),legend.text=element_text(size=15),legend.title=element_text(size=16),strip.text.x = element_text(size = 22))+
   scale_y_continuous(trans='log2', breaks = seq(5,60, 10),minor_breaks =NULL) +
   scale_x_continuous(trans='log2', breaks = seq(1000,4250,250),minor_breaks =NULL) +
   geom_smooth(method="lm",color="black",fill="lightblue",formula=y~x)+
@@ -96,7 +96,7 @@ my_grob2 = grobTree(textGrob(bquote(r[p] == .(round(cor(y=log2(data.total.final$
 ### Plot D1
 png("alpha-div_D1_FREE_log.png",width=7*1.65,height=5*1.5,res=500,units="in")
 p6 <- ggplot(data=data.total.final,aes(x=D1.fcm,y=D1, fill=Lake))+ scale_fill_brewer(palette="Paired") +geom_point(shape=21,size=6,alpha=0.6,aes(fill=Lake))+
-  theme_bw()+labs(y="Taxonomic diversity (D1) - 16S",x="Phenotypic diversity (D1) - FCM", fill="Environment")+
+  theme_bw()+labs(y=expression('Taxonomic diversity - D'[1]),x=expression('Phenotypic diversity - D'[1]), fill="Environment")+
   theme(axis.text=element_text(size=15),axis.title=element_text(size=18,face="bold"),legend.text=element_text(size=15),legend.title=element_text(size=16),strip.text.x = element_text(size = 22))+
   scale_y_continuous(trans='log2', breaks = seq(20,200, 40),minor_breaks =NULL) +
   scale_x_continuous(trans='log2', breaks = seq(1500,4250,500),minor_breaks =NULL) +
@@ -119,7 +119,7 @@ my_grob2 = grobTree(textGrob(bquote(r[p] == .(round(cor(y=log2(data.total.final$
 ### Plot D0
 png("alpha-div_D0_FREE_log.png",width=7*1.65,height=5*1.5,res=500,units="in")
 p7 <- ggplot(data=data.total.final,aes(x=D0.fcm,y=D0,fill=Lake))+ scale_fill_brewer(palette="Paired") +geom_point(shape=21,size=6,alpha=0.6,aes(fill=Lake))+
-  theme_bw()+labs(y="Taxonomic diversity (D0) - 16S",x="Phenotypic diversity (D0) - FCM", fill="Environment")+
+  theme_bw()+labs(y=expression('Taxonomic diversity - D'[0]),x=expression('Phenotypic diversity - D'[0]), fill="Environment")+
   theme(axis.text=element_text(size=15),axis.title=element_text(size=18,face="bold"),legend.text=element_text(size=15),legend.title=element_text(size=16),strip.text.x = element_text(size = 22))+
   scale_y_continuous(trans='log2', breaks = seq(0,4000, 500),minor_breaks =NULL) +
   scale_x_continuous(trans='log2', breaks = seq(1500,20000,2500),minor_breaks =NULL) +
@@ -130,8 +130,8 @@ print(p7)
 dev.off()
 
 ### All together
-png("alpha-div_log_all_together.png",width=3*7*1.65,height=5*1.5,res=500,units="in")
-grid.arrange(p7,p6,p5, ncol=3)
+png("alpha-div_log_D1D2_together.png",width=1.6*7*1.65,height=5*1.5,res=500,units="in")
+grid.arrange(p7,p6, ncol=2)
 dev.off()
 
 ##################################################################################################

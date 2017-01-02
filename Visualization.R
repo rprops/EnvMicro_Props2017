@@ -4,7 +4,7 @@ library("Phenoflow")
 library("gridExtra")
 library("ggplot2")
 library("Phenoflow")
-
+library("egg")
 my.settings <- list(
   strip.background=list(col="transparent"),
   strip.border=list(col="transparent", cex=5),
@@ -139,15 +139,16 @@ p12 <- ggplot(data=results, aes(x=factor(Time), y=HNA.cells, fill=Treatment)) +
   geom_point(shape=21, size=5,alpha=0.9)+
   scale_fill_manual(values=myColours[c(1,2)])+
   theme_bw()+
-  labs(y="HNA cells/µL", x="Time (h)", title="B", fill="")+
-  theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
+  labs(y=expression("HNA cells µL"^"-1"), x="Time (h)", title="C", fill="")+
+  theme(axis.text=element_text(size=14), axis.title=element_text(size=16),
         title=element_text(size=20), legend.text=element_text(size=14),
         legend.title=element_text(size=15),
         # panel.grid.major = element_blank(), panel.grid.minor = element_blank()
         legend.direction = "horizontal",legend.position = "bottom"
         )+ 
   # guides(fill=FALSE)+
-  geom_errorbar(aes(ymin=HNA.cells-sd.HNA.cells, ymax=HNA.cells+sd.HNA.cells), width=0.075)
+  geom_errorbar(aes(ymin=HNA.cells-sd.HNA.cells, ymax=HNA.cells+sd.HNA.cells), width=0.075)+
+  ylim(200,525)
 
 p13 <- ggplot(data=results, aes(x=factor(Time), y=LNA.cells, fill=Treatment)) + 
   # geom_boxplot(alpha=0.9)+
@@ -156,13 +157,14 @@ p13 <- ggplot(data=results, aes(x=factor(Time), y=LNA.cells, fill=Treatment)) +
   # geom_smooth(formula=y ~ x, color="black")+
   # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
   theme_bw()+
-  labs(y="LNA cells/µL", x="Time (h)", title="C", fill="")+
-  theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
+  labs(y=expression("LNA cells µL"^"-1"), x="Time (h)", title="B", fill="")+
+  theme(axis.text=element_text(size=14), axis.title=element_text(size=16),
         title=element_text(size=20), legend.text=element_text(size=14),
         legend.title=element_text(size=15),
         legend.direction = "horizontal",legend.position = "bottom")+ 
   # guides(fill=FALSE)+
-  geom_errorbar(aes(ymin=LNA.cells-sd.LNA.cells, ymax=LNA.cells+sd.LNA.cells), width=0.075)
+  geom_errorbar(aes(ymin=LNA.cells-sd.LNA.cells, ymax=LNA.cells+sd.LNA.cells), width=0.075)+
+  ylim(1000,1325)
 
 
 
@@ -175,10 +177,10 @@ vtot <- ggplot(comp_total, aes(`FL1.H`, `FL3.H`, z = Density))+
   geom_contour(color = "white", alpha = 1)+
   facet_grid(~Timepoint)+
   labs(x="Green fluorescence intensity (a.u.)", y="Red fluorescence intensity (a.u.)",title="A")+
-  theme(axis.title=element_text(size=16,face="bold"), strip.text.x=element_text(size=16,face="bold"),
+  theme(axis.title=element_text(size=16), strip.text.x=element_text(size=16,face="bold"),
         legend.title=element_text(size=15),legend.text=element_text(size=14),
         axis.text = element_text(size=14),title=element_text(size=20),
-        strip.background=element_rect(fill=adjustcolor("lightgray",0.5))
+        strip.background=element_rect(fill=adjustcolor("lightgray",0.2))
         #,panel.grid.major = element_blank(), panel.grid.minor = element_blank()
         )
   
@@ -192,6 +194,16 @@ dev.off()
 png(file = "contrasts_0.04_combined_cells_grid_B.png", width = 12, height = 12, res = 500, 
     units = "in", pointsize = 10)
 # grid.arrange(vtot,p12,p13, nrow=3)
-grid.arrange(vtot,arrangeGrob(p12,p13, ncol=2), heights=c(4/4, 4/4), ncol=1)
-
+g1 <- ggplotGrob(p13);
+g2 <- ggplotGrob(p12);
+gv <- ggplotGrob(vtot);
+fg1 <- gtable_frame(g1)
+fg2 <- gtable_frame(g2)
+fg12 <- gtable_frame(cbind(fg1,fg2))
+fg3 <- gtable_frame(gv)
+grid.newpage()
+combined <- rbind(fg3, fg12)
+grid.draw(combined)
 dev.off()
+
+

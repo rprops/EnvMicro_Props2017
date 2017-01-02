@@ -6,6 +6,7 @@ library("formatR")
 library("gridExtra")
 library("cowplot")
 library("RColorBrewer")
+source("functions.R")
 myColours <- brewer.pal("Accent",n=3)
 # For file renaming
 # path <- "data/Mosselstaaltjes_deel2"
@@ -190,10 +191,10 @@ p1 <- ggplot(data=results, aes(x=factor(Time), y=D2, fill=Treatment)) +
   # geom_smooth(formula=y ~ x, color="black")+
   # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
   theme_bw()+
-  labs(y=expression('Phenotypic Diversity - D'[2]), x="Time (h)", title="A",
+  labs(y=expression('Phenotypic diversity - D'[2]), x="Time (h)", title="A",
        fill="")+
-  theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
-        title=element_text(size=20), legend.text=element_text(size=14),
+  theme(axis.text=element_text(size=14), axis.title=element_text(size=20),
+        title=element_text(size=20), legend.text=element_text(size=16),
         # panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         legend.direction = "horizontal",legend.position = "bottom")+ 
   geom_errorbar(aes(ymin=D2-sd.D2, ymax=D2+sd.D2), width=0.075)
@@ -231,7 +232,8 @@ print(p.beta)
   
 png(file="Submerged.fcm_pooledC.png",width=12,height=6,res=500,units="in", pointsize=12)
 # grid.arrange(arrangeGrob(p2,p1, ncol=2), p.beta.S, heights=c(4/4, 4/4), ncol=1)
-grid.arrange(p1,p.beta.S, ncol=2)
+# grid.arrange(p1,p.beta.S, ncol=2)
+grid_arrange_shared_legend(p1,p.beta.S, ncol=2)
 dev.off()
 
 ### Separate S
@@ -245,10 +247,10 @@ p.beta.S <- ggplot(data=beta.div.data.S, aes(x=X1, y=X2, fill=Treatment, size=Ti
   guides(fill = guide_legend(override.aes = list(size=5)), size=FALSE)+
   theme_bw()+
   scale_fill_manual(values=myColours[c(1,2)])+
-  labs(x = paste0("Axis1 (",var[1], "%)"), y = paste0("Axis2 (",var[2], "%)"), title="B",
+  labs(x = paste0("PCoA axis 1 (",var[1], "%)"), y = paste0("PCoA axis 2 (",var[2], "%)"), title="B",
        fill="")+
-  theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
-        title=element_text(size=20), legend.text=element_text(size=14),
+  theme(axis.text=element_text(size=14), axis.title=element_text(size=20),
+        title=element_text(size=20), legend.text=element_text(size=16),
         # panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         legend.direction = "horizontal",legend.position = "bottom")
 print(p.beta.S)
@@ -303,6 +305,9 @@ p13 <- ggplot(data=results, aes(x=factor(Time), y=LNA.cells, fill=Treatment)) +
 png(file="HNA.LNA.png",width=12,height=5,res=500,units="in", pointsize=12)
 grid.arrange(p12, p13, ncol=2)
 dev.off()
+
+
+
 
 ### Calculate coefficient of variation within LNA and DNA of control/treatment
 # CV for control in LNA population
