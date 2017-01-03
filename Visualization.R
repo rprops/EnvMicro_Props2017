@@ -191,11 +191,11 @@ png(file = "contrasts_0.04.png", width = 12, height = 6, res = 500,
 print(vtot)
 dev.off()
 
-png(file = "contrasts_0.04_combined_cells_grid_B.png", width = 12, height = 12, res = 500, 
+png(file = "contrasts_0.04_combined_cells_grid_C.png", width = 12, height = 12, res = 500, 
     units = "in", pointsize = 10)
 # grid.arrange(vtot,p12,p13, nrow=3)
 g1 <- ggplotGrob(p13);
-g2 <- ggplotGrob(p12);
+g2 <- ggplotGrob(p12b);
 gv <- ggplotGrob(vtot);
 fg1 <- gtable_frame(g1)
 fg2 <- gtable_frame(g2)

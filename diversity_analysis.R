@@ -6,6 +6,7 @@ library("formatR")
 library("gridExtra")
 library("cowplot")
 library("RColorBrewer")
+library("vegan")
 source("functions.R")
 myColours <- brewer.pal("Accent",n=3)
 # For file renaming
@@ -156,8 +157,16 @@ fbasis2<-fbasis; fbasis2@basis <- fbasis@basis[!Diversity.fbasis$Treatment=="S",
 
 # Without T and S versus control separately
 beta.div.S <- beta_div_fcm(fbasis1, INDICES=pos[!Diversity.fbasis$Treatment=="T"], ord.type="PCoA")
+# Take average fingerprint for technical replicates
+fbasis1@basis <- fbasis1@basis/apply(fbasis1@basis, 1, max)
+fbasis1@basis <- round(fbasis1@basis, 4)
+x <- by(fbasis1@basis, INDICES = pos[!Diversity.fbasis$Treatment=="T"], FUN = colMeans)
+x <- do.call(rbind, x)
+# Calculate distance matrix
+dist.S <- vegdist(x, method="bray")
+
 beta.div.T <- beta_div_fcm(fbasis2, INDICES=pos[!Diversity.fbasis$Treatment=="S"], ord.type="PCoA")
-rm(fbasis1,fbasis2)
+
 
 results <- data.frame(cbind(Sample_names=levels(pos), do.call(rbind,by(results[,c(2,3,4,13,14,15,18,19,20,25,26,27)], INDICES=pos, FUN=colMeans)), 
                    do.call(rbind,by(results[,c(5,6,7,21,22,23,28,29,30)], INDICES=pos, FUN = function(x) sqrt(colSums(x^2))/nrow(x))),
@@ -186,7 +195,7 @@ results <- result.tmp[!result.tmp$Treatment=="Feeding - T", ]
 results$Treatment <- droplevels(plyr::revalue(results$Treatment, c("Feeding - S"="Feeding")))
 p1 <- ggplot(data=results, aes(x=factor(Time), y=D2, fill=Treatment)) + 
   # geom_boxplot(alpha=0.9)+
-  geom_point(shape=21, size=5,alpha=0.9)+
+  geom_point(shape=21, size=7,alpha=0.9)+
   scale_fill_manual(values=myColours[c(1,2)])+
   # geom_smooth(formula=y ~ x, color="black")+
   # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
@@ -270,44 +279,9 @@ p.beta.T <- ggplot(data=beta.div.data.T, aes(x=X1, y=X2, fill=Treatment, size=Ti
         title=element_text(size=20), legend.text=element_text(size=14))
 print(p.beta.T)
 
-###################################################################################################
-### Evaluate effect on HNA/LNA bacteria over time 
-###################################################################################################
-
-p12 <- ggplot(data=results, aes(x=factor(Time), y=HNA.cells, fill=Treatment)) + 
-  # geom_boxplot(alpha=0.9)+
-  geom_point(shape=21, size=5,alpha=0.9)+
-  scale_fill_manual(values=myColours[c(1,2)])+
-  # geom_smooth(formula=y ~ x, color="black")+
-  # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
-  theme_bw()+
-  labs(y="Cells/µL", x="Time (h)", title="HNA cell density")+
-  theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
-        title=element_text(size=20), legend.text=element_text(size=14))+ 
-  guides(fill=FALSE)+
-  geom_errorbar(aes(ymin=HNA.cells-sd.HNA.cells, ymax=HNA.cells+sd.HNA.cells), width=0.075)+
-  ylim(200,1300)
-
-p13 <- ggplot(data=results, aes(x=factor(Time), y=LNA.cells, fill=Treatment)) + 
-  # geom_boxplot(alpha=0.9)+
-  geom_point(shape=21, size=5,alpha=0.9)+
-  scale_fill_manual(values=myColours[c(1,2)])+
-  # geom_smooth(formula=y ~ x, color="black")+
-  # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
-  theme_bw()+
-  labs(y="Cells/µL", x="Time (h)", title="LNA cell density")+
-  theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
-        title=element_text(size=20), legend.text=element_text(size=14))+ 
-  guides(fill=FALSE)+
-  geom_errorbar(aes(ymin=LNA.cells-sd.LNA.cells, ymax=LNA.cells+sd.LNA.cells), width=0.075)+
-  ylim(200,1300)
-
-png(file="HNA.LNA.png",width=12,height=5,res=500,units="in", pointsize=12)
-grid.arrange(p12, p13, ncol=2)
-dev.off()
-
-
-
+##############################################################################
+### Additional statistics
+##############################################################################
 
 ### Calculate coefficient of variation within LNA and DNA of control/treatment
 # CV for control in LNA population
@@ -318,6 +292,38 @@ dev.off()
 100*sd(results$HNA[results$Treatment=="Control"])/mean(results$HNA[results$Treatment=="Control"])
 # CV for treatment in HNA population
 100*sd(results$HNA[results$Treatment=="Feeding"])/mean(results$HNA[results$Treatment=="Feeding"])
+
+### Calculate the removal rate of HNA bacteria
+### We use robust regression because of the two (suspected) outliers at t0.
+lm.HNA <- rlm(HNA.cells~Time, data=results[results$Treatment=="Feeding",])
+lm.HNA_C <- rlm(HNA.cells~Time, data=results[results$Treatment=="Control",])
+car::Anova(lm.HNA_C) # P=0.9826
+car::Anova(lm.HNA) # P=9.02e-11
+
+### Plot these regressions in a new figure
+p12b <- ggplot(data=results, aes(x=Time, y=HNA.cells, fill=Treatment)) + 
+  # geom_boxplot(alpha=0.9)+
+  geom_point(shape=21, size=5,alpha=0.9)+
+  scale_fill_manual(values=myColours[c(1,2)])+
+  theme_bw()+
+  labs(y=expression("HNA cells µL"^"-1"), x="Time (h)", title="C", fill="")+
+  theme(axis.text=element_text(size=14), axis.title=element_text(size=16),
+        title=element_text(size=20), legend.text=element_text(size=14),
+        legend.title=element_text(size=15),
+        # panel.grid.major = element_blank(), panel.grid.minor = element_blank()
+        legend.direction = "horizontal",legend.position = "bottom"
+  )+ 
+  # guides(fill=FALSE)+
+  geom_errorbar(aes(ymin=HNA.cells-sd.HNA.cells, ymax=HNA.cells+sd.HNA.cells), width=0.075)+
+  ylim(200,525)+ 
+  geom_smooth(method="rlm",color="black", alpha=0.2)
+
+
+### PERMANOVA on beta diversity analysis
+disper.test <- betadisper(dist.S, group=results$Treatment)
+disper.test # average distance to mean 0.03 for both groups
+anova(disper.test) # P = 0.891
+adonis(dist.S~Time*Treatment, data=results) 
 
 ### No effect on D2 within populations
 # p14 <- ggplot(data=results, aes(x=factor(Time), y=D2.HNA, fill=Treatment)) + 

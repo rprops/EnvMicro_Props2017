@@ -3,6 +3,7 @@ library("dplyr")
 library("plyr")
 library("grid")
 library("gridExtra")
+library("car")
 
 div.FCM <- read.csv2("fcm.diversity_total.csv")
 div.16S <- read.csv2("otu.diversity16S_F.csv")
@@ -62,6 +63,21 @@ data.total.final$Lake <- revalue(data.total.final$Lake, c("Michigan"="Lake Michi
 ### Get R squared
 lm.F <- lm(log2(D2)~log2(D2.fcm), data=data.total.final)
 summary(lm.F)$r.squared
+
+### Residual analysis
+png("residual_analysis_D2.png",width=10,height=4,res=500,units="in", pointsize=14)
+par(mfrow=c(1,3))
+qqPlot(lm.F, col="blue", reps=10000, ylab="Studentized residuals", xlab="Theoretical quantiles (t-distribution)",
+       cex=1.5)
+plot(residuals(lm.F,"pearson"), x=predict(lm.F), col="blue", las=1,
+     ylab="Pearson residuals",xlab="Predicted values", cex=1.5)
+lines(x=c(0,10), y=c(0,0), lty=2)
+plot(y=log2(data.total.final$D2), x=predict(lm.F), col="blue",
+     ylab="Observed values",xlab="Predicted values", cex=1.5)
+dev.off()
+
+### Breusch-Pagan test for checking heteroscedasticity
+bptest(residuals(lm.F,"pearson")~predict(lm.F))
 
 ### Prepare to plot r squared / pearson's correlation
 my_grob = grobTree(textGrob(bquote(r^2 == .(round(summary(lm.F)$r.squared, 2))), x=0.8,  y=0.16, hjust=0,
