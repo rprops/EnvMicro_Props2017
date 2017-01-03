@@ -239,10 +239,10 @@ p.beta <- ggplot(data=beta.div.data, aes(x=X1, y=X2, fill=Treatment, size=Time))
         title=element_text(size=20), legend.text=element_text(size=14))
 print(p.beta)
   
-png(file="Submerged.fcm_pooledC.png",width=12,height=6,res=500,units="in", pointsize=12)
+png(file="Submerged.fcm_pooledD.png",width=12,height=6,res=500,units="in", pointsize=12)
 # grid.arrange(arrangeGrob(p2,p1, ncol=2), p.beta.S, heights=c(4/4, 4/4), ncol=1)
 # grid.arrange(p1,p.beta.S, ncol=2)
-grid_arrange_shared_legend(p1,p.beta.S, ncol=2)
+grid_arrange_shared_legend(p1b,p.beta.S, ncol=2)
 dev.off()
 
 ### Separate S
@@ -297,8 +297,8 @@ print(p.beta.T)
 ### We use robust regression because of the two (suspected) outliers at t0.
 lm.HNA <- rlm(HNA.cells~Time, data=results[results$Treatment=="Feeding",])
 lm.HNA_C <- rlm(HNA.cells~Time, data=results[results$Treatment=="Control",])
-car::Anova(lm.HNA_C) # P=0.9826
-car::Anova(lm.HNA) # P=9.02e-11
+car::Anova(lm.HNA_C) # p = 0.9826
+car::Anova(lm.HNA) # p = 9.02e-11
 
 ### Plot these regressions in a new figure
 p12b <- ggplot(data=results, aes(x=Time, y=HNA.cells, fill=Treatment)) + 
@@ -317,6 +317,47 @@ p12b <- ggplot(data=results, aes(x=Time, y=HNA.cells, fill=Treatment)) +
   geom_errorbar(aes(ymin=HNA.cells-sd.HNA.cells, ymax=HNA.cells+sd.HNA.cells), width=0.075)+
   ylim(200,525)+ 
   geom_smooth(method="rlm",color="black", alpha=0.2)
+
+### Calculate the dynamics of D2 in time for treatment/control
+### We can't use a linear regression here (for obvious reasons)
+### Hence we will try to fit a spline and see if we can make inference
+### this way
+sp_T <- lm(D2~ns(Time, df=3), data=results[results$Treatment=="Feeding",])
+sp_C <- lm(D2~ns(Time, df=3), data=results[results$Treatment=="Control",])
+
+### Order studentized residuals according to timepoint
+res.T <- studres(sp_T)[order(results[results$Treatment=="Feeding",]$Time)]
+res.C <- studres(sp_C)[order(results[results$Treatment=="Control",]$Time)]
+
+## Location of knots
+attr(ns(results$Time, df=3), "knots")
+
+### Check for temporal autocorrelation in model residuals
+png(file="acf_D2.png",width=10,height=5,res=500,units="in", pointsize=12)
+par(mfrow=c(1,2))
+acf(res.C, main="Treatment: control", las=1)
+acf(res.T, main="Treatment: feeding", las=1)
+dev.off()
+
+### Perform statistical inference on splines
+waldtest(sp_C) # p = 0.168
+waldtest(sp_T, vcov = vcovHAC(sp_T)) # p = 1.292e-05
+
+p1b <- ggplot(data=results, aes(x=Time, y=D2, fill=Treatment)) + 
+  # geom_boxplot(alpha=0.9)+
+  geom_point(shape=21, size=7,alpha=0.9)+
+  scale_fill_manual(values=myColours[c(1,2)])+
+  # geom_smooth(formula=y ~ x, color="black")+
+  # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
+  theme_bw()+
+  labs(y=expression('Phenotypic diversity - D'[2]), x="Time (h)", title="A",
+       fill="")+
+  theme(axis.text=element_text(size=14), axis.title=element_text(size=20),
+        title=element_text(size=20), legend.text=element_text(size=16),
+        # panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        legend.direction = "horizontal",legend.position = "bottom")+ 
+  geom_errorbar(aes(ymin=D2-sd.D2, ymax=D2+sd.D2), width=0.075)+
+  geom_smooth(method="lm", color="black", alpha=0.2, formula = y ~ splines::ns(x,df=3))
 
 
 ### PERMANOVA on beta diversity analysis
