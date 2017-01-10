@@ -56,10 +56,9 @@ flowData_transformed <- flowData_transformed[which(flowCore::sampleNames(flowDat
 MyText <- c("Control - 0h", "Control - 1.5h", "Control - 3h",
             "Feeding - 0h", "Feeding - 1.5h", "Feeding - 3h")
 
-# colramp <- colorRampPalette(IDPcolorRamp(21))
+# Make xyplot of gating strategy (6 samples)
 require('RColorBrewer')
-require("IDPmisc")
-png(file="Fig1_scatters_200_log.png", units="in", width=12, height=10,  pointsize=8,   res=500)
+png(file="FigS1_scatters_200_log.png", units="in", width=12, height=10,  pointsize=8,   res=500)
 print(xyplot(`FL3-H`~`FL1-H`, data=flowData_transformed,index.cond=list(c(1:6)),
              filter=flist,
              xbins=200,nbin=128, par.strip.text=list(col="black", font=3,cex=1.85), 
@@ -71,6 +70,22 @@ print(xyplot(`FL3-H`~`FL1-H`, data=flowData_transformed,index.cond=list(c(1:6)),
              margin=TRUE,
              binTrans="log"
       )
+)
+dev.off()
+
+# Make xyplot of gating strategy (1 sample)
+png(file="Fig1_scatters_400_log.png", units="in", width=8, height=8,  pointsize=8,   res=500)
+print(xyplot(`FL3-H`~`FL1-H`, data=flowData_transformed,index.cond=list(c(1)),
+             filter=flist[1],
+             xbins=400,nbin=128, par.strip.text=list(col="black", font=3,cex=1.85), 
+             smooth=FALSE, xlim=c(0.5,1),ylim=c(0.1,1),xlab=list(label="Green fluorescence intensity (FL1-H)",cex=2),ylab=list(label="Red fluorescence intensity (FL3-H)",cex=2),
+             par.settings=my.settings,
+             scales=list(x=list(at=seq(from=0, to=1, by=.1),cex=1),
+                         y=list(at=seq(from=0, to=1, by=.2),cex=1)), layout=c(1,1),
+             margin=TRUE,
+             binTrans="log",
+             strip=strip.custom(factor.levels="")
+)
 )
 dev.off()
 
@@ -177,7 +192,7 @@ vtot <- ggplot(comp_total, aes(`FL1.H`, `FL3.H`, z = Density))+
   geom_contour(color = "white", alpha = 1)+
   facet_grid(~Timepoint)+
   labs(x="Green fluorescence intensity (a.u.)", y="Red fluorescence intensity (a.u.)",title="A")+
-  theme(axis.title=element_text(size=16), strip.text.x=element_text(size=16,face="bold"),
+  theme(axis.title=element_text(size=16), strip.text.x=element_text(size=16),
         legend.title=element_text(size=15),legend.text=element_text(size=14),
         axis.text = element_text(size=14),title=element_text(size=20),
         strip.background=element_rect(fill=adjustcolor("lightgray",0.2))
@@ -206,4 +221,15 @@ combined <- rbind(fg3, fg12)
 grid.draw(combined)
 dev.off()
 
+### Average HNA removal
+t0 <- mean(results$HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="0"])
+t3 <- mean(results$HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="3"])
+100*(t0-t3)/t0
+
+### Error on average HNA densities
+e0 <- sqrt(sum(results$sd.HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="0"]^2))/3
+e3 <- sqrt(sum(results$sd.HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="3"]^2))/3
+
+### Error on HNA removal ratio
+100*sqrt((sqrt(e0^2 + e3^2)/(t0-t3))^2 + (e0/t0)^2)
 

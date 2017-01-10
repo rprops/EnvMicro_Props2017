@@ -8,13 +8,13 @@ library("cowplot")
 library("RColorBrewer")
 library("vegan")
 source("functions.R")
+library("sandwich")
+library("lmtest")
+
+### Set seed for reproducible analysis
+set.seed(777)
+
 myColours <- brewer.pal("Accent",n=3)
-# For file renaming
-# path <- "data/Mosselstaaltjes_deel2"
-# setwd(path)
-# baseFolder = path
-# a = list.files(pattern="")
-# file.rename(a, paste0(gsub(",",".", a)))
 
 ### Samples were diluted 2x
 dilution <- 2
@@ -186,6 +186,15 @@ colnames(results)[colnames(results)=="sd.D0.2"|colnames(results)=="sd.D1.2"|coln
 colnames(results)[colnames(results)=="D0.2"|colnames(results)=="D1.2"|colnames(results)=="D2.2"] <- 
   c("D0.LNA","D1.LNA","D2.LNA")
 
+##############################################################################
+### Import metadata of the mussels for M&M
+##############################################################################
+meta.mus <- read.csv2("mussels_meta.csv")
+meta.mus <- meta.mus[meta.mus$Treatment=="S",]
+mean(meta.mus$size_mm)
+sd(meta.mus$size_mm)
+## No significant difference between mesocosms in mussel size distribution (p=0.081).
+kruskal.test(size_mm ~ Sample, data=meta.mus)
 
 ##############################################################################
 ### Make some plots
@@ -239,7 +248,7 @@ p.beta <- ggplot(data=beta.div.data, aes(x=X1, y=X2, fill=Treatment, size=Time))
         title=element_text(size=20), legend.text=element_text(size=14))
 print(p.beta)
   
-png(file="Submerged.fcm_pooledD.png",width=12,height=6,res=500,units="in", pointsize=12)
+png(file="Submerged.fcm_pooled_rlm.png",width=12,height=6,res=500,units="in", pointsize=12)
 # grid.arrange(arrangeGrob(p2,p1, ncol=2), p.beta.S, heights=c(4/4, 4/4), ncol=1)
 # grid.arrange(p1,p.beta.S, ncol=2)
 grid_arrange_shared_legend(p1b,p.beta.S, ncol=2)
@@ -299,6 +308,17 @@ lm.HNA <- rlm(HNA.cells~Time, data=results[results$Treatment=="Feeding",])
 lm.HNA_C <- rlm(HNA.cells~Time, data=results[results$Treatment=="Control",])
 car::Anova(lm.HNA_C) # p = 0.9826
 car::Anova(lm.HNA) # p = 9.02e-11
+### To get std. error on parameter estimation
+summary(lm.HNA)
+
+### Rate per mg DW of IDM and associated error
+1000*lm.HNA$coefficients[2]/mean(1000*meta.mus$weight_g)
+sqrt((sd(meta.mus$weight_g)/mean(meta.mus$weight_g))^2 + (summary(lm.HNA)$coefficients[2,2]/lm.HNA$coefficients[2])^2)
+
+### Calculage clearance rate according to Coughlan (1969)
+### Volume removed for each bucket
+
+
 
 ### Plot these regressions in a new figure
 p12b <- ggplot(data=results, aes(x=Time, y=HNA.cells, fill=Treatment)) + 
@@ -311,37 +331,47 @@ p12b <- ggplot(data=results, aes(x=Time, y=HNA.cells, fill=Treatment)) +
         title=element_text(size=20), legend.text=element_text(size=14),
         legend.title=element_text(size=15),
         # panel.grid.major = element_blank(), panel.grid.minor = element_blank()
-        legend.direction = "horizontal",legend.position = "bottom"
+        legend.direction = "horizontal",legend.position = "bottom",
+        panel.grid.minor = element_blank()
   )+ 
   # guides(fill=FALSE)+
   geom_errorbar(aes(ymin=HNA.cells-sd.HNA.cells, ymax=HNA.cells+sd.HNA.cells), width=0.075)+
   ylim(200,525)+ 
-  geom_smooth(method="rlm",color="black", alpha=0.2)
+  geom_smooth(method="rlm",color="black", alpha=0.2)+
+  scale_x_continuous(breaks=c(0,0.5,1,1.5,2,2.5,3))
 
 ### Calculate the dynamics of D2 in time for treatment/control
 ### We can't use a linear regression here (for obvious reasons)
 ### Hence we will try to fit a spline and see if we can make inference
 ### this way
-sp_T <- lm(D2~ns(Time, df=3), data=results[results$Treatment=="Feeding",])
-sp_C <- lm(D2~ns(Time, df=3), data=results[results$Treatment=="Control",])
+sp_T <- rlm(D2~splines::ns(Time, df=3), data=results[results$Treatment=="Feeding",])
+sp_C <- rlm(D2~splines::ns(Time, df=3), data=results[results$Treatment=="Control",])
 
 ### Order studentized residuals according to timepoint
-res.T <- studres(sp_T)[order(results[results$Treatment=="Feeding",]$Time)]
-res.C <- studres(sp_C)[order(results[results$Treatment=="Control",]$Time)]
+res.T <- residuals(sp_T, "pearson")[order(results[results$Treatment=="Feeding",]$Time)]
+res.C <- residuals(sp_C, "pearson")[order(results[results$Treatment=="Control",]$Time)]
 
 ## Location of knots
 attr(ns(results$Time, df=3), "knots")
 
 ### Check for temporal autocorrelation in model residuals
-png(file="acf_D2.png",width=10,height=5,res=500,units="in", pointsize=12)
+png(file="acf_D2_rlm.png",width=10,height=5,res=500,units="in", pointsize=12)
 par(mfrow=c(1,2))
 acf(res.C, main="Treatment: control", las=1)
 acf(res.T, main="Treatment: feeding", las=1)
 dev.off()
 
 ### Perform statistical inference on splines
-waldtest(sp_C) # p = 0.168
-waldtest(sp_T, vcov = vcovHAC(sp_T)) # p = 1.292e-05
+car::Anova(sp_C, vcov = vcovHAC(sp_C)) # p = 0.03795
+car::Anova(sp_T, vcov = vcovHAC(sp_T)) # p = 5.599e-06
+
+### Compare errors before and after correction
+  # Treatment
+summary(sp_T)$coefficients[,2]
+sqrt(diag(vcovHAC(sp_T)))
+  # Control
+summary(sp_C)$coefficients[,2]
+sqrt(diag(vcovHAC(sp_C)))
 
 p1b <- ggplot(data=results, aes(x=Time, y=D2, fill=Treatment)) + 
   # geom_boxplot(alpha=0.9)+
@@ -357,14 +387,15 @@ p1b <- ggplot(data=results, aes(x=Time, y=D2, fill=Treatment)) +
         # panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         legend.direction = "horizontal",legend.position = "bottom")+ 
   geom_errorbar(aes(ymin=D2-sd.D2, ymax=D2+sd.D2), width=0.075)+
-  geom_smooth(method="lm", color="black", alpha=0.2, formula = y ~ splines::ns(x,df=3))
+  geom_smooth(method="rlm", color="black", alpha=0.2, formula = y ~ splines::ns(x,df=3))+
+  ylim(1990,2150)
 
 
 ### PERMANOVA on beta diversity analysis
 disper.test <- betadisper(dist.S, group=results$Treatment)
 disper.test # average distance to mean 0.03 for both groups
-anova(disper.test) # P = 0.891
-adonis(dist.S~Time*Treatment, data=results) 
+anova(disper.test) # P = 0.892
+adonis(dist.S~Time/Treatment, data=results) 
 
 ### No effect on D2 within populations
 # p14 <- ggplot(data=results, aes(x=factor(Time), y=D2.HNA, fill=Treatment)) + 
