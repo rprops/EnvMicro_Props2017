@@ -316,9 +316,15 @@ summary(lm.HNA)
 sqrt((sd(meta.mus$weight_g)/mean(meta.mus$weight_g))^2 + (summary(lm.HNA)$coefficients[2,2]/lm.HNA$coefficients[2])^2)
 
 ### Calculage clearance rate according to Coughlan (1969)
-### Volume removed for each bucket
+### Volume = 11L for each bucket
+11*abs(lm.HNA$coefficients[2])/lm.HNA$coefficients[1]/mean(meta.mus$weight_g)
+# error on first quotient
+eq1 <- sqrt((summary(lm.HNA)$coefficients[1,2]/lm.HNA$coefficients[1])^2 + (summary(lm.HNA)$coefficients[2,2]/lm.HNA$coefficients[2])^2)
+# error on final clearance rate
+11*sqrt(((eq1/abs(lm.HNA$coefficients[2])/lm.HNA$coefficients[1])^2) + (sd(meta.mus$weight_g)/mean(meta.mus$weight_g))^2)
 
-
+#mean((6/3/mean(meta.mus$weight_g))*log((results$HNA.cells[results$Time==0][3:5])/(results$HNA.cells[results$Time==3][3:5])))
+#sd((6/3/mean(meta.mus$weight_g))*log((results$HNA.cells[results$Time==0][3:5])/(results$HNA.cells[results$Time==3][3:5])))
 
 ### Plot these regressions in a new figure
 p12b <- ggplot(data=results, aes(x=Time, y=HNA.cells, fill=Treatment)) + 
@@ -397,37 +403,5 @@ disper.test # average distance to mean 0.03 for both groups
 anova(disper.test) # P = 0.892
 adonis(dist.S~Time/Treatment, data=results) 
 
-### No effect on D2 within populations
-# p14 <- ggplot(data=results, aes(x=factor(Time), y=D2.HNA, fill=Treatment)) + 
-#   # geom_boxplot(alpha=0.9)+
-#   geom_point(shape=21, size=5,alpha=0.9)+
-#   scale_fill_manual(values=myColours[c(1,2)])+
-#   # geom_smooth(formula=y ~ x, color="black")+
-#   # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
-#   theme_bw()+
-#   labs(y="Phenotypic diversity D2", x="Time (h)", title="HNA population")+
-#   theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
-#         title=element_text(size=20), legend.text=element_text(size=14))+ 
-#   guides(fill=FALSE)+
-#   geom_errorbar(aes(ymin=D2.HNA -sd.D2.HNA , ymax=D2.HNA +sd.D2.HNA ), width=0.075)+
-#   ylim(1000,1350)
-# 
-# p15 <- ggplot(data=results, aes(x=factor(Time), y=LNA.cells, fill=Treatment)) + 
-#   # geom_boxplot(alpha=0.9)+
-#   geom_point(shape=21, size=5,alpha=0.9)+
-#   scale_fill_manual(values=myColours[c(1,2)])+
-#   # geom_smooth(formula=y ~ x, color="black")+
-#   # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
-#   theme_bw()+
-#   labs(y="Phenotypic diversity D2", x="Time (h)", title="LNA population")+
-#   theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
-#         title=element_text(size=20), legend.text=element_text(size=14))+ 
-#   guides(fill=FALSE)+
-#   geom_errorbar(aes(ymin=LNA.cells-sd.LNA.cells, ymax=LNA.cells+sd.LNA.cells), width=0.075)+
-#   ylim(1000,1350)
-# 
-# png(file="HNA.LNA.png",width=12,height=5,res=500,units="in", pointsize=12)
-# grid.arrange(p14, p15, ncol=2)
-# dev.off()
-# 
-# 
+# Report running information
+sessionInfo()
