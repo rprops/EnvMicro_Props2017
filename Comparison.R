@@ -60,12 +60,23 @@ data.total.final$Lake[is.na(data.total.final$Lake)] <- "Cooling water"
 data.total.final$Lake <- factor(data.total.final$Lake, levels=c("Michigan","Muskegon","Cooling water"))
 data.total.final$Lake <- revalue(data.total.final$Lake, c("Michigan"="Lake Michigan", "Muskegon"="Muskegon lake"))
 
+### Get average HNA percentage and sem in lake Mi
+mean(100*data.total.final$HNA_counts[data.total.final$Lake=="Lake Michigan"]/data.total.final$counts[data.total.final$Lake=="Lake Michigan"])
+100*sqrt(sum((data.total.final$HNA_counts.sd[data.total.final$Lake=="Lake Michigan"]/data.total.final$HNA_counts[data.total.final$Lake=="Lake Michigan"])^2 + (data.total.final$counts.sd[data.total.final$Lake=="Lake Michigan"]/data.total.final$counts[data.total.final$Lake=="Lake Michigan"])^2)/length(data.total.final$counts[data.total.final$Lake=="Lake Michigan"]))
+length(data.total.final$counts[data.total.final$Lake=="Lake Michigan"])
+
 ### Get R squared
 lm.F <- lm(log2(D2)~log2(D2.fcm), data=data.total.final)
 summary(lm.F)$r.squared
 
 # predicted R²
 model_fit_stats(lm.F)
+
+# Dynamic range of D2
+max(data.total.final$D2)/min(data.total.final$D2)
+
+# Dynamic range of D2 in previous study
+max(data.total.final$D2[data.total.final$Lake=="Cooling water"])/min(data.total.final$D2[data.total.final$Lake=="Cooling water"])
 
 # Calculate mean predicted decrease in D2 at 0 and 3 hours
 df <- data.frame(D2.fcm = results$D2[results$Treatment=="Feeding"][results[results$Treatment=="Feeding",]$Time==3 | results[results$Treatment=="Feeding",]$Time==0],

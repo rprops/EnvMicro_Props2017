@@ -315,7 +315,7 @@ summary(lm.HNA)
 1000*lm.HNA$coefficients[2]/mean(1000*meta.mus$weight_g)
 sqrt((sd(meta.mus$weight_g)/mean(meta.mus$weight_g))^2 + (summary(lm.HNA)$coefficients[2,2]/lm.HNA$coefficients[2])^2)
 
-### Calculage clearance rate according to Coughlan (1969)
+### Calculage clearance rate (linear regression used to get dC/dt)
 ### Volume = 11L for each bucket
 11*abs(lm.HNA$coefficients[2])/lm.HNA$coefficients[1]/mean(meta.mus$weight_g)
 # error on first quotient
@@ -323,8 +323,10 @@ eq1 <- sqrt((summary(lm.HNA)$coefficients[1,2]/lm.HNA$coefficients[1])^2 + (summ
 # error on final clearance rate
 11*sqrt(((eq1/abs(lm.HNA$coefficients[2])/lm.HNA$coefficients[1])^2) + (sd(meta.mus$weight_g)/mean(meta.mus$weight_g))^2)
 
-#mean((6/3/mean(meta.mus$weight_g))*log((results$HNA.cells[results$Time==0][3:5])/(results$HNA.cells[results$Time==3][3:5])))
-#sd((6/3/mean(meta.mus$weight_g))*log((results$HNA.cells[results$Time==0][3:5])/(results$HNA.cells[results$Time==3][3:5])))
+### Initial % HNA
+mean(100*results$LNA.cells[results$Time==0]/results$Total.cells[results$Time==0])
+em1 <- 100*sqrt((results$sd.LNA.cells[results$Time==0]/(results$LNA.cells[results$Time==0]))^2 + (results$sd.Total.cells[results$Time==0]/(results$Total.cells[results$Time==0]))^2)
+sqrt(sum(em1^2)/length(em1))
 
 ### Plot these regressions in a new figure
 p12b <- ggplot(data=results, aes(x=Time, y=HNA.cells, fill=Treatment)) + 

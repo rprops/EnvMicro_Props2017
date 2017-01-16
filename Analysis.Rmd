@@ -1,0 +1,39 @@
+---
+title: "Analysis"
+author: "Ruben Props"
+date: "14 januari 2017"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, 
+                      echo = TRUE, 
+                      cache = TRUE,
+                      include = TRUE,
+                      collapse = FALSE,
+                      dependson = NULL,
+                      engine = "R", # Chunks will always have R code, unless noted
+                      error = TRUE,
+                      fig.path="Figures/cached/",  # Set the figure options
+                      fig.align = "center"
+                      )
+```
+
+# Load libraries
+
+```{r load-libraries}
+library("Phenoflow")
+library("dplyr")
+library("gridExtra")
+library("ggplot2")
+library("formatR")
+library("gridExtra")
+library("cowplot")
+library("RColorBrewer")
+library("vegan")
+source("functions.R")
+library("sandwich")
+library("lmtest")
+```
+
