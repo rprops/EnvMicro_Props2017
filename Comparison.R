@@ -35,8 +35,6 @@ div.16S$Sample <- gsub(div.16S$Sample, pattern="-", replacement="")
 ### Remove RNA samples
 div.16S <- div.16S[sapply(as.character(div.16S$Sample), function(x) substr(x, nchar(x), nchar(x))) != "R",]
 
-### Replace "D" of DNA samples by ""
-
 ### Merge data
 data.16s <- inner_join(div.16S, metadata, by=c("Sample"="Sample_16S"))
 

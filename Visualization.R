@@ -167,7 +167,7 @@ p12 <- ggplot(data=results, aes(x=factor(Time), y=HNA.cells, fill=Treatment)) +
 
 p13 <- ggplot(data=results, aes(x=factor(Time), y=LNA.cells, fill=Treatment)) + 
   # geom_boxplot(alpha=0.9)+
-  geom_point(shape=21, size=5,alpha=0.9)+
+  geom_point(shape=21, size=5,alpha=0.9, position=position_dodge(width=0.3))+
   scale_fill_manual(values=myColours[c(1,2)])+
   # geom_smooth(formula=y ~ x, color="black")+
   # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
@@ -178,7 +178,8 @@ p13 <- ggplot(data=results, aes(x=factor(Time), y=LNA.cells, fill=Treatment)) +
         legend.title=element_text(size=15),
         legend.direction = "horizontal",legend.position = "bottom")+ 
   # guides(fill=FALSE)+
-  geom_errorbar(aes(ymin=LNA.cells-sd.LNA.cells, ymax=LNA.cells+sd.LNA.cells), width=0.075)+
+  geom_errorbar(aes(ymin=LNA.cells-sd.LNA.cells, ymax=LNA.cells+sd.LNA.cells), width=0.075
+                , position=position_dodge(width=0.3))+
   ylim(1000,1325)
 
 
@@ -206,7 +207,7 @@ png(file = "contrasts_0.04.png", width = 12, height = 6, res = 500,
 print(vtot)
 dev.off()
 
-png(file = "contrasts_0.04_combined_cells_grid_C.png", width = 12, height = 12, res = 500, 
+png(file = "contrasts_0.04_combined_cells_grid_C_dodge.png", width = 12, height = 12, res = 500, 
     units = "in", pointsize = 10)
 # grid.arrange(vtot,p12,p13, nrow=3)
 g1 <- ggplotGrob(p13);
