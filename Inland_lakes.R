@@ -100,7 +100,10 @@ results.inland <- data.frame(samples = rownames(means), means, errors)
 
 ### Merge with metadata
 results.inland.total <- inner_join(results.inland, meta_inland , by = c("samples"="Sampnum"))
-results.inland.total <- results.inland.total[results.inland.total$Season=="Summer",]
+# results.inland.total <- results.inland.total[results.inland.total$Season=="Summer",]
+
+write.csv2(results.inland.total, file="fcm.inland.csv", row.names = FALSE)
+
 results.inland.total$Depth
 ggplot(data=results.inland.total, aes(x=Lake, y=HNA.cells/LNA.cells, fill=Depth))+
   geom_point(shape=21, size=8, alpha=0.4)
@@ -108,3 +111,4 @@ ggplot(data=results.inland.total, aes(x=Lake, y=HNA.cells/LNA.cells, fill=Depth)
 ggplot(data=results.inland.total, aes(x=Lake, y=HNA.cells/Total.cells, fill=Depth))+
   geom_point(shape=21, size=8, alpha=0.4)+
   facet_grid(~Invaded)
+
