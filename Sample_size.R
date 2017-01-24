@@ -54,18 +54,25 @@ for (i in c(10, 100, 200, 300, 400, 500, 750, 1000, 1250, 1500, 2000, 2500,
 ### Create plots
 D0 <- ggplot(data = results.tot, aes(x = factor(size), y = D0)) + # geom_jitter(alpha=0.7, size=1)+
   geom_boxplot(alpha = 0.2, color = "blue", fill = "blue", size = 1) + labs(x = "Sample size (nr. of cells)", 
-                                                                            y = "Phenotypic diversity - D0") + theme_bw() + theme(axis.text.x = element_text(angle = 45, 
-                                                                                                                                                             hjust = 1))
-
+                                                                            y = expression('Phenotypic diversity - D'[0])) + theme_bw() + theme(axis.text.x = element_text(angle = 45, 
+                                                                                                                                                             hjust = 1), 
+                                                                                                                                                axis.text=element_text(size=11),
+                                                                                                                                                axis.title=element_text(size=15))
 D1 <- ggplot(data = results.tot, aes(x = factor(size), y = D1)) + # geom_jitter(alpha=0.7, size=1)+
   geom_boxplot(alpha = 0.2, color = "blue", fill = "blue", size = 1) + labs(x = "Sample size (nr. of cells)", 
-                                                                            y = "Phenotypic diversity - D1") + theme_bw() + theme(axis.text.x = element_text(angle = 45, 
-                                                                                                                                                             hjust = 1))
+                                                                            y = expression('Phenotypic diversity - D'[1])) + theme_bw() + theme(axis.text.x = element_text(angle = 45, 
+                                                                                                                                                             hjust = 1), 
+                                                                                                                                                axis.text=element_text(size=11),
+                                                                                                                                                axis.title=element_text(size=15))
 
 D2 <- ggplot(data = results.tot, aes(x = factor(size), y = D2)) + # geom_jitter(alpha=0.7, size=1)+
   geom_boxplot(alpha = 0.2, color = "blue", fill = "blue", size = 1) + labs(x = "Sample size (nr. of cells)", 
-                                                                            y = "Phenotypic diversity - D2") + theme_bw() + theme(axis.text.x = element_text(angle = 45, 
-                                                                                                                                                             hjust = 1))
+                                                                            y = expression('Phenotypic diversity - D'[2])) + theme_bw() + theme(axis.text.x = element_text(angle = 45, 
+                                                                                                                                                             hjust = 1), 
+                                                                                                                                                axis.text=element_text(size=11),
+                                                                                                                                                axis.title=element_text(size=15))
+# Sample used for this assessment
+flowCore::sampleNames(flowData_transformed[10])
 
 png(file = "sample_size_effect.png", width = 12, height = 6, res = 500, 
     units = "in", pointsize = 10)

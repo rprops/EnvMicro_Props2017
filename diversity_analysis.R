@@ -394,7 +394,7 @@ p1b <- ggplot(data=results, aes(x=Time, y=D2, fill=Treatment)) +
         title=element_text(size=20), legend.text=element_text(size=16),
         # panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         legend.direction = "horizontal",legend.position = "bottom")+ 
-  geom_errorbar(aes(ymin=D2-sd.D2, ymax=D2+sd.D2), width=0.075)+
+  # geom_errorbar(aes(ymin=D2-sd.D2, ymax=D2+sd.D2), width=0.075)+
   geom_smooth(method="rlm", color="black", alpha=0.2, formula = y ~ splines::ns(x,df=3))+
   ylim(1990,2150)
 
@@ -403,7 +403,7 @@ p1b <- ggplot(data=results, aes(x=Time, y=D2, fill=Treatment)) +
 disper.test <- betadisper(dist.S, group=results$Treatment)
 disper.test # average distance to mean 0.03 for both groups
 anova(disper.test) # P = 0.892
-adonis(dist.S~Time/Treatment, data=results) 
+adonis(dist.S~Treatment*Time, data=results)
 
 # Report running information
 sessionInfo()
