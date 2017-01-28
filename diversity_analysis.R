@@ -19,7 +19,7 @@ myColours <- brewer.pal("Accent",n=3)
 ### Samples were diluted 2x
 dilution <- 2
 
-path = "data"
+path = "data_mussel"
 flowData <- read.flowSet(path = path, transformation = FALSE, pattern=".fcs")
 
 flowData_transformed <- transform(flowData,`FL1-H`=asinh(`FL1-H`), 
@@ -217,20 +217,6 @@ p1 <- ggplot(data=results, aes(x=factor(Time), y=D2, fill=Treatment)) +
         legend.direction = "horizontal",legend.position = "bottom")+ 
   geom_errorbar(aes(ymin=D2-sd.D2, ymax=D2+sd.D2), width=0.075)
 
-
-# p2 <- ggplot(data=results, aes(x=factor(Time), y=Total.cells, fill=Treatment)) + 
-#   # geom_boxplot(alpha=0.9)+
-#   geom_point(shape=21, size=5,alpha=0.9)+
-#   geom_line()+
-#   scale_fill_manual(values=myColours[c(1,2)])+
-#   # geom_smooth(formula=y ~ x, color="black")+
-#   theme_bw()+
-#   labs(y="Cells/µL", x="Time (h)", title="A. Cell density")+
-#   theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
-#         title=element_text(size=20), legend.text=element_text(size=14),
-#         panel.grid.major = element_blank(), panel.grid.minor = element_blank())+ 
-#   guides(fill=FALSE)+
-#   geom_errorbar(aes(ymin=Total.cells-sd.Total.cells, ymax=Total.cells+sd.Total.cells), width=0.075)
 
 ### Beta diversity
 beta.div.data <- data.frame(beta.div$points, tmp)

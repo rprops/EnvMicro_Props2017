@@ -4,6 +4,7 @@ library("plyr")
 library("grid")
 library("gridExtra")
 library("car")
+library("lmtest")
 
 div.FCM <- read.csv2("fcm.diversity_total.csv")
 div.16S <- read.csv2("otu.diversity16S_F.csv")
@@ -57,6 +58,11 @@ data.total.final$Lake <- as.character(data.total.final$Lake)
 data.total.final$Lake[is.na(data.total.final$Lake)] <- "Cooling water"
 data.total.final$Lake <- factor(data.total.final$Lake, levels=c("Michigan","Muskegon","Cooling water"))
 data.total.final$Lake <- revalue(data.total.final$Lake, c("Michigan"="Lake Michigan", "Muskegon"="Muskegon Lake"))
+lb <- read.csv2("labels_ref.csv")
+tmp <- left_join(data.total.final,lb, by=c("Sample_fcm"="Sample_fcm"))
+data.total.final$Sample[data.total.final$Lake == "Cooling water"] <- tmp$Sample_seq[!is.na(tmp$Sample_seq)]; remove(tmp)
+data.total.final$Lake[1:87][data.total.final$Site[1:87] == "MLB"] <- "Muskegon Lake"
+data.total.final$Season[1:87][data.total.final$Season[1:87]=="Winter"] <- "Fall"
 
 ### Get average HNA percentage and sem in lake Mi
 mean(100*data.total.final$HNA_counts[data.total.final$Lake=="Lake Michigan"]/data.total.final$counts[data.total.final$Lake=="Lake Michigan"])
@@ -126,7 +132,7 @@ plot(y=log2(data.total.final$D2), x=predict(lm.F), col="blue",
 dev.off()
 
 ### Breusch-Pagan test for checking heteroscedasticity
-bptest(residuals(lm.F,"pearson")~predict(lm.F))
+bptest(studres(lm.F)~predict(lm.F))
 
 ### Prepare to plot r squared / pearson's correlation
 my_grob = grobTree(textGrob(bquote(r^2 == .(round(summary(lm.F)$r.squared, 2))), x=0.8,  y=0.16, hjust=0,
@@ -202,87 +208,3 @@ png("alpha-div_log_D1D2_together_extracol.png",width=1.6*7*1.65,height=5*1.5,res
 grid.arrange(p7,p6, ncol=2)
 dev.off()
 
-##################################################################################################
-### The same figures but with error bars
-##################################################################################################
-### Get R squared
-
-lm.F <- lm(log2(D0)~log2(D0.fcm), data=data.total.final)
-summary(lm.F)$r.squared
-
-### Prepare to plot r squared / pearson's correlation
-my_grob = grobTree(textGrob(bquote(r^2 == .(round(summary(lm.F)$r.squared, 2))), x=0.8,  y=0.16, hjust=0,
-                            gp=gpar(col="black", fontsize=20, fontface="italic")))
-my_grob2 = grobTree(textGrob(bquote(r[p] == .(round(cor(y=log2(data.total.final$D0), x=log2(data.total.final$D0.fcm)), 2))), x=0.8,  y=0.08, hjust=0,
-                             gp=gpar(col="black", fontsize=20, fontface="italic")))
-
-p8 <- ggplot(data=data.total.final,aes(x=D0.fcm,y=D0,fill=Lake))+ scale_fill_brewer(palette="Paired") +geom_point(shape=21,size=6,alpha=0.6,aes(fill=Lake))+
-  theme_bw()+labs(y="Taxonomic diversity (D0) - 16S",x="Phenotypic diversity (D0) - FCM", fill="Environment")+
-  theme(axis.text=element_text(size=15),axis.title=element_text(size=18,face="bold"),legend.text=element_text(size=15),legend.title=element_text(size=16),strip.text.x = element_text(size = 22))+
-  scale_y_continuous(trans='log2', breaks = seq(0,4000, 500),minor_breaks =NULL) +
-  scale_x_continuous(trans='log2', breaks = seq(1500,20000,2500),minor_breaks =NULL) +
-  geom_smooth(method="lm",color="black",fill="lightblue",formula=y~x)+
-  annotation_custom(my_grob)+
-  annotation_custom(my_grob2)+
-  geom_errorbar(aes(ymin = D0 - sd.D0, ymax = D0 + 
-                               sd.D0), width = 0.02, color="black")+
-  geom_errorbarh(aes(xmin = D0.fcm - sd.D0.fcm, xmax = D0.fcm + 
-                       sd.D0.fcm), height = 0.02, color="black")
-print(p8)
-
-
-## Get R squared
-lm.F <- lm(log2(D1)~log2(D1.fcm), data=data.total.final)
-summary(lm.F)$r.squared
-
-
-### Prepare to plot r squared / pearson's correlation
-my_grob = grobTree(textGrob(bquote(r^2 == .(round(summary(lm.F)$r.squared, 2))), x=0.8,  y=0.16, hjust=0,
-                            gp=gpar(col="black", fontsize=20, fontface="italic")))
-my_grob2 = grobTree(textGrob(bquote(r[p] == .(round(cor(y=log2(data.total.final$D1), x=log2(data.total.final$D1.fcm)), 2))), x=0.8,  y=0.08, hjust=0,
-                             gp=gpar(col="black", fontsize=20, fontface="italic")))
-
-
-p6 <- ggplot(data=data.total.final,aes(x=D1.fcm,y=D1, fill=Lake))+ scale_fill_brewer(palette="Paired") +geom_point(shape=21,size=6,alpha=0.6,aes(fill=Lake))+
-  theme_bw()+labs(y="Taxonomic diversity (D1) - 16S",x="Phenotypic diversity (D1) - FCM", fill="Environment")+
-  theme(axis.text=element_text(size=15),axis.title=element_text(size=18,face="bold"),legend.text=element_text(size=15),legend.title=element_text(size=16),strip.text.x = element_text(size = 22))+
-  scale_y_continuous(trans='log2', breaks = seq(20,200, 40),minor_breaks =NULL) +
-  scale_x_continuous(trans='log2', breaks = seq(1500,4250,500),minor_breaks =NULL) +
-  geom_smooth(method="lm",color="black",fill="lightblue",formula=y~x)+
-  annotation_custom(my_grob)+
-  annotation_custom(my_grob2)+
-  geom_errorbar(aes(ymin = D2 - sd.D2, ymax = D2 + 
-                    sd.D2), width = 0.02, color="black")+
-  geom_errorbarh(aes(xmin = D2.fcm - sd.D2.fcm, xmax = D2.fcm + 
-                       sd.D2.fcm), height = 0.02, color="black")
-print(p9)
-
-### Get R squared
-lm.F <- lm(log2(D2)~log2(D2.fcm), data=data.total.final)
-summary(lm.F)$r.squared
-
-### Prepare to plot r squared / pearson's correlation
-my_grob = grobTree(textGrob(bquote(r^2 == .(round(summary(lm.F)$r.squared, 2))), x=0.8,  y=0.16, hjust=0,
-                            gp=gpar(col="black", fontsize=20, fontface="italic")))
-my_grob2 = grobTree(textGrob(bquote(r[p] == .(round(cor(y=log2(data.total.final$D2), x=log2(data.total.final$D2.fcm)), 2))), x=0.8,  y=0.08, hjust=0,
-                             gp=gpar(col="black", fontsize=20, fontface="italic")))
-
-p10 <- ggplot(data=data.total.final,aes(x=D2.fcm,y=D2, fill=Lake))+ scale_fill_brewer(palette="Paired") +geom_point(shape=21,size=6,alpha=0.6,aes(fill=Lake))+
-  theme_bw()+labs(y="Taxonomic diversity (D2) - 16S",x="Phenotypic diversity (D2) - FCM", fill="Environment")+
-  theme(axis.text=element_text(size=15),axis.title=element_text(size=18,face="bold"),legend.text=element_text(size=15),legend.title=element_text(size=16),strip.text.x = element_text(size = 22))+
-  scale_y_continuous(trans='log2', breaks = seq(5,60, 10),minor_breaks =NULL) +
-  scale_x_continuous(trans='log2', breaks = seq(1000,4250,250),minor_breaks =NULL) +
-  geom_smooth(method="lm",color="black",fill="lightblue",formula=y~x)+
-  annotation_custom(my_grob)+
-  annotation_custom(my_grob2)+
-  geom_errorbar(aes(ymin = D2 - sd.D2, ymax = D2 + 
-                      sd.D2), width = 0.02, color="black")+
-  geom_errorbarh(aes(xmin = D2.fcm - sd.D2.fcm, xmax = D2.fcm + 
-                       sd.D2.fcm), height = 0.02, color="black")
-print(p10)
-
-
-### All together with error
-png("alpha-div_log_all_together_errorbars.png",width=3*7*1.65,height=5*1.5,res=500,units="in")
-grid.arrange(p8,p9,p10, ncol=3)
-dev.off()
