@@ -1,7 +1,7 @@
 .Rproj.user
 .Rhistory
 .RData
-data/
+data_mussel/
 Mosselstaaltjes.zip
 Mosselstaaltjes_deel2.zip
 16S/
@@ -12,3 +12,4 @@ for_marian_counts.R
 17122016.RData
 data_reference/FCM_CW/
 data_reference/FCM_MI/
+29012016.RData

@@ -6,6 +6,11 @@ library("Phenoflow")
 library("ggplot2")
 library("gridExtra")
 source("functions.R")
+library("grid")
+library("RColorBrewer")
+library("vegan")
+
+myColours2 <- brewer.pal(n=12,"Paired"); myColours2 <- myColours2[c(2,6,7)]
 
 ### Import otu data
 physeq.otu <- import_mothur(mothur_shared_file ="16S/stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.an.unique_list.shared" ,
@@ -27,7 +32,9 @@ rownames(data.total.final) <- data.total.final$Sample
 sample_data(physeq.otu) <- data.total.final
 
 ### Rescale
+sample_sums(physeq.otu)
 physeq.otu <- scale_reads(physeq.otu)
+sample_sums(physeq.otu)
 physeq.otu <- transform_sample_counts(physeq.otu, function(x) x/sum(x))
 
 ### Run beta diversity analysis on 16s data
@@ -41,20 +48,6 @@ pcoa <- ordinate(
 
 pcoa.df <- data.frame(pcoa$vectors, sample_data(physeq.otu))
 var <- round(pcoa$values$Eigenvalues/sum(pcoa$values$Eigenvalues)*100,1)
-
-beta.pcoa <- ggplot(data=pcoa.df, aes(x=Axis.1, y=Axis.2, colour=Season, shape=Lake))+
-  geom_point(alpha=0.7, size=7, aes(fill=Season))+
-  scale_shape_manual(values=c(21,24))+
-  # scale_size(range=c(4,10), breaks=c(0,0.5,1,1.5,2,2.5,3))+ 
-  # guides(fill = guide_legend(override.aes = list(size=5)))+
-  theme_bw()+
-  scale_colour_brewer(palette="Accent")+
-  scale_fill_brewer(palette="Accent")+
-  labs(x = paste0("Axis1 (",var[1], "%)"), y = paste0("Axis2 (",var[2], "%)"), fill="Season", shape="Environment",
-       title="Taxonomic beta diversity")+
-  theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
-        title=element_text(size=20), legend.text=element_text(size=14))
-print(beta.pcoa)
 
 ### Start beta diversity analysis on FCM data
 path = "data_reference/FCM_MI"
@@ -104,31 +97,6 @@ df.beta.fcm <- inner_join(df.beta.fcm, data.total.final, by=c("Sample"="Sample_f
 var2 <- round(beta.div$eig/sum(beta.div$eig)*100, 1)
 df.beta.fcm <- droplevels(df.beta.fcm)
 
-
-### Plot beta diversity
-beta.pcoa.fcm <- ggplot(data=df.beta.fcm, aes(x=X1, y=-X2, shape=Lake, colour=Season))+
-  scale_shape_manual(values=c(21,24))+
-  geom_point(size=7)+
-  geom_point(size=7, aes(fill = Season), alpha=0.7)+
-  # scale_size(range=c(4,10), breaks=c(0,0.5,1,1.5,2,2.5,3))+ 
-  # guides(fill = guide_legend(override.aes = list(size=5)))+
-  theme_bw()+
-  scale_fill_brewer(palette="Accent")+
-  scale_colour_brewer(palette="Accent")+
-  labs(x = paste0("Axis1 (",var2[1], "%)"), y = paste0("Axis2 (",var2[2], "%)"), fill="Season", shape = "Environment",
-       title="Phenotypic beta diversity")+
-  theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
-        title=element_text(size=20), legend.text=element_text(size=14))
-
-print(beta.pcoa.fcm)
-grid.arrange(beta.pcoa, beta.pcoa.fcm, ncol=2)
-
-
-### All together
-png("beta-div_fcm_seq.png",width=1.6*7*1.65,height=5*1.5,res=500,units="in")
-grid.arrange(beta.pcoa, beta.pcoa.fcm, ncol=2)
-dev.off()
-
 ### Procrustes analysis
 fbasis1 <- fbasis
 fbasis1@basis <- fbasis1@basis/apply(fbasis1@basis, 1, max)
@@ -155,11 +123,17 @@ pcoa.seq <- cmdscale(dist.seq)
 
 # Run procrustes + permutation
 # dist.proc <- vegan::procrustes(dist.seq, dist.fcm)
-dist.prot <- vegan::protest(pcoa.seq,pcoa.fcm)
+# Permutations are constrained within each sampling year 
+perm <- how(nperm = 999)
+setBlocks(perm) <- with(x.data, Year)
+dist.prot <- vegan::protest(pcoa.seq,pcoa.fcm, permutations = perm)
+# png("procrustes.png",width=6,height=6,res=500,units="in")
 plot(dist.prot)
+# dev.off()
 summary(dist.prot)
 
 # Run PERMANOVA to evaluate if conclusions are similar between FCM/seq
+# Similar variances across seasons
 disper.fcm <- betadisper(dist.fcm, group=x.data$Season)
 print(disper.fcm)
 plot(disper.fcm)
@@ -173,3 +147,60 @@ setBlocks(perm) <- with(x.data, Year)
 permanova.fcm <- adonis(dist.fcm~Season*Lake, data=x.data, permutations = perm)
 permanova.seq <- adonis(dist.seq~Season*Lake, data=data.frame(sample_data(physeq.otu)), permutations = perm)
 
+### Plot FCM beta diversity
+my_grob = grobTree(textGrob(bquote(paste(r[Season]^2 == .(round(100*permanova.fcm$aov.tab[1,5], 1)),"%")), x=0.7,  y=0.95, hjust=0,
+                            gp=gpar(col="black", fontsize=14, fontface="italic")))
+my_grob2 = grobTree(textGrob(bquote(paste(r[Lake]^2 == .(format(round(100*permanova.fcm$aov.tab[2,5], 1), nsmall = 1)),"%")), x=0.7,  y=0.87, hjust=0,
+                             gp=gpar(col="black", fontsize=14, fontface="italic")))
+my_grob3 = grobTree(textGrob(bquote(paste(r[Season:Lake]^2 == .(round(100*permanova.fcm$aov.tab[3,5], 1)),"%")), x=0.7,  y=0.79, hjust=0,
+                             gp=gpar(col="black", fontsize=14, fontface="italic")))
+
+df.beta.fcm$Season <- factor(df.beta.fcm$Season, levels = c("Spring", "Summer", "Fall"))
+pcoa.df$Season <- factor(pcoa.df$Season, levels = c("Spring", "Summer", "Fall"))
+
+beta.pcoa.fcm <- ggplot(data=df.beta.fcm, aes(x=X1, y=-X2, shape=Lake))+
+  scale_shape_manual(values=c(21,24))+
+  geom_point(size=7, aes(fill = Season), alpha=0.7)+
+  theme_bw()+
+  scale_fill_manual(values=myColours2)+
+  scale_colour_manual(values=myColours2)+
+  labs(x = paste0("PCoA axis 1 (",var2[1], "%)"), y = paste0("PCoA axis 2 (",var2[2], "%)"), fill="", shape = "", colour="",
+       title="B")+
+  theme(axis.text=element_text(size=14), axis.title=element_text(size=20),
+        title=element_text(size=20), legend.text=element_text(size=16))+ 
+  guides(fill = guide_legend(override.aes = list(shape = 22)))+
+  annotation_custom(my_grob)+
+  annotation_custom(my_grob2)+
+  annotation_custom(my_grob3)
+
+print(beta.pcoa.fcm)
+
+### Plot 16S  beta diversity
+my_grob = grobTree(textGrob(bquote(paste(r[Season]^2 == .(round(100*permanova.seq$aov.tab[1,5], 1)),"%")), x=0.7,  y=0.95, hjust=0,
+                            gp=gpar(col="black", fontsize=14, fontface="italic")))
+my_grob2 = grobTree(textGrob(bquote(paste(r[Lake]^2 == .(round(100*permanova.seq$aov.tab[2,5], 1)),"%")), x=0.7,  y=0.87, hjust=0,
+                            gp=gpar(col="black", fontsize=14, fontface="italic")))
+my_grob3 = grobTree(textGrob(bquote(paste(r[Season:Lake]^2 == .(round(100*permanova.seq$aov.tab[3,5], 1)),"%")), x=0.7,  y=0.79, hjust=0,
+                             gp=gpar(col="black", fontsize=14, fontface="italic")))
+
+beta.pcoa <- ggplot(data=pcoa.df, aes(x=Axis.1, y=Axis.2, shape=Lake))+
+  geom_point(alpha=0.7, size=7, aes(fill=Season))+
+  scale_shape_manual(values=c(21,24))+
+  theme_bw()+
+  scale_fill_manual(values=myColours2)+
+  scale_colour_manual(values=myColours2)+
+  labs(x = paste0("PCoA axis 1 (",var[1], "%)"), y = paste0("PCoA axis 2 (",var[2], "%)"), fill="", shape="", colour="",
+       title="A")+
+  theme(axis.text=element_text(size=14), axis.title=element_text(size=20),
+        title=element_text(size=20), legend.text=element_text(size=16))+
+  guides(fill = guide_legend(override.aes = list(shape = 22)))+
+  annotation_custom(my_grob)+
+  annotation_custom(my_grob2)+
+  annotation_custom(my_grob3)+
+  ylim(-0.4,0.3)
+print(beta.pcoa)
+
+### All together
+png("beta-div_seq_fcm_noscaling.png",width=12,height=6,res=500,units="in")
+grid_arrange_shared_legend(beta.pcoa, beta.pcoa.fcm, ncol=2)
+dev.off()

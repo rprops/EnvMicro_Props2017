@@ -70,7 +70,7 @@ mean(100*data.total.final$HNA_counts[data.total.final$Lake=="Lake Michigan"]/dat
 length(data.total.final$counts[data.total.final$Lake=="Lake Michigan"])
 
 ### Get R squared
-lm.F <- lm(log2(D2)~log2(D2.fcm)/Lake, data=data.total.final)
+lm.F <- lm(log2(D2)~log2(D2.fcm), data=data.total.final)
 summary(lm.F)$r.squared
 
 # predicted R²
@@ -78,6 +78,7 @@ model_fit_stats(lm.F)
 
 # Dynamic range of D2
 max(data.total.final$D2)/min(data.total.final$D2)
+max(data.total.final$D1)/min(data.total.final$D1)
 
 # Dynamic range of D2 in previous study
 max(data.total.final$D2[data.total.final$Lake=="Cooling water"])/min(data.total.final$D2[data.total.final$Lake=="Cooling water"])
@@ -91,7 +92,7 @@ df.pred <- data.frame(aggregate(D2.16S~time, df.pred, mean), aggregate(D2.16S.er
 
 ### Note: After transformation back to linear scale, errors are not necessarily normal distributed anymore,
 ### So calculate minimum and maximum and report as such.
-
+df.pred.res <- df.pred 
 # Maximum decrease in D2 (3.63 units or 15.6 %)
 2^(df.pred$D2.16S[df.pred.res$time==0] + df.pred$D2.16S.error[df.pred.res$time==0]) -  2^(df.pred$D2.16S[df.pred.res$time==3] - df.pred$D2.16S.error[df.pred.res$time==3])
 (2^(df.pred$D2.16S[df.pred.res$time==0] + df.pred$D2.16S.error[df.pred.res$time==0]) -  2^(df.pred$D2.16S[df.pred.res$time==3] - df.pred$D2.16S.error[df.pred.res$time==3])) / 2^(df.pred$D2.16S[df.pred.res$time==0] + df.pred$D2.16S.error[df.pred.res$time==0])
@@ -131,11 +132,8 @@ plot(y=log2(data.total.final$D2), x=predict(lm.F), col="blue",
      las=1)
 dev.off()
 
-### Breusch-Pagan test for checking heteroscedasticity
-bptest(studres(lm.F)~predict(lm.F))
-
 ### Prepare to plot r squared / pearson's correlation
-my_grob = grobTree(textGrob(bquote(r^2 == .(round(summary(lm.F)$r.squared, 2))), x=0.8,  y=0.16, hjust=0,
+my_grob = grobTree(textGrob(bquote(r^2 == .(paste(round(model_fit_stats(lm.F)[2], 2)))), x=0.8,  y=0.16, hjust=0,
                             gp=gpar(col="black", fontsize=20, fontface="italic")))
 my_grob2 = grobTree(textGrob(bquote(r[p] == .(round(cor(y=log2(data.total.final$D2), x=log2(data.total.final$D2.fcm)), 2))), x=0.8,  y=0.08, hjust=0,
                             gp=gpar(col="black", fontsize=20, fontface="italic")))

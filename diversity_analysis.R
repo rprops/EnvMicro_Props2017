@@ -10,6 +10,7 @@ library("vegan")
 source("functions.R")
 library("sandwich")
 library("lmtest")
+library("grid")
 
 ### Set seed for reproducible analysis
 set.seed(777)
@@ -234,13 +235,19 @@ p.beta <- ggplot(data=beta.div.data, aes(x=X1, y=X2, fill=Treatment, size=Time))
         title=element_text(size=20), legend.text=element_text(size=14))
 print(p.beta)
   
-png(file="Submerged.fcm_pooled_rlm.png",width=12,height=6,res=500,units="in", pointsize=12)
-# grid.arrange(arrangeGrob(p2,p1, ncol=2), p.beta.S, heights=c(4/4, 4/4), ncol=1)
-# grid.arrange(p1,p.beta.S, ncol=2)
-grid_arrange_shared_legend(p1b,p.beta.S, ncol=2)
-dev.off()
+### Separate for submerged data
+### PERMANOVA on beta diversity analysis
+disper.test <- betadisper(dist.S, group=results$Treatment)
+disper.test # average distance to mean 0.03 for both groups
+anova(disper.test) # P = 0.892
+perma.beta <- adonis(dist.S~Treatment*Time, data=results)
+my_grob = grobTree(textGrob(bquote(paste(r[Feeding]^2 == .(round(100*perma.beta$aov.tab[1,5], 1)),"%")), x=0.68,  y=0.95, hjust=0,
+                            gp=gpar(col="black", fontsize=14, fontface="italic")))
+my_grob2 = grobTree(textGrob(bquote(paste(r[Time]^2 == .(format(round(100*perma.beta$aov.tab[2,5], 1), nsmall = 1)),"%")), x=0.68,  y=0.87, hjust=0,
+                             gp=gpar(col="black", fontsize=14, fontface="italic")))
+my_grob3 = grobTree(textGrob(bquote(paste(r[Feeding:Time]^2 == .(round(100*perma.beta$aov.tab[3,5], 1)),"%")), x=0.68,  y=0.79, hjust=0,
+                             gp=gpar(col="black", fontsize=14, fontface="italic")))
 
-### Separate S
 beta.div.data.S <- data.frame(beta.div.S$points, tmp[!tmp$Treatment=="Feeding - T",])
 beta.div.data.S <- droplevels(beta.div.data.S)
 beta.div.data.S$Treatment <- plyr::revalue(beta.div.data.S$Treatment, c("Feeding - S"="Feeding"))
@@ -256,23 +263,18 @@ p.beta.S <- ggplot(data=beta.div.data.S, aes(x=X1, y=X2, fill=Treatment, size=Ti
   theme(axis.text=element_text(size=14), axis.title=element_text(size=20),
         title=element_text(size=20), legend.text=element_text(size=16),
         # panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        legend.direction = "horizontal",legend.position = "bottom")
+        legend.direction = "horizontal",legend.position = "bottom")+
+  annotation_custom(my_grob)+
+  annotation_custom(my_grob2)+
+  annotation_custom(my_grob3)+
+  ylim(-0.035,0.045)
 print(p.beta.S)
 
-### Separate T
-beta.div.data.T <- data.frame(beta.div.T$points, tmp[!tmp$Treatment=="Feeding - S",])
-beta.div.data.T <- droplevels(beta.div.data.T)
-var <- round(vegan::eigenvals(beta.div.T)/sum(vegan::eigenvals(beta.div.T))*100,1)
-p.beta.T <- ggplot(data=beta.div.data.T, aes(x=X1, y=X2, fill=Treatment, size=Time))+
-  geom_point(shape=21, alpha=1)+
-  scale_size(range=c(4,10), breaks=c(0,0.5,1,1.5,2,2.5,3))+ 
-  guides(fill = guide_legend(override.aes = list(size=5)))+
-  theme_bw()+
-  scale_fill_manual(values=myColours[c(1,3)])+
-  labs(x = paste0("Axis1 (",var[1], "%)"), y = paste0("Axis2 (",var[2], "%)"), title="C. Phenotypic beta diversity")+
-  theme(axis.text=element_text(size=14), axis.title=element_text(size=16,face="bold"),
-        title=element_text(size=20), legend.text=element_text(size=14))
-print(p.beta.T)
+png(file="Submerged.fcm_pooled_rlm.png",width=12,height=6,res=500,units="in", pointsize=12)
+# grid.arrange(arrangeGrob(p2,p1, ncol=2), p.beta.S, heights=c(4/4, 4/4), ncol=1)
+# grid.arrange(p1,p.beta.S, ncol=2)
+grid_arrange_shared_legend(p1b,p.beta.S, ncol=2)
+dev.off()
 
 ##############################################################################
 ### Additional statistics
@@ -309,7 +311,7 @@ eq1 <- sqrt((summary(lm.HNA)$coefficients[1,2]/lm.HNA$coefficients[1])^2 + (summ
 # error on final clearance rate
 11*sqrt(((eq1/abs(lm.HNA$coefficients[2])/lm.HNA$coefficients[1])^2) + (sd(meta.mus$weight_g)/mean(meta.mus$weight_g))^2)
 
-### Initial % HNA
+### Initial % LNA
 mean(100*results$LNA.cells[results$Time==0]/results$Total.cells[results$Time==0])
 em1 <- 100*sqrt((results$sd.LNA.cells[results$Time==0]/(results$LNA.cells[results$Time==0]))^2 + (results$sd.Total.cells[results$Time==0]/(results$Total.cells[results$Time==0]))^2)
 sqrt(sum(em1^2)/length(em1))
@@ -383,13 +385,6 @@ p1b <- ggplot(data=results, aes(x=Time, y=D2, fill=Treatment)) +
   # geom_errorbar(aes(ymin=D2-sd.D2, ymax=D2+sd.D2), width=0.075)+
   geom_smooth(method="rlm", color="black", alpha=0.2, formula = y ~ splines::ns(x,df=3))+
   ylim(1990,2150)
-
-
-### PERMANOVA on beta diversity analysis
-disper.test <- betadisper(dist.S, group=results$Treatment)
-disper.test # average distance to mean 0.03 for both groups
-anova(disper.test) # P = 0.892
-adonis(dist.S~Treatment*Time, data=results)
 
 # Report running information
 sessionInfo()
