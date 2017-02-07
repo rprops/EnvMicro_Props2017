@@ -5,6 +5,8 @@ library("grid")
 library("gridExtra")
 library("car")
 library("lmtest")
+library("caret")
+source("functions.R")
 
 div.FCM <- read.csv2("fcm.diversity_total.csv")
 div.16S <- read.csv2("otu.diversity16S_F.csv")
@@ -46,9 +48,6 @@ data.total <- inner_join(div.FCM.merged, data.16s, by="Sample_fcm")
 ### Select samples with > 10000 counts
 data.total <- data.total[data.total$counts>10000,]
 
-### remove outlier
-# data.total <- data.total[data.total$D1.y>10,]
-
 ### Add data from previous publication (cooling water)
 div.ref <- read.csv2("div.ref.merged.csv")
 
@@ -64,17 +63,33 @@ data.total.final$Sample[data.total.final$Lake == "Cooling water"] <- tmp$Sample_
 data.total.final$Lake[1:87][data.total.final$Site[1:87] == "MLB"] <- "Muskegon Lake"
 data.total.final$Season[1:87][data.total.final$Season[1:87]=="Winter"] <- "Fall"
 
+### Chlorophyl data
+Chl <- read.csv("chl.csv")
+Chl <- Chl[Chl$Sample_16S %in% data.total.final$Sample[data.total.final$Lake == "Lake Michigan"],]
+mean(aggregate(Chl~Sample_16S, data=Chl, mean)$Chl)
+sd(aggregate(Chl~Sample_16S, data=Chl, mean)$Chl)
+
 ### Get average HNA percentage and sem in lake Mi
 mean(100*data.total.final$HNA_counts[data.total.final$Lake=="Lake Michigan"]/data.total.final$counts[data.total.final$Lake=="Lake Michigan"])
 100*sqrt(sum((data.total.final$HNA_counts.sd[data.total.final$Lake=="Lake Michigan"]/data.total.final$HNA_counts[data.total.final$Lake=="Lake Michigan"])^2 + (data.total.final$counts.sd[data.total.final$Lake=="Lake Michigan"]/data.total.final$counts[data.total.final$Lake=="Lake Michigan"])^2)/length(data.total.final$counts[data.total.final$Lake=="Lake Michigan"]))
 length(data.total.final$counts[data.total.final$Lake=="Lake Michigan"])
 
-### Get R squared
-lm.F <- lm(log2(D2)~log2(D2.fcm), data=data.total.final)
-summary(lm.F)$r.squared
+### Get R squared for all diversity metrics (biased)
+lm.F.D2 <- lm(log2(D2)~log2(D2.fcm), data=data.total.final)
+summary(lm.F.D2)$r.squared
+lm.F.D1 <- lm(log2(D1)~log2(D1.fcm), data=data.total.final)
+summary(lm.F.D1)$r.squared
+lm.F.D0 <- lm(log2(D0)~log2(D0.fcm), data=data.total.final)
+summary(lm.F.D0)$r.squared
 
-# predicted R²
-model_fit_stats(lm.F)
+### Calculate unbiased R squared by tenfold cross validation
+lmGrid <- expand.grid(intercept = TRUE)
+R.cv.D2 <- train(log2(D2)~log2(D2.fcm), data=data.total.final, method ='lm', trControl = trainControl(method ="repeatedcv", repeats = 100), tuneGrid = lmGrid)
+R.cv.D2$results
+R.cv.D1 <- train(log2(D1)~log2(D1.fcm), data=data.total.final, method ='lm', trControl = trainControl(method ="repeatedcv", repeats = 100), tuneGrid = lmGrid)
+R.cv.D1$results
+R.cv.D0 <- train(log2(D0)~log2(D0.fcm), data=data.total.final, method ='lm', trControl = trainControl(method ="repeatedcv", repeats = 100), tuneGrid = lmGrid)
+R.cv.D0$results
 
 # Dynamic range of D2
 max(data.total.final$D2)/min(data.total.final$D2)
@@ -88,18 +103,17 @@ df <- data.frame(D2.fcm = results$D2[results$Treatment=="Feeding"][results[resul
                  time=results$Time[results$Treatment=="Feeding"][results[results$Treatment=="Feeding",]$Time==3 | results[results$Treatment=="Feeding",]$Time==0])
 df.pred <- data.frame(D2.16S = predict(lm.F, df, se=TRUE)$fit, D2.16S.error = predict(lm.F, df, se=TRUE)$se.fit, time = df$time)
 df.pred <- data.frame(aggregate(D2.16S~time, df.pred, mean), aggregate(D2.16S.error~time, df.pred, FUN = function(x) sqrt(sum(x^2))/length(x)))
-# df.pred$D2.16S <- 2^df.pred$D2.16S
 
 ### Note: After transformation back to linear scale, errors are not necessarily normal distributed anymore,
 ### So calculate minimum and maximum and report as such.
 df.pred.res <- df.pred 
 # Maximum decrease in D2 (3.63 units or 15.6 %)
 2^(df.pred$D2.16S[df.pred.res$time==0] + df.pred$D2.16S.error[df.pred.res$time==0]) -  2^(df.pred$D2.16S[df.pred.res$time==3] - df.pred$D2.16S.error[df.pred.res$time==3])
-(2^(df.pred$D2.16S[df.pred.res$time==0] + df.pred$D2.16S.error[df.pred.res$time==0]) -  2^(df.pred$D2.16S[df.pred.res$time==3] - df.pred$D2.16S.error[df.pred.res$time==3])) / 2^(df.pred$D2.16S[df.pred.res$time==0] + df.pred$D2.16S.error[df.pred.res$time==0])
+(2^(df.pred$D2.16S[df.pred.res$time==0] + df.pred$D2.16S.error[df.pred.res$time==3]) -  2^(df.pred$D2.16S[df.pred.res$time==3] - df.pred$D2.16S.error[df.pred.res$time==3])) / 2^(df.pred$D2.16S[df.pred.res$time==0] + df.pred$D2.16S.error[df.pred.res$time==0])
 
 # Minimum decrease in D2 (1.65 units or 7.5 %)
 2^(df.pred$D2.16S[df.pred.res$time==0] - df.pred$D2.16S.error[df.pred.res$time==0]) -  2^(df.pred$D2.16S[df.pred.res$time==3] + df.pred$D2.16S.error[df.pred.res$time==3])
-(2^(df.pred$D2.16S[df.pred.res$time==0] - df.pred$D2.16S.error[df.pred.res$time==0]) -  2^(df.pred$D2.16S[df.pred.res$time==3] + df.pred$D2.16S.error[df.pred.res$time==3])) / 2^(df.pred$D2.16S[df.pred.res$time==0] - df.pred$D2.16S.error[df.pred.res$time==0])
+(2^(df.pred$D2.16S[df.pred.res$time==0] - df.pred$D2.16S.error[df.pred.res$time==3]) -  2^(df.pred$D2.16S[df.pred.res$time==3] + df.pred$D2.16S.error[df.pred.res$time==3])) / 2^(df.pred$D2.16S[df.pred.res$time==0] - df.pred$D2.16S.error[df.pred.res$time==0])
 
 # Average decrease in D2 (2.64 units or 11.6 %)
 2^df.pred$D2.16S[df.pred.res$time==0] -  2^df.pred$D2.16S[df.pred.res$time==3]
@@ -107,6 +121,27 @@ df.pred.res <- df.pred
 
 ### Note: Errors seem (approx.) randomly distributed even on linear scale, so we can just summarize by +/- the average
 ### on the mean estimate.
+
+# Calculate mean predicted decrease in D2 at 0 and 1 hour
+df <- data.frame(D2.fcm = results$D2[results$Treatment=="Feeding"][results[results$Treatment=="Feeding",]$Time==1 | results[results$Treatment=="Feeding",]$Time==0],
+                 time=results$Time[results$Treatment=="Feeding"][results[results$Treatment=="Feeding",]$Time==1 | results[results$Treatment=="Feeding",]$Time==0])
+df.pred <- data.frame(D2.16S = predict(lm.F, df, se=TRUE)$fit, D2.16S.error = predict(lm.F, df, se=TRUE)$se.fit, time = df$time)
+df.pred <- data.frame(aggregate(D2.16S~time, df.pred, mean), aggregate(D2.16S.error~time, df.pred, FUN = function(x) sqrt(sum(x^2))/length(x)))
+
+### Note: After transformation back to linear scale, errors are not necessarily normal distributed anymore,
+### So calculate minimum and maximum and report as such.
+df.pred.res <- df.pred 
+# Maximum decrease in D2 (2.82 units or 12.05 %)
+2^(df.pred$D2.16S[df.pred.res$time==0] + df.pred$D2.16S.error[df.pred.res$time==0]) -  2^(df.pred$D2.16S[df.pred.res$time==1] - df.pred$D2.16S.error[df.pred.res$time==1])
+(2^(df.pred$D2.16S[df.pred.res$time==0] + df.pred$D2.16S.error[df.pred.res$time==1]) -  2^(df.pred$D2.16S[df.pred.res$time==1] - df.pred$D2.16S.error[df.pred.res$time==1])) / 2^(df.pred$D2.16S[df.pred.res$time==0] + df.pred$D2.16S.error[df.pred.res$time==0])
+
+# Minimum decrease in D2 (0.79 units or 3.66 %)
+2^(df.pred$D2.16S[df.pred.res$time==0] - df.pred$D2.16S.error[df.pred.res$time==0]) -  2^(df.pred$D2.16S[df.pred.res$time==1] + df.pred$D2.16S.error[df.pred.res$time==1])
+(2^(df.pred$D2.16S[df.pred.res$time==0] - df.pred$D2.16S.error[df.pred.res$time==1]) -  2^(df.pred$D2.16S[df.pred.res$time==1] + df.pred$D2.16S.error[df.pred.res$time==1])) / 2^(df.pred$D2.16S[df.pred.res$time==0] - df.pred$D2.16S.error[df.pred.res$time==0])
+
+# Average decrease in D2 (1.8 units or 7.96 %)
+2^df.pred$D2.16S[df.pred.res$time==0] -  2^df.pred$D2.16S[df.pred.res$time==1]
+(2^df.pred$D2.16S[df.pred.res$time==0] -  2^df.pred$D2.16S[df.pred.res$time==1]) / 2^df.pred$D2.16S[df.pred.res$time==0] 
 
 # Calculate delta in D2.fcm for an increase of 10 taxonomic units (5->10 and 35->45)
 df2 <- data.frame(D2.fcm=c(1000,1500,2000,2500))
@@ -120,7 +155,7 @@ df2.res <- predict(lm.F,df2)
 cor(data.total.final$D1.fcm,data.total.final$D2.fcm)
 
 ### Residual analysis of the D2 model
-png("residual_analysis_D2.png",width=10,height=4,res=500,units="in", pointsize=14)
+png("residual_analysis_D2_scaled.png",width=10,height=4,res=500,units="in", pointsize=14)
 par(mfrow=c(1,3))
 qqPlot(lm.F, col="blue", reps=10000, ylab="Studentized residuals", xlab="Theoretical quantiles (t-distribution)",
        cex=1.5, las=1)
@@ -133,7 +168,7 @@ plot(y=log2(data.total.final$D2), x=predict(lm.F), col="blue",
 dev.off()
 
 ### Prepare to plot r squared / pearson's correlation
-my_grob = grobTree(textGrob(bquote(r^2 == .(paste(round(model_fit_stats(lm.F)[2], 2)))), x=0.8,  y=0.16, hjust=0,
+my_grob = grobTree(textGrob(bquote(r^2 == .(paste(round(R.cv.D2$results$Rsquared, 2)))), x=0.8,  y=0.16, hjust=0,
                             gp=gpar(col="black", fontsize=20, fontface="italic")))
 my_grob2 = grobTree(textGrob(bquote(r[p] == .(round(cor(y=log2(data.total.final$D2), x=log2(data.total.final$D2.fcm)), 2))), x=0.8,  y=0.08, hjust=0,
                             gp=gpar(col="black", fontsize=20, fontface="italic")))
@@ -152,13 +187,8 @@ p5 <- ggplot(data=data.total.final,aes(x=D2.fcm,y=D2, fill=Lake))+ scale_fill_ma
 print(p5)
 dev.off()
 
-### Get R squared
-lm.F <- lm(log2(D1)~log2(D1.fcm), data=data.total.final)
-summary(lm.F)$r.squared
-
-
 ### Prepare to plot r squared / pearson's correlation
-my_grob = grobTree(textGrob(bquote(r^2 == .(round(summary(lm.F)$r.squared, 2))), x=0.8,  y=0.16, hjust=0,
+my_grob = grobTree(textGrob(bquote(r^2 == .(round(R.cv.D1$results$Rsquared, 2))), x=0.8,  y=0.16, hjust=0,
                             gp=gpar(col="black", fontsize=20, fontface="italic")))
 my_grob2 = grobTree(textGrob(bquote(r[p] == .(round(cor(y=log2(data.total.final$D1), x=log2(data.total.final$D1.fcm)), 2))), x=0.8,  y=0.08, hjust=0,
                              gp=gpar(col="black", fontsize=20, fontface="italic")))
@@ -177,12 +207,8 @@ p6 <- ggplot(data=data.total.final,aes(x=D1.fcm,y=D1, fill=Lake))+ scale_fill_ma
 print(p6)
 dev.off()
 
-### Get R squared
-lm.F <- lm(log2(D0)~log2(D0.fcm), data=data.total.final)
-summary(lm.F)$r.squared
-
 ### Prepare to plot r squared / pearson's correlation
-my_grob = grobTree(textGrob(bquote(r^2 == .(round(summary(lm.F)$r.squared, 2))), x=0.8,  y=0.16, hjust=0,
+my_grob = grobTree(textGrob(bquote(r^2 == .(round(R.cv.D0$results$Rsquared, 2))), x=0.8,  y=0.16, hjust=0,
                             gp=gpar(col="black", fontsize=20, fontface="italic")))
 my_grob2 = grobTree(textGrob(bquote(r[p] == .(round(cor(y=log2(data.total.final$D0), x=log2(data.total.final$D0.fcm)), 2))), x=0.8,  y=0.08, hjust=0,
                              gp=gpar(col="black", fontsize=20, fontface="italic")))
@@ -202,7 +228,7 @@ print(p7)
 dev.off()
 
 ### All together
-png("alpha-div_log_D1D2_together_extracol.png",width=1.6*7*1.65,height=5*1.5,res=500,units="in")
+png("alpha-div_log_D0D1D2_together_extracol.png",width=1.6*7*1.65,height=5*1.5*2,res=500,units="in")
 grid.arrange(p7,p6, ncol=2)
 dev.off()
 

@@ -16,8 +16,10 @@ phy.ref <- phyloseq(phy.ref, tax.ref)
 ### Only consider samples with > 10000 reads
 phy.ref <- prune_samples(sample_sums(phy.ref)>10000, phy.ref)
 
+### Scale if desired
+phy.ref <- scale_reads(phy.ref, n = 10000)
 
-# div.ref <- Diversity_16S(phy.ref, R=100, brea=FALSE, thresh=500)
+div.ref <- Diversity_16S(phy.ref, R=100, brea=FALSE, thresh=500)
 div.ref <- data.frame(div.ref)
 
 
@@ -31,8 +33,8 @@ dist.ref <- data.frame(Sample1 = row.names(dist.ref), Sample2 = cols, distance =
 dist.ref <- data.frame(Sample_seq_comb = paste(dist.ref[,1], dist.ref[,2], sep="-"), distance.seq = dist.ref[,3])
   
 ### Export data
-write.csv2(dist.ref, "dist.16S.ref.csv")
-write.csv2(div.ref, "otu.diversity16S.ref.csv")
+# write.csv2(dist.ref, "dist.16S.ref.csv")
+write.csv2(div.ref, "otu.diversity16S.ref_scaled.csv")
 
 ### Calculate FCM diversity for reference samples
 
@@ -117,7 +119,7 @@ errors <- do.call(rbind,by(div.fcm.ref[,5:7], INDICES = groupLevels,
 div.fcm.ref.merged <- data.frame(cbind(means,errors), sample_fcm = rownames(means))
 
 ### And match them to the corresponding sequencing data
-div.seq.ref <- read.csv2("otu.diversity16S.ref.csv")
+div.seq.ref <- read.csv2("otu.diversity16S.ref_scaled.csv")
 lb <- read.csv2("labels_ref.csv")
 div.fcm.ref.merged <- inner_join(div.fcm.ref.merged, lb, by=c("sample_fcm"="Sample_fcm"))
 dist.fbasis <- inner_join(dist.fbasis, lb, by=c("Sample1"="Sample_fcm"))
@@ -130,7 +132,7 @@ dist.fbasis <- data.frame(dist.fbasis[,1:3], Sample_seq_comb = paste(dist.fbasis
 colnames(div.fcm.ref.merged) <- c("D0.fcm","D1.fcm","D2.fcm","sd.D0.fcm","sd.D1.fcm","sd.D2.fcm","Sample_fcm","Sample_seq")
 
 ### Merge
-div.total.ref <- inner_join(div.fcm.ref.merged, div.seq.ref, by=c("Sample_seq"="Sample"))
+div.total.ref <- inner_join(div.fcm.ref.merged, div.seq.ref, by=c("Sample_seq"="X"))
 dist.total.ref <- inner_join(dist.fbasis, dist.ref, by=c("Sample_seq_comb"="Sample_seq_comb"))
 dist.total.ref <- dist.total.ref[dist.total.ref$distance.fcm != 0 | dist.total.ref$distance.seq != 0,]
 
@@ -140,7 +142,7 @@ div.total.ref <- data.frame(div.total.ref[,7:8], div.total.ref[,1:6], div.total.
 
 ### Write csv
 
-# write.csv2(div.total.ref, "div.ref.merged.csv")
+write.csv2(div.total.ref, "div.ref.merged_scaled.csv")
 
 ggplot(data=dist.total.ref, aes(x=distance.fcm, y=distance.seq))+
   geom_point()+

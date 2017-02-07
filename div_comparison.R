@@ -2,7 +2,7 @@ library("data.table")
 library("Phenoflow")
 library('qdap')
 library("phyloseq")
-
+source("functions.R")
 ### Import data
 phy.otu <- import_mothur(mothur_shared_file = "16S/stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.an.unique_list.shared",
                          mothur_constaxonomy_file = "16S/stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.an.unique_list.0.03.cons.taxonomy")
@@ -30,18 +30,24 @@ phy.otu.F <- prune_samples(samples=sample_names(phy.otu) %in% sl_F, x=phy.otu)
 phy.otu.P <- prune_samples(samples=sample_names(phy.otu) %in% sl_P, x=phy.otu)
 phy.otu.W <- prune_samples(samples=sample_names(phy.otu) %in% sl_W, x=phy.otu)
 
+### Rescale if desired to 10000
+phy.otu.F <- scale_reads(phy.otu.F, n = 10000)
+phy.otu.P <- scale_reads(phy.otu.P, n = 10000)
+phy.otu.W <- scale_reads(phy.otu.W, n = 10000)
+
 ### Calculate diversities
-div <- Diversity_16S(phy.otu, R=100, brea=FALSE, thresh=500)
-div <- data.frame(div)
+# div <- Diversity_16S(phy.otu, R=100, brea=FALSE, thresh=500)
+# div <- data.frame(div)
 
 div.F <- Diversity_16S(phy.otu.F, R=100, brea=FALSE, thresh=500)
+div.F <- data.frame(Sample = rownames(div.F), div.F)
 div.W <- Diversity_16S(phy.otu.W, R=100, brea=FALSE, thresh=500)
 div.W <- data.frame(div.W)
 div.P <- Diversity_16S(phy.otu.P, R=100, brea=FALSE, thresh=500)
 div.P <- data.frame(div.P)
 
 ### Import FCM ref
-write.csv2(div.F, "otu.diversity16S_F.csv")
-write.csv2(div.P, "otu.diversity16S_P.csv")
-write.csv2(div.W, "otu.diversity16S_W.csv")
+write.csv2(div.F, "otu.diversity16S_F_scaled.csv", row.names = FALSE)
+write.csv2(div.P, "otu.diversity16S_P_scaled.csv", row.names = FALSE)
+write.csv2(div.W, "otu.diversity16S_W_scaled.csv", row.names = FALSE)
 ###

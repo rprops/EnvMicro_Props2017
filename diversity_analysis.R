@@ -203,7 +203,7 @@ kruskal.test(size_mm ~ Sample, data=meta.mus)
 result.tmp <- results
 results <- result.tmp[!result.tmp$Treatment=="Feeding - T", ]
 results$Treatment <- droplevels(plyr::revalue(results$Treatment, c("Feeding - S"="Feeding")))
-p1 <- ggplot(data=results, aes(x=factor(Time), y=D2, fill=Treatment)) + 
+p1 <- ggplot(data=results, aes(x=Time, y=D2, fill=Treatment)) + 
   # geom_boxplot(alpha=0.9)+
   geom_point(shape=21, size=7,alpha=0.9)+
   scale_fill_manual(values=myColours[c(1,2)])+
@@ -216,7 +216,9 @@ p1 <- ggplot(data=results, aes(x=factor(Time), y=D2, fill=Treatment)) +
         title=element_text(size=20), legend.text=element_text(size=16),
         # panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         legend.direction = "horizontal",legend.position = "bottom")+ 
-  geom_errorbar(aes(ymin=D2-sd.D2, ymax=D2+sd.D2), width=0.075)
+  # geom_errorbar(aes(ymin=D2-sd.D2, ymax=D2+sd.D2), width=0.075)+
+  geom_smooth(method="rlm", color="black", alpha=0.2, formula = y ~ splines::ns(x,df=3))+
+  ylim(1990,2150)
 
 
 ### Beta diversity
@@ -298,6 +300,32 @@ car::Anova(lm.HNA_C) # p = 0.9826
 car::Anova(lm.HNA) # p = 9.02e-11
 ### To get std. error on parameter estimation
 summary(lm.HNA)
+
+### Average HNA removal relative to HNA pool
+t0 <- mean(results$HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="0"])
+t3 <- mean(results$HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="3"])
+100*(t0-t3)/t0
+
+### Error on average HNA densities
+e0 <- sqrt(sum(results$sd.HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="0"]^2))/3
+e3 <- sqrt(sum(results$sd.HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="3"]^2))/3
+
+### Error on HNA removal ratio
+100*sqrt((sqrt(e0^2 + e3^2)/(t0-t3))^2 + (e0/t0)^2)
+
+### Average HNA removal relative to total cell pool
+t0 <- mean(results$HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="0"])
+t3 <- mean(results$HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="3"])
+t.C <- mean(results$Total.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="3"])
+100*(t0-t3)/t.C
+
+### Error on average HNA densities
+e0 <- sqrt(sum(results$sd.HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="0"]^2))/3
+e3 <- sqrt(sum(results$sd.HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="3"]^2))/3
+e.C <- sqrt(sum(results$sd.Total.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="3"]^2))/3
+
+### Error on HNA removal ratio
+100*sqrt((sqrt(e0^2 + e3^2)/(t0-t3))^2 + (e.C/t.C)^2)
 
 ### Rate per mg DW of IDM and associated error
 1000*lm.HNA$coefficients[2]/mean(1000*meta.mus$weight_g)
