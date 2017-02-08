@@ -27,14 +27,13 @@ library("egg")
 library("phyloseq")
 library("splines")
 library("caret") # for cross validation
-```
-
-```
-## Warning: package 'caret' was built under R version 3.3.2
-```
-
-```r
 source("functions.R")
+my.settings <- list(
+  strip.background=list(col="transparent"),
+  strip.border=list(col="transparent", cex=5),
+  gate=list(col="black", fill="lightblue", alpha=0.2,border=NA,lwd=2),
+  panel.background=list(col="lightgray"),
+  background=list(col="white"))
 ```
 
 # Part 1: Validation of alpha diversity
@@ -247,6 +246,7 @@ max(data.total.final$D2[data.total.final$Lake=="Cooling water"])/min(data.total.
 ## [1] 10.31645
 ```
 
+## Figure S4: Check model assumptions
 
 ```r
 # D2 and D1 are highly correlated so we only use D2 in the feeding experiment
@@ -272,6 +272,7 @@ plot(y=log2(data.total.final$D2), x=predict(lm.F), col="blue",
 
 <img src="Figures/cached/Plot D2 residuals-1.png" style="display: block; margin: auto;" />
 
+## Figure 1: Regression analysis
 
 ```r
 ### Prepare to plot r squared / pearson's correlation
@@ -295,6 +296,7 @@ print(p5)
 
 <img src="Figures/cached/Plot D2 regression-1.png" style="display: block; margin: auto;" />
 
+## Figure S6: Regression of D0/D1
 
 ```r
 ### Prepare to plot r squared / pearson's correlation
@@ -314,16 +316,6 @@ p6 <- ggplot(data=data.total.final,aes(x=D1.fcm,y=D1, fill=Lake))+ scale_fill_ma
   annotation_custom(my_grob)+
   annotation_custom(my_grob2)
 
-### Get R squared
-lm.F <- lm(log2(D0)~log2(D0.fcm), data=data.total.final)
-summary(lm.F)$r.squared
-```
-
-```
-## [1] 0.2868273
-```
-
-```r
 ### Prepare to plot r squared / pearson's correlation
 my_grob = grobTree(textGrob(bquote(r^2 == .(round(R.cv.D0$results$Rsquared, 2))), x=0.8,  y=0.16, hjust=0,
                             gp=gpar(col="black", fontsize=20, fontface="italic")))
@@ -538,6 +530,7 @@ polyGate1 <- polygonGate(.gate=sqrcut1, filterId = "Total Cells")
 xyplot(`FL3-H` ~ `FL1-H`, data=flowData_transformed[1], filter=polyGate1,
        scales=list(y=list(limits=c(0,14)),
                    x=list(limits=c(6,16))),
+       par.settings = my.settings,
        axis = axis.default, nbin=125, 
        par.strip.text=list(col="white", font=2, cex=2), smooth=FALSE)
 ```
@@ -602,6 +595,8 @@ dist.seq <- vegan::vegdist(otu_table(physeq.otu))
 pcoa.seq <- cmdscale(dist.seq)
 ```
 
+## Procrustes analysis
+
 ```r
 # Run procrustes + permutation
 # dist.proc <- vegan::procrustes(dist.seq, dist.fcm)
@@ -646,6 +641,7 @@ plot(dist.prot)
 
 <img src="Figures/cached/procrustes-analysis-1.png" style="display: block; margin: auto;" />
 
+## Figure 2: Beta diversity analysis
 
 ```r
 # Run PERMANOVA to evaluate if conclusions are similar between FCM/seq
@@ -806,6 +802,7 @@ polyGate1 <- polygonGate(.gate=sqrcut1, filterId = "Total Cells")
 xyplot(`FL3-H` ~ `FL1-H`, data=flowData_transformed[1], filter=polyGate1,
        scales=list(y=list(limits=c(0,14)),
                    x=list(limits=c(6,16))),
+       par.settings = my.settings,
        axis = axis.default, nbin=125, 
        par.strip.text=list(col="white", font=2, cex=2), smooth=FALSE)
 ```
@@ -837,10 +834,10 @@ Diversity.fbasis <- Diversity_rf(flowData_transformed, d=3, param = param, R = 3
 ```
 
 ```
-## Sat Feb 04 16:34:21 2017 ---- Starting resample run 1
-## Sat Feb 04 16:35:23 2017 ---- Starting resample run 2
-## Sat Feb 04 16:36:23 2017 ---- Starting resample run 3
-## Sat Feb 04 16:37:21 2017 ---- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
+## Tue Feb 07 22:26:06 2017 ---- Starting resample run 1
+## Tue Feb 07 22:27:15 2017 ---- Starting resample run 2
+## Tue Feb 07 22:28:21 2017 ---- Starting resample run 3
+## Tue Feb 07 22:29:27 2017 ---- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
 ```
 
 ```r
@@ -876,10 +873,10 @@ Diversity.HNA <- Diversity_rf(flowData_HNA, d=3, param = param, R = 3)
 ```
 
 ```
-## Sat Feb 04 16:37:34 2017 ---- Starting resample run 1
-## Sat Feb 04 16:38:19 2017 ---- Starting resample run 2
-## Sat Feb 04 16:39:01 2017 ---- Starting resample run 3
-## Sat Feb 04 16:39:47 2017 ---- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
+## Tue Feb 07 22:29:44 2017 ---- Starting resample run 1
+## Tue Feb 07 22:30:57 2017 ---- Starting resample run 2
+## Tue Feb 07 22:32:01 2017 ---- Starting resample run 3
+## Tue Feb 07 22:33:04 2017 ---- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
 ```
 
 ```r
@@ -887,10 +884,10 @@ Diversity.LNA <- Diversity_rf(flowData_LNA, d=3, param = param, R = 3)
 ```
 
 ```
-## Sat Feb 04 16:39:47 2017 ---- Starting resample run 1
-## Sat Feb 04 16:40:38 2017 ---- Starting resample run 2
-## Sat Feb 04 16:41:35 2017 ---- Starting resample run 3
-## Sat Feb 04 16:42:19 2017 ---- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
+## Tue Feb 07 22:33:04 2017 ---- Starting resample run 1
+## Tue Feb 07 22:34:07 2017 ---- Starting resample run 2
+## Tue Feb 07 22:35:08 2017 ---- Starting resample run 3
+## Tue Feb 07 22:35:56 2017 ---- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
 ```
 
 ```r
@@ -904,6 +901,7 @@ polyGate1 <- polygonGate(.gate=sqrcut1, filterId = "Total Cells")
 xyplot(`FL3-H` ~ `FL1-H`, data=flowData_transformed[1], filter=rGate_HNA,
        scales=list(y=list(limits=c(0,1)),
                    x=list(limits=c(0.4,1))),
+       par.settings = my.settings,
        axis = axis.default, nbin=125, par.strip.text=list(col="white", font=2, 
                                                           cex=2), smooth=FALSE)
 ```
@@ -2051,23 +2049,17 @@ attr(splines::ns(results$Time, df=3), "knots")
 ##         1         2
 ```
 
+## Figure S5: Check for autocorrelation
+
 ```r
 ### Check for temporal autocorrelation in model residuals
 par(mfrow=c(1,2))
-```
 
-
-```r
 acf(res.C, main="Treatment: control", las=1)
-```
-
-<img src="Figures/cached/evaluate auto-correlation-1.png" style="display: block; margin: auto;" />
-
-```r
 acf(res.T, main="Treatment: feeding", las=1)
 ```
 
-<img src="Figures/cached/evaluate auto-correlation-2.png" style="display: block; margin: auto;" />
+<img src="Figures/cached/evaluate auto-correlation-1.png" style="display: block; margin: auto;" />
 
 ```r
 ### Perform statistical inference on splines
@@ -2141,6 +2133,7 @@ sqrt(diag(vcovHAC(sp_C)))
 ## [1]  8.017367 21.069012 28.009764 25.632796
 ```
 
+## Figure 3: Diversity analysis during feeding
 
 ```r
 ### Prepare plots
@@ -2405,18 +2398,9 @@ df2.res <- predict(lm.F,df2)
 ## 1.948104
 ```
 
-## Identify physiological populations
-
+## Figure S1: Gating strategy
 
 ```r
-my.settings <- list(
-  strip.background=list(col="transparent"),
-  strip.border=list(col="transparent", cex=5),
-  gate=list(col="black", fill="lightblue", alpha=0.2,border=NA,lwd=2),
-  panel.background=list(col="lightgray"),
-  background=list(col="white"))
-
-
 path = "data_mussel"
 flowData <- read.flowSet(path = path, transformation = FALSE, pattern=".fcs")
 
@@ -2434,20 +2418,6 @@ sqrcut1 <- matrix(c(8.5,8.5,15,15,3,8,14,3),ncol=2, nrow=4)
 colnames(sqrcut1) <- c("FL1-H","FL3-H")
 polyGate1 <- polygonGate(.gate=sqrcut1, filterId = "Total Cells")
 
-###  Gating quality check
-xyplot(`FL3-H` ~ `FL1-H`, data=flowData_transformed[1], filter=polyGate1,
-       scales=list(y=list(limits=c(0,14)),
-                   x=list(limits=c(6,16))),
-       axis = axis.default, nbin=125, 
-       par.strip.text=list(col="white", font=2, cex=2), smooth=FALSE)
-```
-
-<img src="Figures/cached/Contrasts-1.png" style="display: block; margin: auto;" />
-
-```r
-### Isolate only the cellular information based on the polyGate1
-# flowData_transformed <- Subset(flowData_transformed, polyGate1)
-
 summary <- fsApply(x=flowData_transformed,FUN=function(x) apply(x,2,max),use.exprs=TRUE)
 max = max(summary[,1])
 max <- 14.99341
@@ -2461,6 +2431,39 @@ flowData_transformed <- flowData_transformed[which(flowCore::sampleNames(flowDat
                                                    %in% c("Q3_T_t0_rep1.fcs","Q3_T_t1.5_rep1.fcs","Q3_T_t3_rep1.fcs",
                                                          "C1_t0_rep1.fcs","C1_t1.5_rep1.fcs","C1_t3_rep1.fcs"))]
 
+MyText <- c("Control - 0h", "Control - 1.5h", "Control - 3h",
+            "Feeding - 0h", "Feeding - 1.5h", "Feeding - 3h")
+
+sqrcut1 <- matrix(c(asinh(12500),asinh(12500),15,15,3,9.55,14,3)/max,ncol=2, nrow=4)
+colnames(sqrcut1) <- c("FL1-H","FL3-H")
+rGate_HNA <- polygonGate(.gate=sqrcut1, filterId = "HNA")
+sqrcut1 <- matrix(c(8.5,8.5,asinh(12500),asinh(12500),3,8,9.55,3)/max,ncol=2, nrow=4)
+colnames(sqrcut1) <- c("FL1-H","FL3-H")
+rGate_LNA <- polygonGate(.gate=sqrcut1, filterId = "LNA")
+
+filters <- filters(list(rGate_LNA, rGate_HNA))
+flist <- list(filters , filters, filters, filters, filters, filters)
+names(flist) <- flowCore::sampleNames(flowData_transformed)
+
+print(xyplot(`FL3-H`~`FL1-H`, data=flowData_transformed,index.cond=list(c(1:6)),
+             filter=flist,
+             xbins=200,nbin=128, par.strip.text=list(col="black", font=3,cex=1.85), 
+             smooth=FALSE, xlim=c(0.5,1),ylim=c(0.1,1),xlab=list(label="Green fluorescence intensity (FL1-H)",cex=2),ylab=list(label="Red fluorescence intensity (FL3-H)",cex=2),
+             par.settings=my.settings,
+             scales=list(x=list(at=seq(from=0, to=1, by=.1),cex=1),
+                         y=list(at=seq(from=0, to=1, by=.2),cex=1)), layout=c(3,2),
+             strip=strip.custom(factor.levels=MyText),
+             margin=TRUE,
+             binTrans="log"
+      )
+)
+```
+
+<img src="Figures/cached/Gating-1.png" style="display: block; margin: auto;" />
+
+## Figure 4: Identify physiological populations
+
+```r
 comp_t0 <- fp_contrasts(x=fbasis, comp2=(pos=="C1_t0.fcs" | pos== "C2_t0.fcs"),
                         comp1=(pos=="Q1_T_t0.fcs" | pos== "Q2_T_t0.fcs" | pos== "Q3_T_t0.fcs"), 
                         thresh=0.04)
@@ -2598,8 +2601,9 @@ combined <- rbind(fg3, fg12)
 grid.draw(combined)
 ```
 
-<img src="Figures/cached/Contrasts-2.png" style="display: block; margin: auto;" />
+<img src="Figures/cached/Contrasts-1.png" style="display: block; margin: auto;" />
 
+## Calculate removal statistics
 
 ```r
 ##############################################################################

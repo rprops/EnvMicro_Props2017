@@ -53,6 +53,12 @@ library("phyloseq")
 library("splines")
 library("caret") # for cross validation
 source("functions.R")
+my.settings <- list(
+  strip.background=list(col="transparent"),
+  strip.border=list(col="transparent", cex=5),
+  gate=list(col="black", fill="lightblue", alpha=0.2,border=NA,lwd=2),
+  panel.background=list(col="lightgray"),
+  background=list(col="white"))
 ```
 
 # Part 1: Validation of alpha diversity
@@ -149,6 +155,7 @@ max(data.total.final$D1)/min(data.total.final$D1)
 max(data.total.final$D2[data.total.final$Lake=="Cooling water"])/min(data.total.final$D2[data.total.final$Lake=="Cooling water"])
 ```
 
+## Figure S4: Check model assumptions
 ```{r Plot D2 residuals, fig.width = 15, fig.height = 5}
 # D2 and D1 are highly correlated so we only use D2 in the feeding experiment
 cor(data.total.final$D1.fcm,data.total.final$D2.fcm)
@@ -165,6 +172,7 @@ plot(y=log2(data.total.final$D2), x=predict(lm.F), col="blue",
      las=1)
 ```
 
+## Figure 1: Regression analysis
 ```{r Plot D2 regression, fig.width = 8, fig.height = 5}
 ### Prepare to plot r squared / pearson's correlation
 my_grob = grobTree(textGrob(bquote(r^2 == .(paste(round(R.cv.D2$results$Rsquared, 2)))), x=0.8,  y=0.16, hjust=0,
@@ -185,6 +193,7 @@ p5 <- ggplot(data=data.total.final,aes(x=D2.fcm,y=D2, fill=Lake))+ scale_fill_ma
 print(p5)
 ```
 
+## Figure S6: Regression of D0/D1
 ```{r Plot D0 & D1 regression, fig.width = 15, fig.height = 5}
 ### Prepare to plot r squared / pearson's correlation
 my_grob = grobTree(textGrob(bquote(r^2 == .(round(R.cv.D1$results$Rsquared, 2))), x=0.8,  y=0.16, hjust=0,
@@ -286,6 +295,7 @@ polyGate1 <- polygonGate(.gate=sqrcut1, filterId = "Total Cells")
 xyplot(`FL3-H` ~ `FL1-H`, data=flowData_transformed[1], filter=polyGate1,
        scales=list(y=list(limits=c(0,14)),
                    x=list(limits=c(6,16))),
+       par.settings = my.settings,
        axis = axis.default, nbin=125, 
        par.strip.text=list(col="white", font=2, cex=2), smooth=FALSE)
 
@@ -338,6 +348,8 @@ dist.seq <- vegan::vegdist(otu_table(physeq.otu))
 pcoa.seq <- cmdscale(dist.seq)
 
 ```
+
+## Procrustes analysis
 ```{r procrustes-analysis, fig.width = 5, fig.height = 5}
 # Run procrustes + permutation
 # dist.proc <- vegan::procrustes(dist.seq, dist.fcm)
@@ -349,6 +361,7 @@ summary(dist.prot)
 plot(dist.prot)
 ```
 
+## Figure 2: Beta diversity analysis
 ```{r permanova-analysis, fig.width = 12, fig.height = 5}
 # Run PERMANOVA to evaluate if conclusions are similar between FCM/seq
 # Similar variances across seasons
@@ -465,6 +478,7 @@ polyGate1 <- polygonGate(.gate=sqrcut1, filterId = "Total Cells")
 xyplot(`FL3-H` ~ `FL1-H`, data=flowData_transformed[1], filter=polyGate1,
        scales=list(y=list(limits=c(0,14)),
                    x=list(limits=c(6,16))),
+       par.settings = my.settings,
        axis = axis.default, nbin=125, 
        par.strip.text=list(col="white", font=2, cex=2), smooth=FALSE)
 
@@ -532,6 +546,7 @@ polyGate1 <- polygonGate(.gate=sqrcut1, filterId = "Total Cells")
 xyplot(`FL3-H` ~ `FL1-H`, data=flowData_transformed[1], filter=rGate_HNA,
        scales=list(y=list(limits=c(0,1)),
                    x=list(limits=c(0.4,1))),
+       par.settings = my.settings,
        axis = axis.default, nbin=125, par.strip.text=list(col="white", font=2, 
                                                           cex=2), smooth=FALSE)
 ### Extract the cell counts
@@ -643,12 +658,13 @@ res.C <- residuals(sp_C, "pearson")[order(results[results$Treatment=="Control",]
 
 ## Location of knots
 attr(splines::ns(results$Time, df=3), "knots")
-
-### Check for temporal autocorrelation in model residuals
-par(mfrow=c(1,2))
 ```
 
-```{r evaluate auto-correlation, fig.width = 15, fig.height = 5}
+## Figure S5: Check for autocorrelation
+```{r evaluate auto-correlation, fig.width = 12, fig.height = 5}
+### Check for temporal autocorrelation in model residuals
+par(mfrow=c(1,2))
+
 acf(res.C, main="Treatment: control", las=1)
 acf(res.T, main="Treatment: feeding", las=1)
 
@@ -665,7 +681,8 @@ summary(sp_C)$coefficients[,2]
 sqrt(diag(vcovHAC(sp_C)))
 ``` 
 
-```{r plot-diversity, fig.width = 15, fig.height = 5}
+## Figure 3: Diversity analysis during feeding
+```{r plot-diversity, fig.width = 12, fig.height = 5}
 ### Prepare plots
 p.alpha <- ggplot(data=results, aes(x=Time, y=D2, fill=Treatment)) + 
   # geom_boxplot(alpha=0.9)+
@@ -724,7 +741,6 @@ p.beta.S <- ggplot(data=beta.div.data.S, aes(x=X1, y=X2, fill=Treatment, size=Ti
 
 ### Plot diversity dynamics
 grid_arrange_shared_legend(p.alpha,p.beta.S, ncol=2)
-
 ```
 
 ## Infer taxonomic diversity dynamics
@@ -786,17 +802,8 @@ df2.res <- predict(lm.F,df2)
 2^(df2.res[4] - df2.res[3])
 ```
 
-## Identify physiological populations
-
-```{r Contrasts, fig.width = 15, fig.height = 10}
-my.settings <- list(
-  strip.background=list(col="transparent"),
-  strip.border=list(col="transparent", cex=5),
-  gate=list(col="black", fill="lightblue", alpha=0.2,border=NA,lwd=2),
-  panel.background=list(col="lightgray"),
-  background=list(col="white"))
-
-
+## Figure S1: Gating strategy
+```{r Gating, fig.width = 15, fig.height = 10}
 path = "data_mussel"
 flowData <- read.flowSet(path = path, transformation = FALSE, pattern=".fcs")
 
@@ -814,16 +821,6 @@ sqrcut1 <- matrix(c(8.5,8.5,15,15,3,8,14,3),ncol=2, nrow=4)
 colnames(sqrcut1) <- c("FL1-H","FL3-H")
 polyGate1 <- polygonGate(.gate=sqrcut1, filterId = "Total Cells")
 
-###  Gating quality check
-xyplot(`FL3-H` ~ `FL1-H`, data=flowData_transformed[1], filter=polyGate1,
-       scales=list(y=list(limits=c(0,14)),
-                   x=list(limits=c(6,16))),
-       axis = axis.default, nbin=125, 
-       par.strip.text=list(col="white", font=2, cex=2), smooth=FALSE)
-
-### Isolate only the cellular information based on the polyGate1
-# flowData_transformed <- Subset(flowData_transformed, polyGate1)
-
 summary <- fsApply(x=flowData_transformed,FUN=function(x) apply(x,2,max),use.exprs=TRUE)
 max = max(summary[,1])
 max <- 14.99341
@@ -837,6 +834,36 @@ flowData_transformed <- flowData_transformed[which(flowCore::sampleNames(flowDat
                                                    %in% c("Q3_T_t0_rep1.fcs","Q3_T_t1.5_rep1.fcs","Q3_T_t3_rep1.fcs",
                                                          "C1_t0_rep1.fcs","C1_t1.5_rep1.fcs","C1_t3_rep1.fcs"))]
 
+MyText <- c("Control - 0h", "Control - 1.5h", "Control - 3h",
+            "Feeding - 0h", "Feeding - 1.5h", "Feeding - 3h")
+
+sqrcut1 <- matrix(c(asinh(12500),asinh(12500),15,15,3,9.55,14,3)/max,ncol=2, nrow=4)
+colnames(sqrcut1) <- c("FL1-H","FL3-H")
+rGate_HNA <- polygonGate(.gate=sqrcut1, filterId = "HNA")
+sqrcut1 <- matrix(c(8.5,8.5,asinh(12500),asinh(12500),3,8,9.55,3)/max,ncol=2, nrow=4)
+colnames(sqrcut1) <- c("FL1-H","FL3-H")
+rGate_LNA <- polygonGate(.gate=sqrcut1, filterId = "LNA")
+
+filters <- filters(list(rGate_LNA, rGate_HNA))
+flist <- list(filters , filters, filters, filters, filters, filters)
+names(flist) <- flowCore::sampleNames(flowData_transformed)
+
+print(xyplot(`FL3-H`~`FL1-H`, data=flowData_transformed,index.cond=list(c(1:6)),
+             filter=flist,
+             xbins=200,nbin=128, par.strip.text=list(col="black", font=3,cex=1.85), 
+             smooth=FALSE, xlim=c(0.5,1),ylim=c(0.1,1),xlab=list(label="Green fluorescence intensity (FL1-H)",cex=2),ylab=list(label="Red fluorescence intensity (FL3-H)",cex=2),
+             par.settings=my.settings,
+             scales=list(x=list(at=seq(from=0, to=1, by=.1),cex=1),
+                         y=list(at=seq(from=0, to=1, by=.2),cex=1)), layout=c(3,2),
+             strip=strip.custom(factor.levels=MyText),
+             margin=TRUE,
+             binTrans="log"
+      )
+)
+```
+
+## Figure 4: Identify physiological populations
+``` {r Contrasts, fig.width = 15, fig.height = 12}
 comp_t0 <- fp_contrasts(x=fbasis, comp2=(pos=="C1_t0.fcs" | pos== "C2_t0.fcs"),
                         comp1=(pos=="Q1_T_t0.fcs" | pos== "Q2_T_t0.fcs" | pos== "Q3_T_t0.fcs"), 
                         thresh=0.04)
@@ -919,6 +946,7 @@ combined <- rbind(fg3, fg12)
 grid.draw(combined)
 ```
 
+## Calculate removal statistics
 ```{r HNA removal statistics}
 ##############################################################################
 ### Additional statistics
