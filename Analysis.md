@@ -47,7 +47,7 @@ metadata$Sample_fcm <- gsub(metadata$Sample_fcm, pattern="_rep.*", replacement="
 metadata <- do.call(rbind,by(metadata, INDICES = factor(metadata$Sample_fcm), 
                         FUN = unique))
 
-### Calculate means + errors for FCM data
+# Calculate means + errors for FCM data
 groupLevels <- factor(gsub(div.FCM$Sample_names, pattern="_rep.*", replacement="", fixed=FALSE))
 means <- do.call(rbind,by(div.FCM[,c(3:5,9:12)], INDICES = groupLevels, 
                           FUN = colMeans))
@@ -58,19 +58,19 @@ errors2 <- do.call(rbind,by(div.FCM[,c(9,10,12)], INDICES = groupLevels,
 colnames(errors2) <- c("counts.sd", "volume.sd", "HNA_counts.sd")
 div.FCM.merged <- data.frame(sample_fcm = rownames(means), cbind(means[,1:3], errors1, means[,4:7], errors2))
 
-### Rename colnames
+# Rename colnames
 colnames(div.FCM.merged)[1:7] <- c("Sample_fcm","D0.fcm","D1.fcm","D2.fcm","sd.D0.fcm","sd.D1.fcm","sd.D2.fcm")
 
-### Replace .renamed for MI13 data
+# Replace .renamed for MI13 data
 div.16S$Sample <- gsub(div.16S$Sample, pattern=".renamed",replacement="",fixed=TRUE)
 
-### Replace "-" from div.16S
+# Replace "-" from div.16S
 div.16S$Sample <- gsub(div.16S$Sample, pattern="-", replacement="")
 
 ### Remove RNA samples
 div.16S <- div.16S[sapply(as.character(div.16S$Sample), function(x) substr(x, nchar(x), nchar(x))) != "R",]
 
-### Merge data
+# Merge data
 data.16s <- inner_join(div.16S, metadata, by=c("Sample"="Sample_16S"))
 ```
 
@@ -80,7 +80,7 @@ data.16s <- inner_join(div.16S, metadata, by=c("Sample"="Sample_16S"))
 ```
 
 ```r
-### Join all data in one dataframe 
+# Join all data in one dataframe 
 data.16s$Sample_fcm <- gsub(data.16s$Sample_fcm, pattern="_rep.*", replacement="")
 data.total <- inner_join(div.FCM.merged, data.16s, by="Sample_fcm")
 ```
@@ -91,10 +91,10 @@ data.total <- inner_join(div.FCM.merged, data.16s, by="Sample_fcm")
 ```
 
 ```r
-### Select samples with > 10000 counts
+# Select samples with > 10000 counts
 data.total <- data.total[data.total$counts>10000,]
 
-### Add data from previous publication (cooling water)
+# Add data from previous publication (cooling water)
 div.ref <- read.csv2("div.ref.merged.csv")
 
 data.total.final <- rbind.fill(data.total, div.ref[, c(2,4:9)])
@@ -117,7 +117,7 @@ data.total.final$Sample[data.total.final$Lake == "Cooling water"] <- tmp$Sample_
 data.total.final$Lake[1:87][data.total.final$Site[1:87] == "MLB"] <- "Muskegon Lake"
 data.total.final$Season[1:87][data.total.final$Season[1:87]=="Winter"] <- "Fall"
 
-### Chlorophyl data
+# Chlorophyl data
 Chl <- read.csv("chl.csv")
 Chl <- Chl[Chl$Sample_16S %in% data.total.final$Sample[data.total.final$Lake == "Lake Michigan"],]
 mean(aggregate(Chl~Sample_16S, data=Chl, mean)$Chl)
@@ -136,7 +136,7 @@ sd(aggregate(Chl~Sample_16S, data=Chl, mean)$Chl)
 ```
 
 ```r
-### Get average HNA percentage and error in lake Mi
+# Get average HNA percentage and error in lake Mi
 mean(100*data.total.final$HNA_counts[data.total.final$Lake=="Lake Michigan"]/data.total.final$counts[data.total.final$Lake=="Lake Michigan"])
 ```
 
@@ -161,7 +161,7 @@ length(data.total.final$counts[data.total.final$Lake=="Lake Michigan"])
 ```
 
 ```r
-### Get R squared for all diversity metrics
+# Get R squared for all diversity metrics
 lm.F.D2 <- lm(log2(D2)~log2(D2.fcm), data=data.total.final)
 summary(lm.F.D2)$r.squared
 ```
@@ -189,7 +189,7 @@ summary(lm.F.D0)$r.squared
 ```
 
 ```r
-### Calculate unbiased R squared by tenfold cross validation
+# Calculate unbiased R squared by tenfold cross validation
 lmGrid <- expand.grid(intercept = TRUE)
 R.cv.D2 <- train(log2(D2)~log2(D2.fcm), data=data.total.final, method ='lm', trControl = trainControl(method ="repeatedcv", repeats = 100), tuneGrid = lmGrid)
 R.cv.D2$results
@@ -197,7 +197,7 @@ R.cv.D2$results
 
 ```
 ##   intercept      RMSE  Rsquared     RMSESD RsquaredSD
-## 1      TRUE 0.5700415 0.8867051 0.07639437 0.03632224
+## 1      TRUE 0.5704775 0.8867976 0.07603826  0.0364037
 ```
 
 ```r
@@ -206,8 +206,8 @@ R.cv.D1$results
 ```
 
 ```
-##   intercept      RMSE  Rsquared     RMSESD RsquaredSD
-## 1      TRUE 0.6092116 0.8920404 0.09584346  0.0363636
+##   intercept      RMSE  Rsquared   RMSESD RsquaredSD
+## 1      TRUE 0.6097716 0.8926913 0.094771 0.03656009
 ```
 
 ```r
@@ -216,8 +216,8 @@ R.cv.D0$results
 ```
 
 ```
-##   intercept      RMSE  Rsquared    RMSESD RsquaredSD
-## 1      TRUE 0.7060699 0.3204403 0.1280867  0.1618325
+##   intercept      RMSE  Rsquared   RMSESD RsquaredSD
+## 1      TRUE 0.7051741 0.3196786 0.130664  0.1610857
 ```
 
 ```r
@@ -258,14 +258,14 @@ cor(data.total.final$D1.fcm,data.total.final$D2.fcm)
 ```
 
 ```r
-### Residual analysis of the D2 model
+# Residual analysis of the D2 model
 par(mfrow=c(1,3))
-qqPlot(lm.F, col="blue", reps=10000, ylab="Studentized residuals", xlab="Theoretical quantiles (t-distribution)",
+qqPlot(lm.F.D2, col="blue", reps=10000, ylab="Studentized residuals", xlab="Theoretical quantiles (t-distribution)",
        cex=1.5, las=1)
-plot(residuals(lm.F,"pearson"), x=predict(lm.F), col="blue", las=1,
+plot(residuals(lm.F.D2,"pearson"), x=predict(lm.F.D2), col="blue", las=1,
      ylab="Pearson residuals",xlab="Predicted values", cex=1.5)
 lines(x=c(0,10), y=c(0,0), lty=2)
-plot(y=log2(data.total.final$D2), x=predict(lm.F), col="blue",
+plot(y=log2(data.total.final$D2), x=predict(lm.F.D2), col="blue",
      ylab="Observed values",xlab="Predicted values", cex=1.5,
      las=1)
 ```
@@ -275,13 +275,13 @@ plot(y=log2(data.total.final$D2), x=predict(lm.F), col="blue",
 ## Figure 1: Regression analysis
 
 ```r
-### Prepare to plot r squared / pearson's correlation
+# Prepare to plot r squared / pearson's correlation
 my_grob = grobTree(textGrob(bquote(r^2 == .(paste(round(R.cv.D2$results$Rsquared, 2)))), x=0.8,  y=0.16, hjust=0,
                             gp=gpar(col="black", fontsize=20, fontface="italic")))
 my_grob2 = grobTree(textGrob(bquote(r[p] == .(round(cor(y=log2(data.total.final$D2), x=log2(data.total.final$D2.fcm)), 2))), x=0.8,  y=0.08, hjust=0,
                             gp=gpar(col="black", fontsize=20, fontface="italic")))
 
-### Plot D2
+# Plot D2
 p5 <- ggplot(data=data.total.final,aes(x=D2.fcm,y=D2, fill=Lake))+ scale_fill_manual(values=c("#88419d","#a6cee3","#fc8d62")) +
   geom_point(shape=21,size=6,alpha=0.6,aes(fill=Lake))+
   theme_bw()+labs(y=expression('Taxonomic diversity - D'[2]),x=expression('Phenotypic diversity - D'[2]), fill="Environment")+
@@ -336,34 +336,109 @@ p7 <- ggplot(data=data.total.final,aes(x=D0.fcm,y=D0,fill=Lake))+ scale_fill_man
   annotation_custom(my_grob2)
 
 ### All together
-grid.arrange(p7,p6, ncol=2)
+grid.arrange(p7, p6, ncol=2)
 ```
 
 <img src="Figures/cached/Plot D0 & D1 regression-1.png" style="display: block; margin: auto;" />
+
+## Figure S2: Effect of sample size
+
+```r
+# Load data
+path = "data_mussel"
+flowData_sc <- read.flowSet(path = path, transformation = FALSE, pattern=".fcs")
+
+# Preprocess data according to standard protocol
+flowData_sc <- transform(flowData_sc, `FL1-H` = asinh(`FL1-H`), `SSC-H` = asinh(`SSC-H`), 
+                                  `FL3-H` = asinh(`FL3-H`), `FSC-H` = asinh(`FSC-H`))
+param = c("FL1-H", "FL3-H", "SSC-H", "FSC-H")
+flowData_sc = flowData_sc[, param]
+
+# Test this for only one sample
+flowData_sc <- flowData_sc[10]
+
+# Create a PolygonGate for denoising the dataset Define coordinates for
+# gate in sqrcut1 in format: c(x,x,x,x,y,y,y,y)
+sqrcut1 <- matrix(c(8.5,8.5,15,15,3,8,14,3),ncol=2, nrow=4)
+colnames(sqrcut1) <- c("FL1-H", "FL3-H")
+polyGate1 <- polygonGate(.gate = sqrcut1, filterId = "Total Cells")
+
+# Isolate only the cellular information based on the polyGate1
+flowData_sc<- Subset(flowData_sc, polyGate1)
+
+summary <- fsApply(x = flowData_sc, FUN = function(x) apply(x, 2, max), use.exprs = TRUE)
+max = max(summary[, 1])
+mytrans <- function(x) x/max
+flowData_sc <- transform(flowData_sc, `FL1-H` = mytrans(`FL1-H`), 
+                                  `FL3-H` = mytrans(`FL3-H`), `SSC-H` = mytrans(`SSC-H`), `FSC-H` = mytrans(`FSC-H`))
+
+# Subsample at various depths and calculate diversity metrics with 100
+# bootstraps Notice: this will use some CPU/RAM
+for (i in c(10, 100, 200, 300, 400, 500, 750, 1000, 1250, 1500, 2000, 2500, 
+            3000, 5000, 10000, 15000, 20000, 30000)) {
+  for (j in 1:100) {
+    fs1 <- FCS_resample(flowData_sc, replace = TRUE, sample = i, progress = FALSE)
+    fp <- flowBasis(fs1, param, nbin = 128, bw = 0.01, normalize = function(x) x)
+    div.tmp <- Diversity(fp, d = 3, R = 100, progress = FALSE)
+    div.tmp <- cbind(div.tmp, size = i)
+    if (j == 1) 
+      results <- div.tmp else results <- rbind(results, div.tmp)
+  }
+  if (i == 10) 
+    results.tot <- results else results.tot <- rbind(results.tot, results)
+}
+
+# Create plots
+D0 <- ggplot(data = results.tot, aes(x = factor(size), y = D0)) + # geom_jitter(alpha=0.7, size=1)+
+  geom_boxplot(alpha = 0.2, color = "blue", fill = "blue", size = 1) + 
+  labs(x = "Sample size (nr. of cells)", y = expression('Phenotypic diversity - D'[0])) + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 45,hjust = 1),
+                     axis.text=element_text(size=11),axis.title=element_text(size=15))
+
+D1 <- ggplot(data = results.tot, aes(x = factor(size), y = D1)) + # geom_jitter(alpha=0.7, size=1)+
+  geom_boxplot(alpha = 0.2, color = "blue", fill = "blue", size = 1) + 
+  labs(x = "Sample size (nr. of cells)", y = expression('Phenotypic diversity - D'[1])) + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.text=element_text(size=11), axis.title=element_text(size=15))
+
+D2 <- ggplot(data = results.tot, aes(x = factor(size), y = D2)) + # geom_jitter(alpha=0.7, size=1)+
+  geom_boxplot(alpha = 0.2, color = "blue", fill = "blue", size = 1) + 
+  labs(x = "Sample size (nr. of cells)", y = expression('Phenotypic diversity - D'[2])) + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.text=element_text(size=11), axis.title=element_text(size=15))
+
+# Sample used for this assessment
+grid.arrange(D0, D1, D2, ncol = 3, top = textGrob(paste("Sample used:",flowCore::sampleNames(flowData_sc)),                                                   gp = gpar(fontsize = 20, font = 3)))
+```
+
+<img src="Figures/cached/sample-size-1.png" style="display: block; margin: auto;" />
 
 # Part 2: Validation of beta diversity
 
 ```r
 myColours2 <- brewer.pal(n=12,"Paired"); myColours2 <- myColours2[c(2,6,7)]
 
-### Import otu data
+# Import otu data
 physeq.otu <- import_mothur(mothur_shared_file ="16S/stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.an.unique_list.shared" ,
                             mothur_constaxonomy_file = "16S/stability.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.an.unique_list.0.03.cons.taxonomy")
 otu_table(physeq.otu) <- t(otu_table(physeq.otu))
 physeq.otu <- prune_samples(sample_sums(physeq.otu)>10000, physeq.otu)
 physeq.otu <- prune_taxa(taxa_sums(physeq.otu)>0, physeq.otu)
 
-### Select samples for which you have FCM data
+# Select samples for which you have FCM data
 sample_names(physeq.otu) <- gsub(sample_names(physeq.otu), pattern=".renamed", replacement="")
 sample_names(physeq.otu) <- gsub(sample_names(physeq.otu), pattern=".renamed", replacement="")
 meta.seq <- read.csv2("metadata.csv")
 physeq.otu <- prune_samples(sample_names(physeq.otu) %in% data.total.final$Sample, physeq.otu)
 
-### Annotate with metadata
+# Annotate with metadata
 rownames(data.total.final) <- data.total.final$Sample
 sample_data(physeq.otu) <- data.total.final
 
-### Rescale
+# Rescale
 sample_sums(physeq.otu)
 ```
 
@@ -497,7 +572,7 @@ sample_sums(physeq.otu)
 ```r
 physeq.otu <- transform_sample_counts(physeq.otu, function(x) x/sum(x))
 
-### Run beta diversity analysis on 16s data
+# Run beta diversity analysis on 16s data
 pcoa <- ordinate(
   physeq = physeq.otu, 
   method = "PCoA", 
@@ -509,7 +584,7 @@ pcoa <- ordinate(
 pcoa.df <- data.frame(pcoa$vectors, sample_data(physeq.otu))
 var <- round(pcoa$values$Eigenvalues/sum(pcoa$values$Eigenvalues)*100,1)
 
-### Start beta diversity analysis on FCM data
+# Start beta diversity analysis on FCM data
 path = "data_reference/FCM_MI"
 flowData_transformed  <- read.flowSet(path = path, transformation = FALSE, pattern=".fcs")
 
@@ -520,13 +595,13 @@ flowData_transformed <- transform(flowData_transformed,`FL1-H`=asinh(`FL1-H`),
 param=c("FL1-H", "FL3-H","SSC-H","FSC-H")
 flowData_transformed = flowData_transformed[,param]
 
-### Create a PolygonGate for denoising the dataset
-### Define coordinates for gate in sqrcut1 in format: c(x,x,x,x,y,y,y,y)
+# Create a PolygonGate for denoising the dataset
+# Define coordinates for gate in sqrcut1 in format: c(x,x,x,x,y,y,y,y)
 sqrcut1 <- matrix(c(8.5,8.5,15,15,3,8,14,3),ncol=2, nrow=4)
 colnames(sqrcut1) <- c("FL1-H","FL3-H")
 polyGate1 <- polygonGate(.gate=sqrcut1, filterId = "Total Cells")
 
-###  Gating quality check
+#  Gating quality check
 xyplot(`FL3-H` ~ `FL1-H`, data=flowData_transformed[1], filter=polyGate1,
        scales=list(y=list(limits=c(0,14)),
                    x=list(limits=c(6,16))),
@@ -538,7 +613,7 @@ xyplot(`FL3-H` ~ `FL1-H`, data=flowData_transformed[1], filter=polyGate1,
 <img src="Figures/cached/beta-diversity analysis-1.png" style="display: block; margin: auto;" />
 
 ```r
-### Isolate only the cellular information based on the polyGate1
+# Isolate only the cellular information based on the polyGate1
 flowData_transformed <- Subset(flowData_transformed, polyGate1)
 
 summary <- fsApply(x=flowData_transformed,FUN=function(x) apply(x,2,max),use.exprs=TRUE)
@@ -549,11 +624,11 @@ flowData_transformed <- transform(flowData_transformed,`FL1-H`=mytrans(`FL1-H`),
                                   `SSC-H`=mytrans(`SSC-H`),
                                   `FSC-H`=mytrans(`FSC-H`))
 
-### Calculate fingerprint with bw = 0.01
+# Calculate fingerprint with bw = 0.01
 fbasis <- flowBasis(flowData_transformed, param, nbin=128, 
                     bw=0.01,normalize=function(x) x)
 
-### Run beta diversity
+# Run beta diversity
 pos <- gsub(rownames(fbasis@basis),pattern="_rep.*", replacement="")
 beta.div <- beta_div_fcm(fbasis, INDICES=pos, ord.type="PCoA")
 df.beta.fcm <- data.frame(Sample = rownames(beta.div$points), beta.div$points)
@@ -562,7 +637,7 @@ df.beta.fcm <- inner_join(df.beta.fcm, data.total.final, by=c("Sample"="Sample_f
 var2 <- round(beta.div$eig/sum(beta.div$eig)*100, 1)
 df.beta.fcm <- droplevels(df.beta.fcm)
 
-### Procrustes analysis
+# Procrustes analysis
 fbasis1 <- fbasis
 fbasis1@basis <- fbasis1@basis/apply(fbasis1@basis, 1, max)
 fbasis1@basis <- round(fbasis1@basis, 3)
@@ -571,7 +646,7 @@ x <- do.call(rbind, x)
 rownames(x) <- gsub(rownames(x), pattern = "MI5", replacement = "M15")
 x <- x[(rownames(x) %in% data.total.final$Sample_fcm), ]
 
-### Rename and order rows of fcm/seq data
+# Rename and order rows of fcm/seq data
 tmp <- data.frame(sample_fcm=rownames(x))
 tmp <- left_join(tmp, data.total.final, by=c("sample_fcm"="Sample_fcm"))
 ```
@@ -588,7 +663,7 @@ x.data <- data.total.final[data.total.final$Sample %in% rownames(x),]
 x.data <- x.data[order(x.data$Sample),]
 otu_table(physeq.otu) <- otu_table(physeq.otu)[order(rownames(otu_table(physeq.otu))),]
 
-### Run PcoA
+# Run PcoA
 dist.fcm <- vegan::vegdist(x)
 pcoa.fcm <- cmdscale(dist.fcm)
 dist.seq <- vegan::vegdist(otu_table(physeq.otu))
@@ -599,7 +674,6 @@ pcoa.seq <- cmdscale(dist.seq)
 
 ```r
 # Run procrustes + permutation
-# dist.proc <- vegan::procrustes(dist.seq, dist.fcm)
 # Permutations are constrained within each sampling year 
 perm <- how(nperm = 999)
 setBlocks(perm) <- with(x.data, Year)
@@ -700,7 +774,7 @@ permanova.fcm <- adonis(dist.fcm ~ Season * Lake, data = x.data,
 permanova.seq <- adonis(dist.seq ~ Season * Lake, data = data.frame(sample_data(physeq.otu)), 
     permutations = perm)
 
-### Plot FCM beta diversity
+# Plot FCM beta diversity
 my_grob = grobTree(textGrob(bquote(paste(r[Season]^2 == 
     .(round(100 * permanova.fcm$aov.tab[1, 5], 1)), 
     "%")), x = 0.7, y = 0.95, hjust = 0, gp = gpar(col = "black", 
@@ -733,7 +807,7 @@ beta.pcoa.fcm <- ggplot(data=df.beta.fcm, aes(x=X1, y=-X2, shape=Lake))+
   annotation_custom(my_grob2)+
   annotation_custom(my_grob3)
 
-### Plot 16S beta diversity
+# Plot 16S beta diversity
 my_grob = grobTree(textGrob(bquote(paste(r[Season]^2 == 
     .(round(100 * permanova.seq$aov.tab[1, 5], 1)), 
     "%")), x = 0.7, y = 0.95, hjust = 0, gp = gpar(col = "black", 
@@ -763,7 +837,7 @@ beta.pcoa <- ggplot(data=pcoa.df, aes(x=Axis.1, y=Axis.2, shape=Lake))+
   annotation_custom(my_grob3)+
   ylim(-0.4,0.3)
 
-### Both beta diversity plots together
+# Both beta diversity plots together
 grid_arrange_shared_legend(beta.pcoa, beta.pcoa.fcm, ncol=2)
 ```
 
@@ -773,12 +847,12 @@ grid_arrange_shared_legend(beta.pcoa, beta.pcoa.fcm, ncol=2)
 
 
 ```r
-### Set seed for reproducible analysis
+# Set seed for reproducible analysis
 set.seed(777)
 
 myColours <- brewer.pal("Accent",n=3)
 
-### Samples were diluted 2x
+# Samples were diluted 2x
 dilution <- 2
 
 path = "data_mussel"
@@ -792,13 +866,13 @@ param=c("FL1-H", "FL3-H","SSC-H","FSC-H")
 flowData_transformed = flowData_transformed[,param]
 remove(flowData)
 
-### Create a PolygonGate for denoising the dataset
-### Define coordinates for gate in sqrcut1 in format: c(x,x,x,x,y,y,y,y)
+# Create a PolygonGate for denoising the dataset
+# Define coordinates for gate in sqrcut1 in format: c(x,x,x,x,y,y,y,y)
 sqrcut1 <- matrix(c(8.5,8.5,15,15,3,8,14,3),ncol=2, nrow=4)
 colnames(sqrcut1) <- c("FL1-H","FL3-H")
 polyGate1 <- polygonGate(.gate=sqrcut1, filterId = "Total Cells")
 
-###  Gating quality check
+#  Gating quality check
 xyplot(`FL3-H` ~ `FL1-H`, data=flowData_transformed[1], filter=polyGate1,
        scales=list(y=list(limits=c(0,14)),
                    x=list(limits=c(6,16))),
@@ -810,7 +884,7 @@ xyplot(`FL3-H` ~ `FL1-H`, data=flowData_transformed[1], filter=polyGate1,
 <img src="Figures/cached/Mussel-fcm-analysis-1.png" style="display: block; margin: auto;" />
 
 ```r
-### Isolate only the cellular information based on the polyGate1
+# Isolate only the cellular information based on the polyGate1
 flowData_transformed <- Subset(flowData_transformed, polyGate1)
 
 summary <- fsApply(x=flowData_transformed,FUN=function(x) apply(x,2,max),use.exprs=TRUE)
@@ -822,26 +896,26 @@ flowData_transformed <- transform(flowData_transformed,`FL1-H`=mytrans(`FL1-H`),
                                   `FSC-H`=mytrans(`FSC-H`))
 
 
-### Calculate fingerprint with bw = 0.01
+# Calculate fingerprint with bw = 0.01
 fbasis <- flowBasis(flowData_transformed, param, nbin=128, 
                     bw=0.01,normalize=function(x) x)
 
-### Calculate ecological parameters from normalized fingerprint 
-### Densities will be normalized to the interval [0,1]
-### d = rounding factor
+# Calculate ecological parameters from normalized fingerprint 
+# Densities will be normalized to the interval [0,1]
+# d = rounding factor
 # Diversity.fbasis <- Diversity(fbasis, d = 3, plot = TRUE, R = 999)
 Diversity.fbasis <- Diversity_rf(flowData_transformed, d=3, param = param, R = 3)
 ```
 
 ```
-## Tue Feb 07 22:26:06 2017 ---- Starting resample run 1
-## Tue Feb 07 22:27:15 2017 ---- Starting resample run 2
-## Tue Feb 07 22:28:21 2017 ---- Starting resample run 3
-## Tue Feb 07 22:29:27 2017 ---- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
+## Wed Feb 08 17:21:22 2017 ---- Starting resample run 1
+## Wed Feb 08 17:22:21 2017 ---- Starting resample run 2
+## Wed Feb 08 17:23:16 2017 ---- Starting resample run 3
+## Wed Feb 08 17:24:09 2017 ---- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
 ```
 
 ```r
-### make metadata table
+# make metadata table
 tmp <- strsplit(rownames(Diversity.fbasis)[1:42], "_")
 meta.div <- cbind(do.call(rbind, lapply(tmp, rbind))[,1],rep("C",42), do.call(rbind, lapply(tmp, rbind))[,2:3])
 tmp <- strsplit(rownames(Diversity.fbasis)[43:nrow(Diversity.fbasis)], "_")
@@ -851,10 +925,10 @@ meta.div$Replicate <- gsub(meta.div$Replicate,pattern=".fcs",replacement="")
 meta.div$Time <- as.numeric(gsub(meta.div$Time,pattern="t",replacement=""))
 
 
-### Merge with Diversity.fbasis
+# Merge with Diversity.fbasis
 Diversity.fbasis <- cbind(Diversity.fbasis, meta.div)
 
-### Remove outliers due to human errors (forgot staining)
+# Remove outliers due to human errors (forgot staining)
 fbasis@basis <- fbasis@basis[Diversity.fbasis$D2>1600,]
 flowData_transformed <- flowData_transformed[Diversity.fbasis$D2>1600]
 
@@ -865,7 +939,7 @@ sqrcut1 <- matrix(c(8.5,8.5,asinh(12500),asinh(12500),3,8,9.55,3)/max,ncol=2, nr
 colnames(sqrcut1) <- c("FL1-H","FL3-H")
 rGate_LNA <- polygonGate(.gate=sqrcut1, filterId = "LNA")
 
-### Diversities of HNA/LNA populations
+# Diversities of HNA/LNA populations
 flowData_HNA <- split(flowData_transformed, rGate_HNA)$`HNA+`
 flowData_LNA <- split(flowData_transformed, rGate_LNA)$`LNA+`
 
@@ -873,10 +947,10 @@ Diversity.HNA <- Diversity_rf(flowData_HNA, d=3, param = param, R = 3)
 ```
 
 ```
-## Tue Feb 07 22:29:44 2017 ---- Starting resample run 1
-## Tue Feb 07 22:30:57 2017 ---- Starting resample run 2
-## Tue Feb 07 22:32:01 2017 ---- Starting resample run 3
-## Tue Feb 07 22:33:04 2017 ---- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
+## Wed Feb 08 17:24:20 2017 ---- Starting resample run 1
+## Wed Feb 08 17:25:01 2017 ---- Starting resample run 2
+## Wed Feb 08 17:25:42 2017 ---- Starting resample run 3
+## Wed Feb 08 17:26:25 2017 ---- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
 ```
 
 ```r
@@ -884,20 +958,20 @@ Diversity.LNA <- Diversity_rf(flowData_LNA, d=3, param = param, R = 3)
 ```
 
 ```
-## Tue Feb 07 22:33:04 2017 ---- Starting resample run 1
-## Tue Feb 07 22:34:07 2017 ---- Starting resample run 2
-## Tue Feb 07 22:35:08 2017 ---- Starting resample run 3
-## Tue Feb 07 22:35:56 2017 ---- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
+## Wed Feb 08 17:26:25 2017 ---- Starting resample run 1
+## Wed Feb 08 17:27:09 2017 ---- Starting resample run 2
+## Wed Feb 08 17:27:52 2017 ---- Starting resample run 3
+## Wed Feb 08 17:28:36 2017 ---- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
 ```
 
 ```r
-### Counts
-### Normalize total cell gate
+# Counts
+# Normalize total cell gate
 sqrcut1 <- matrix(c(8.5,8.5,15,15,3,8,14,3)/max,ncol=2, nrow=4)
 colnames(sqrcut1) <- c("FL1-H","FL3-H")
 polyGate1 <- polygonGate(.gate=sqrcut1, filterId = "Total Cells")
 
-### Check if rectangle gate is correct, if not, adjust rGate_HNA
+# Check if rectangle gate is correct, if not, adjust rGate_HNA
 xyplot(`FL3-H` ~ `FL1-H`, data=flowData_transformed[1], filter=rGate_HNA,
        scales=list(y=list(limits=c(0,1)),
                    x=list(limits=c(0.4,1))),
@@ -909,7 +983,7 @@ xyplot(`FL3-H` ~ `FL1-H`, data=flowData_transformed[1], filter=rGate_HNA,
 <img src="Figures/cached/Mussel-fcm-analysis-2.png" style="display: block; margin: auto;" />
 
 ```r
-### Extract the cell counts
+# Extract the cell counts
 a <- flowCore::filter(flowData_transformed, rGate_HNA) 
 HNACount <- flowCore::summary(a);HNACount <- toTable(HNACount)
 ```
@@ -1914,33 +1988,33 @@ TotalCount <- flowCore::summary(s);TotalCount <- flowCore::toTable(TotalCount)
 ```
 
 ```r
-### Extract the volume
+# Extract the volume
 vol <- c()
 for(i in 1:length(flowData_transformed)){
   vol[i] <- as.numeric(flowData_transformed[[i]]@description$`$VOL`)/1000
 }
 
-### Save counts
+# Save counts
 counts <- data.frame(Samples=flowCore::sampleNames(flowData_transformed), 
                      Total.cells = dilution*TotalCount$true/vol, HNA.cells = dilution*HNACount$true/vol,
                      LNA.cells = dilution*(TotalCount$true-HNACount$true)/vol)
 
-### Pool results
+# Pool results
 Diversity.fbasis <- Diversity.fbasis[Diversity.fbasis$D2>1600,]
 Storage <- c(); Storage[Diversity.fbasis$Treatment=="T"] <- "Covered"; Storage[Diversity.fbasis$Treatment=="S"] <- "Submerged"
 results <- cbind(Diversity.fbasis,counts, Storage, Diversity.HNA, Diversity.LNA)
 
-### Add an extra column for biological replicates
+# Add an extra column for biological replicates
 bio_rep <- c(rep(1,21),rep(2,21),rep(1,41),rep(2,41),rep(3,41))
 results <- cbind(results,bio_rep=factor(bio_rep))
 
-### Select only S experiment for beta-div and further analysis
+# Select only S experiment for beta-div and further analysis
 
 levels(results$Treatment)[levels(results$Treatment)=="C"] <- "Control"
 levels(results$Treatment)[levels(results$Treatment)=="T"] <- "Feeding - T"
 levels(results$Treatment)[levels(results$Treatment)=="S"] <- "Feeding - S"
 
-### Beta diversity analysis
+# Beta diversity analysis
 pos <- gsub(rownames(fbasis@basis),pattern="_rep1", replacement="")
 pos <- gsub(pos,pattern="_rep2", replacement="")
 pos <- gsub(pos,pattern="_rep3", replacement="")
@@ -1985,9 +2059,7 @@ colnames(results)[colnames(results)=="sd.D0.2"|colnames(results)=="sd.D1.2"|coln
 colnames(results)[colnames(results)=="D0.2"|colnames(results)=="D1.2"|colnames(results)=="D2.2"] <- 
   c("D0.LNA","D1.LNA","D2.LNA")
 
-##############################################################################
-### Import metadata of the mussels for M&M
-##############################################################################
+# Import metadata of the mussels for M&M
 meta.mus <- read.csv2("mussels_meta.csv")
 meta.mus <- meta.mus[meta.mus$Treatment=="S",]
 mean(meta.mus$size_mm)
@@ -2006,7 +2078,7 @@ sd(meta.mus$size_mm)
 ```
 
 ```r
-## No significant difference between mesocosms in mussel size distribution (p=0.081).
+# No significant difference between mesocosms in mussel size distribution (p=0.081).
 kruskal.test(size_mm ~ Sample, data=meta.mus)
 ```
 
@@ -2019,7 +2091,7 @@ kruskal.test(size_mm ~ Sample, data=meta.mus)
 ```
 
 ```r
-### Subset results for mussels transported by the best method (submerged)
+# Subset results for mussels transported by the best method (submerged)
 result.tmp <- results
 results <- result.tmp[!result.tmp$Treatment=="Feeding - T", ]
 results$Treatment <- droplevels(plyr::revalue(results$Treatment, c("Feeding - S"="Feeding")))
@@ -2029,18 +2101,17 @@ results$Treatment <- droplevels(plyr::revalue(results$Treatment, c("Feeding - S"
 
 
 ```r
-### Calculate the dynamics of D2 in time for treatment/control
-### We can't use a linear regression here (for obvious reasons)
-### Hence we will try to fit a spline and see if we can make inference
-### this way
+# Calculate the dynamics of D2 in time for treatment/control
+# We can't use a linear regression here (for obvious reasons)
+# Hence we will try to fit robust smoothings splines and see if we can make inference this way
 sp_T <- rlm(D2~splines::ns(Time, df=3), data=results[results$Treatment=="Feeding",])
 sp_C <- rlm(D2~splines::ns(Time, df=3), data=results[results$Treatment=="Control",])
 
-### Order studentized residuals according to timepoint
+# Order studentized residuals according to timepoint
 res.T <- residuals(sp_T, "pearson")[order(results[results$Treatment=="Feeding",]$Time)]
 res.C <- residuals(sp_C, "pearson")[order(results[results$Treatment=="Control",]$Time)]
 
-## Location of knots
+# Location of knots
 attr(splines::ns(results$Time, df=3), "knots")
 ```
 
@@ -2052,7 +2123,7 @@ attr(splines::ns(results$Time, df=3), "knots")
 ## Figure S5: Check for autocorrelation
 
 ```r
-### Check for temporal autocorrelation in model residuals
+# Check for temporal autocorrelation in model residuals
 par(mfrow=c(1,2))
 
 acf(res.C, main="Treatment: control", las=1)
@@ -2062,7 +2133,7 @@ acf(res.T, main="Treatment: feeding", las=1)
 <img src="Figures/cached/evaluate auto-correlation-1.png" style="display: block; margin: auto;" />
 
 ```r
-### Perform statistical inference on splines
+# Perform statistical inference on splines
 car::Anova(sp_C, vcov = vcovHAC(sp_C)) # p = 0.03795
 ```
 
@@ -2093,7 +2164,7 @@ car::Anova(sp_T, vcov = vcovHAC(sp_T)) # p = 5.599e-06
 ```
 
 ```r
-### Compare errors before and after correction
+# Compare errors before and after correction
   # Treatment
 summary(sp_T)$coefficients[,2]
 ```
@@ -2136,26 +2207,21 @@ sqrt(diag(vcovHAC(sp_C)))
 ## Figure 3: Diversity analysis during feeding
 
 ```r
-### Prepare plots
+# Prepare plots
 p.alpha <- ggplot(data=results, aes(x=Time, y=D2, fill=Treatment)) + 
-  # geom_boxplot(alpha=0.9)+
   geom_point(shape=21, size=7,alpha=0.9)+
   scale_fill_manual(values=myColours[c(1,2)])+
-  # geom_smooth(formula=y ~ x, color="black")+
-  # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
   theme_bw()+
   labs(y=expression('Phenotypic diversity - D'[2]), x="Time (h)", title="A",
        fill="")+
   theme(axis.text=element_text(size=14), axis.title=element_text(size=20),
         title=element_text(size=20), legend.text=element_text(size=16),
-        # panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         legend.direction = "horizontal",legend.position = "bottom")+ 
-  # geom_errorbar(aes(ymin=D2-sd.D2, ymax=D2+sd.D2), width=0.075)+
   geom_smooth(method="rlm", color="black", alpha=0.2, formula = y ~ splines::ns(x,df=3))+
   ylim(1990,2150)
 
-### Separate for submerged data
-### PERMANOVA on beta diversity analysis
+# Separate for submerged data
+# PERMANOVA on beta diversity analysis
 disper.test <- betadisper(dist.S, group=results$Treatment)
 disper.test # average distance to mean 0.03 for both groups
 ```
@@ -2218,7 +2284,6 @@ p.beta.S <- ggplot(data=beta.div.data.S, aes(x=X1, y=X2, fill=Treatment, size=Ti
        fill="")+
   theme(axis.text=element_text(size=14), axis.title=element_text(size=20),
         title=element_text(size=20), legend.text=element_text(size=16),
-        # panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         legend.direction = "horizontal",legend.position = "bottom")+
   annotation_custom(my_grob)+
   annotation_custom(my_grob2)+
@@ -2259,8 +2324,7 @@ df <- data.frame(D2.fcm = results$D2[results$Treatment=="Feeding"][results[resul
 df.pred <- data.frame(D2.16S = predict(lm.F, df, se=TRUE)$fit, D2.16S.error = predict(lm.F, df, se=TRUE)$se.fit, time = df$time)
 df.pred <- data.frame(aggregate(D2.16S~time, df.pred, mean), aggregate(D2.16S.error~time, df.pred, FUN = function(x) sqrt(sum(x^2))/length(x)))
 
-### Note: After transformation back to linear scale, errors are not necessarily normal distributed anymore,
-### So calculate minimum and maximum and report as such.
+# Note: After transformation back to linear scale, errors are not necessarily normal distributed anymore, so calculate minimum and maximum and report as such.
 df.pred.res <- df.pred 
 # Maximum decrease in D2 (3.63 units or 15.6 %)
 2^(df.pred$D2.16S[df.pred.res$time==0] + df.pred$D2.16S.error[df.pred.res$time==0]) -  2^(df.pred$D2.16S[df.pred.res$time==3] - df.pred$D2.16S.error[df.pred.res$time==3])
@@ -2313,8 +2377,7 @@ df.pred.res <- df.pred
 ```
 
 ```r
-### Note: Errors seem (approx.) randomly distributed even on linear scale, so we can just summarize by +/- the average
-### on the mean estimate.
+# Note: Errors seem (approx.) randomly distributed even on linear scale, so we can just summarize by +/- the average on the mean estimate.
 
 # Calculate mean predicted decrease in D2 at 0 and 1 hour
 df <- data.frame(D2.fcm = results$D2[results$Treatment=="Feeding"][results[results$Treatment=="Feeding",]$Time==1 | results[results$Treatment=="Feeding",]$Time==0],
@@ -2322,8 +2385,8 @@ df <- data.frame(D2.fcm = results$D2[results$Treatment=="Feeding"][results[resul
 df.pred <- data.frame(D2.16S = predict(lm.F, df, se=TRUE)$fit, D2.16S.error = predict(lm.F, df, se=TRUE)$se.fit, time = df$time)
 df.pred <- data.frame(aggregate(D2.16S~time, df.pred, mean), aggregate(D2.16S.error~time, df.pred, FUN = function(x) sqrt(sum(x^2))/length(x)))
 
-### Note: After transformation back to linear scale, errors are not necessarily normal distributed anymore,
-### So calculate minimum and maximum and report as such.
+# Note: After transformation back to linear scale, errors are not necessarily normal distributed anymore, so calculate minimum and maximum and report as such.
+
 df.pred.res <- df.pred 
 # Maximum decrease in D2 (2.82 units or 12.05 %)
 2^(df.pred$D2.16S[df.pred.res$time==0] + df.pred$D2.16S.error[df.pred.res$time==0]) -  2^(df.pred$D2.16S[df.pred.res$time==1] - df.pred$D2.16S.error[df.pred.res$time==1])
@@ -2412,8 +2475,8 @@ param=c("FL1-H", "FL3-H","SSC-H","FSC-H")
 flowData_transformed = flowData_transformed[,param]
 remove(flowData)
 
-### Create a PolygonGate for denoising the dataset
-### Define coordinates for gate in sqrcut1 in format: c(x,x,x,x,y,y,y,y)
+# Create a PolygonGate for denoising the dataset
+# Define coordinates for gate in sqrcut1 in format: c(x,x,x,x,y,y,y,y)
 sqrcut1 <- matrix(c(8.5,8.5,15,15,3,8,14,3),ncol=2, nrow=4)
 colnames(sqrcut1) <- c("FL1-H","FL3-H")
 polyGate1 <- polygonGate(.gate=sqrcut1, filterId = "Total Cells")
@@ -2520,7 +2583,7 @@ comp_t3 <- fp_contrasts(x=fbasis, comp2=(pos=="C1_t3.fcs" | pos== "C2_t3.fcs"),
 ```
 
 ```r
-### Merge data frames
+# Merge data frames
 comp_total <- rbind(comp_t0, comp_t1.5, comp_t3)
 comp_total <- data.frame(comp_total, Timepoint=as.factor(c(rep("0h Feeding", nrow(comp_t0)), 
                                                  rep("1.5h Feeding", nrow(comp_t1.5)),
@@ -2562,7 +2625,7 @@ p13 <- ggplot(data=results, aes(x=factor(Time), y=LNA.cells, fill=Treatment)) +
                 , position=position_dodge(width=0.3))+
   ylim(1000,1325)
 
-### Contrast plot
+# Contrast plot
 vtot <- ggplot(comp_total, aes(`FL1.H`, `FL3.H`, z = Density))+
   geom_tile(aes(fill=Density)) + 
   geom_point(colour="gray", alpha=0.4)+
@@ -2579,19 +2642,10 @@ vtot <- ggplot(comp_total, aes(`FL1.H`, `FL3.H`, z = Density))+
         #,panel.grid.major = element_blank(), panel.grid.minor = element_blank()
         )
 
-### Make the plot
+# Make the plot
 g1 <- ggplotGrob(p13);
 g2 <- ggplotGrob(p12b);
 gv <- ggplotGrob(vtot);
-```
-
-```
-## Warning: Not possible to generate contour data
-
-## Warning: Not possible to generate contour data
-```
-
-```r
 fg1 <- gtable_frame(g1)
 fg2 <- gtable_frame(g2)
 fg12 <- gtable_frame(cbind(fg1,fg2))
@@ -2606,11 +2660,7 @@ grid.draw(combined)
 ## Calculate removal statistics
 
 ```r
-##############################################################################
-### Additional statistics
-##############################################################################
-
-### Calculate coefficient of variation within LNA and DNA of control/treatment
+# Calculate coefficient of variation within LNA and DNA of control/treatment
 # CV for control in LNA population
 100*sd(results$LNA[results$Treatment=="Control"])/mean(results$LNA[results$Treatment=="Control"])
 ```
@@ -2647,8 +2697,8 @@ grid.draw(combined)
 ```
 
 ```r
-### Calculate the removal rate of HNA bacteria
-### We use robust regression because of the two (suspected) outliers at t0.
+# Calculate the removal rate of HNA bacteria
+# We use robust regression because of the two (suspected) outliers at t0.
 lm.HNA <- rlm(HNA.cells~Time, data=results[results$Treatment=="Feeding",])
 lm.HNA_C <- rlm(HNA.cells~Time, data=results[results$Treatment=="Control",])
 car::Anova(lm.HNA_C) # p = 0.9826
@@ -2679,7 +2729,7 @@ car::Anova(lm.HNA) # p = 9.02e-11
 ```
 
 ```r
-### To get std. error on parameter estimation
+# To get std. error on parameter estimation
 summary(lm.HNA)
 ```
 
@@ -2700,7 +2750,7 @@ summary(lm.HNA)
 ```
 
 ```r
-### Average HNA removal relative to HNA pool
+# Average HNA removal relative to HNA pool
 t0 <- mean(results$HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="0"])
 t3 <- mean(results$HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="3"])
 100*(t0-t3)/t0
@@ -2711,11 +2761,11 @@ t3 <- mean(results$HNA.cells[results$Treatment=="Feeding"][results$Time[results$
 ```
 
 ```r
-### Error on average HNA densities
+# Error on average HNA densities
 e0 <- sqrt(sum(results$sd.HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="0"]^2))/3
 e3 <- sqrt(sum(results$sd.HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="3"]^2))/3
 
-### Error on HNA removal ratio
+# Error on HNA removal ratio
 100*sqrt((sqrt(e0^2 + e3^2)/(t0-t3))^2 + (e0/t0)^2)
 ```
 
@@ -2724,7 +2774,7 @@ e3 <- sqrt(sum(results$sd.HNA.cells[results$Treatment=="Feeding"][results$Time[r
 ```
 
 ```r
-### Average HNA removal relative to total cell pool
+# Average HNA removal relative to total cell pool
 t0 <- mean(results$HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="0"])
 t3 <- mean(results$HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="3"])
 t.C <- mean(results$Total.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="3"])
@@ -2736,12 +2786,12 @@ t.C <- mean(results$Total.cells[results$Treatment=="Feeding"][results$Time[resul
 ```
 
 ```r
-### Error on average HNA densities
+# Error on average HNA densities
 e0 <- sqrt(sum(results$sd.HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="0"]^2))/3
 e3 <- sqrt(sum(results$sd.HNA.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="3"]^2))/3
 e.C <- sqrt(sum(results$sd.Total.cells[results$Treatment=="Feeding"][results$Time[results$Treatment=="Feeding"]=="3"]^2))/3
 
-### Error on HNA removal ratio
+# Error on HNA removal ratio
 100*sqrt((sqrt(e0^2 + e3^2)/(t0-t3))^2 + (e.C/t.C)^2)
 ```
 
@@ -2750,7 +2800,7 @@ e.C <- sqrt(sum(results$sd.Total.cells[results$Treatment=="Feeding"][results$Tim
 ```
 
 ```r
-### Rate per mg DW of IDM and associated error
+# Rate per mg DW of IDM and associated error
 1000*lm.HNA$coefficients[2]/mean(1000*meta.mus$weight_g)
 ```
 
@@ -2769,8 +2819,8 @@ sqrt((sd(meta.mus$weight_g)/mean(meta.mus$weight_g))^2 + (summary(lm.HNA)$coeffi
 ```
 
 ```r
-### Calculage clearance rate (linear regression used to get dC/dt)
-### Volume = 11L for each bucket
+# Calculage clearance rate (linear regression used to get dC/dt)
+# Volume = 11L for each bucket
 11*abs(lm.HNA$coefficients[2])/lm.HNA$coefficients[1]/mean(meta.mus$weight_g)
 ```
 

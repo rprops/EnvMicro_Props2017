@@ -3,7 +3,7 @@ library("gridExtra")
 library("grid")
 
 ### Load data
-path = "data"
+path = "data_mussel"
 flowData <- read.flowSet(path = path, transformation = FALSE, pattern=".fcs")
 
 ### Preprocess data according to standard protocol
