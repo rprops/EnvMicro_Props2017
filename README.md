@@ -1,6 +1,6 @@
 # Mussel_feeding
 
-The full analysis of the submitted paper: ***Invasive dreissenid mussels induce shifts in bacterioplankton diversity through selective feeding on high nucleic acid bacteria*** can found in the **Analysis.Rmd** RMarkdown. 
+The full analysis of the submitted paper: ***Invasive dreissenid mussels induce shifts in bacterioplankton diversity through selective feeding on high nucleic acid bacteria*** can be found in the **Analysis.Rmd** RMarkdown. 
 
 Before starting the analysis please unzip **16S.zip** and download the FCM data for the mussel experiment from [here](https://flowrepository.org/experiments/1034) and store them in a directory named **data_mussel**. The reference FCM data for the cooling water system and Lake Michigan/Muskegon Lake is available from [here](https://flowrepository.org/experiments/746) and [here](https://flowrepository.org/experiments/1047). These data should be stored in a directory called **data_reference** with subdirectories **FCM_CW** for the cooling water data and **FCM_MI** for the Lake Michigan and Muskegon Lake data.
 
