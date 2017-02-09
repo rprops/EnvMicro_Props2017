@@ -271,6 +271,9 @@ div.tocify {
 </div>
 
 
+<p>The full analysis of the submitted paper: <strong><em>Invasive dreissenid mussels induce shifts in bacterioplankton diversity through selective feeding on high nucleic acid bacteria</em></strong> can found in the <strong>Analysis.Rmd</strong> RMarkdown.</p>
+<p>Before starting the analysis please unzip <strong>16S.zip</strong> and download the FCM data for the mussel experiment from <a href="https://flowrepository.org/experiments/1034">here</a> and store them in a directory named <strong>data_mussel</strong>. The reference FCM data for the cooling water system and Lake Michigan/Muskegon Lake is available from <a href="https://flowrepository.org/experiments/746">here</a> and <a href="https://flowrepository.org/experiments/1047">here</a>. These data should be stored in a directory called <strong>data_reference</strong> with subdirectories <strong>FCM_CW</strong> for the cooling water data and <strong>FCM_MI</strong> for the Lake Michigan and Muskegon Lake data.</p>
+<p><em>Notice:</em> Some bootstrap repeats are set rather low to facilitate faster run times. For exactly reproducing the output described in the manuscript please adjust the parameters to those specified in the methods section. The output from this markdown file is provided in html format.</p>
 <div id="load-libraries" class="section level1">
 <h1>Load libraries</h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;Phenoflow&quot;</span>)
