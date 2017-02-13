@@ -161,7 +161,7 @@ max(data.total.final$D1)/min(data.total.final$D1)
 max(data.total.final$D2[data.total.final$Lake=="Cooling water"])/min(data.total.final$D2[data.total.final$Lake=="Cooling water"])
 ```
 
-## Figure S4: Check model assumptions
+## Figure S1: Check model assumptions
 ```{r Plot D2 residuals, fig.width = 15, fig.height = 5}
 # D2 and D1 are highly correlated so we only use D2 in the feeding experiment
 cor(data.total.final$D1.fcm,data.total.final$D2.fcm)
@@ -199,7 +199,7 @@ p5 <- ggplot(data=data.total.final,aes(x=D2.fcm,y=D2, fill=Lake))+ scale_fill_ma
 print(p5)
 ```
 
-## Figure S6: Regression of D0/D1
+## Figure S2: Regression of D0/D1
 ```{r Plot D0 & D1 regression, fig.width = 15, fig.height = 5}
 ### Prepare to plot r squared / pearson's correlation
 my_grob = grobTree(textGrob(bquote(r^2 == .(round(R.cv.D1$results$Rsquared, 2))), x=0.8,  y=0.16, hjust=0,
@@ -241,7 +241,7 @@ p7 <- ggplot(data=data.total.final,aes(x=D0.fcm,y=D0,fill=Lake))+ scale_fill_man
 grid.arrange(p7, p6, ncol=2)
 ```
 
-## Figure S2: Effect of sample size
+## Figure S4: Effect of sample size
 ```{r sample-size, fig.width = 15, fig.height = 5, message = FALSE, warning = FALSE}
 # Load data
 path = "data_mussel"
@@ -868,7 +868,7 @@ df2.res <- predict(lm.F,df2)
 2^(df2.res[4] - df2.res[3])
 ```
 
-## Figure S1: Gating strategy
+## Figure S3: Gating strategy
 ```{r Gating, fig.width = 15, fig.height = 10}
 path = "data_mussel"
 flowData <- read.flowSet(path = path, transformation = FALSE, pattern=".fcs")
