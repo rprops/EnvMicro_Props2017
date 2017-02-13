@@ -202,5 +202,7 @@ print(beta.pcoa)
 
 ### All together
 png("beta-div_seq_fcm_noscaling.png",width=12,height=6,res=500,units="in")
+pdf("Fig2_PROPS.pdf",width=12,height=6, onefile=FALSE)
 grid_arrange_shared_legend(beta.pcoa, beta.pcoa.fcm, ncol=2)
 dev.off()
+

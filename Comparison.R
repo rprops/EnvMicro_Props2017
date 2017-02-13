@@ -174,7 +174,8 @@ my_grob2 = grobTree(textGrob(bquote(r[p] == .(round(cor(y=log2(data.total.final$
                             gp=gpar(col="black", fontsize=20, fontface="italic")))
 
 ### Plot D2
-png("alpha-div_D2_FREE_log_extracol.png",width=6*1.65,height=5*1.5,res=500,units="in")
+# png("alpha-div_D2_FREE_log_extracol.png",width=6*1.65,height=5*1.5,res=500,units="in")
+pdf("alpha-div_D2_FREE_log_extracol.pdf",width=6*1.65,height=5*1.5)
 p5 <- ggplot(data=data.total.final,aes(x=D2.fcm,y=D2, fill=Lake))+ scale_fill_manual(values=c("#88419d","#a6cee3","#fc8d62")) +
   geom_point(shape=21,size=6,alpha=0.6,aes(fill=Lake))+
   theme_bw()+labs(y=expression('Taxonomic diversity - D'[2]),x=expression('Phenotypic diversity - D'[2]), fill="Environment")+

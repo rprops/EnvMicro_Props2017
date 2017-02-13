@@ -273,6 +273,7 @@ p.beta.S <- ggplot(data=beta.div.data.S, aes(x=X1, y=X2, fill=Treatment, size=Ti
 print(p.beta.S)
 
 png(file="Submerged.fcm_pooled_rlm.png",width=12,height=6,res=500,units="in", pointsize=12)
+pdf(file="Fig3_PROPS.pdf",width=12,height=6, pointsize=12, onefile = FALSE)
 # grid.arrange(arrangeGrob(p2,p1, ncol=2), p.beta.S, heights=c(4/4, 4/4), ncol=1)
 # grid.arrange(p1,p.beta.S, ncol=2)
 grid_arrange_shared_legend(p1b,p.beta.S, ncol=2)

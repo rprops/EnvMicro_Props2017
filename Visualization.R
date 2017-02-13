@@ -149,7 +149,8 @@ comp_total <- data.frame(comp_total, Timepoint=as.factor(c(rep("0h Feeding", nro
                                                  rep("3h Feeding", nrow(comp_t3)))))
 
 ### For HNA dynamics (from diversity_analysis.R script)
-p12 <- ggplot(data=results, aes(x=factor(Time), y=HNA.cells, fill=Treatment)) + 
+### Plot these regressions in a new figure
+p12b <- ggplot(data=results, aes(x=Time, y=HNA.cells, fill=Treatment)) + 
   # geom_boxplot(alpha=0.9)+
   geom_point(shape=21, size=5,alpha=0.9)+
   scale_fill_manual(values=myColours[c(1,2)])+
@@ -159,11 +160,14 @@ p12 <- ggplot(data=results, aes(x=factor(Time), y=HNA.cells, fill=Treatment)) +
         title=element_text(size=20), legend.text=element_text(size=14),
         legend.title=element_text(size=15),
         # panel.grid.major = element_blank(), panel.grid.minor = element_blank()
-        legend.direction = "horizontal",legend.position = "bottom"
-        )+ 
+        legend.direction = "horizontal",legend.position = "bottom",
+        panel.grid.minor = element_blank()
+  )+ 
   # guides(fill=FALSE)+
   geom_errorbar(aes(ymin=HNA.cells-sd.HNA.cells, ymax=HNA.cells+sd.HNA.cells), width=0.075)+
-  ylim(200,525)
+  ylim(200,525)+ 
+  geom_smooth(method="rlm",color="black", alpha=0.2)+
+  scale_x_continuous(breaks=c(0,0.5,1,1.5,2,2.5,3))
 
 p13 <- ggplot(data=results, aes(x=factor(Time), y=LNA.cells, fill=Treatment)) + 
   # geom_boxplot(alpha=0.9)+
@@ -209,6 +213,7 @@ dev.off()
 
 png(file = "contrasts_0.04_combined_cells_grid_C_dodge.png", width = 12, height = 12, res = 500, 
     units = "in", pointsize = 10)
+pdf(file = "Fig4_PROPS.pdf", width = 12, height = 12, onefile=FALSE)
 # grid.arrange(vtot,p12,p13, nrow=3)
 g1 <- ggplotGrob(p13);
 g2 <- ggplotGrob(p12b);
