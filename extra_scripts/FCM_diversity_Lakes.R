@@ -2,19 +2,12 @@ library("Phenoflow")
 library("dplyr")
 
 ### Output files will be stored in this directory
-path2 = c("/media/projects1/Ruben.FCM/Michigan/Accuri/Lake_MI_2013","/media/projects1/Ruben.FCM/Michigan/Accuri/Lake_MI_2015",
-         "/media/projects1/Ruben.FCM/Michigan/Accuri/Muskegon")
-path = c("/media/projects1/Ruben.FCM/Michigan/Accuri/all")
+path = c("/data_reference/FCM_MI")
+
 ### Import .fcs data
 ### Samples are automatically sorted according to name...
 flowData <- read.flowSet(path = path, 
                          transformation = FALSE, pattern=".fcs")
-
-### Dilution factors
-DF.2013 <- data.frame(Sample=list.files(path2[1]),dilution=10)
-DF.2015 <- read.csv2('dilution.MI2015.csv')[,2:3]; DF.2015$Sample <- paste0(DF.2015$Sample,".fcs")
-DF.musk <- data.frame(Sample=list.files(path2[3]),dilution=10)
-DF <- rbind(DF.2013, DF.2015,DF.musk)
 
 ### Select parameters (standard: two scatters and two FL) and 
 ### Transform data using the inverse hyperbolic sine
@@ -54,14 +47,9 @@ flowData_transformed <- transform(flowData_transformed,`FL1-H`=mytrans(`FL1-H`),
 
 
 ### optional resample
-# flowData_transformed2 <- FCS_resample(flowData_transformed, replace=TRUE)
-
-# fbasis <- flowBasis(flowData_transformed, param, nbin=128, 
-                    # bw=0.01,normalize=function(x) x)
 ### Calculate phenotypic diversity
-# Diversity.Accuri3 <- Phenoflow::Diversity(fbasis, d=3, R=999)
-# Diversity.Accuri3 <- Phenoflow::Diversity_rf(flowData_transformed, d=3, R=100,
-                                             # param=param)
+Diversity.Accuri <- Phenoflow::Diversity_rf(flowData_transformed, d=3, R=100,
+                                             param=param)
 
 ### Count nr of cells
 sqrcut1 <- matrix(c(8.5,8.5,15,15,3,8,14,3)/max,ncol=2, nrow=4)
@@ -83,10 +71,7 @@ Counts.Accuri <- data.frame(Samples=flowData_transformed@phenoData@data$name,
                                  counts = TotalCount$true, volume=vol.temp)
 
 ### Merge counts/diversity
-tmp <- inner_join(Diversity.Accuri3, Counts.Accuri, by=c("Sample_names"="Samples"))
-
-### Add Dilution factor
-results <- inner_join(tmp, DF,by=c("Sample_names"="Sample"))
+tmp <- inner_join(Diversity.Accuri, Counts.Accuri, by=c("Sample_names"="Samples"))
 
 ### Write to file
-write.csv2(results,file="fcm.diversity_total.csv")
+write.csv2(results,file="Lakes_diversityFCM_F.csv")
