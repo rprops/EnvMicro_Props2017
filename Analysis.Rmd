@@ -69,8 +69,8 @@ my.settings <- list(
 
 # Part 1: Validation of alpha diversity
 ```{r Regression analysis}
-div.FCM <- read.csv2("fcm.diversity_total.csv")
-div.16S <- read.csv2("otu.diversity16S_F.csv")
+div.FCM <- read.csv2("Lakes_diversityFCM_F.csv")
+div.16S <- read.csv2("Lakes_diversity16S_F.csv")
 metadata <- read.csv2("metadata.csv")
 metadata <- metadata[metadata$Platform == "Accuri",]
 metadata$Sample_fcm <- gsub(metadata$Sample_fcm, pattern="_rep.*", replacement="")
@@ -110,8 +110,8 @@ data.total <- inner_join(div.FCM.merged, data.16s, by="Sample_fcm")
 # Select samples with > 10000 counts
 data.total <- data.total[data.total$counts>10000,]
 
-# Add data from previous publication (cooling water)
-div.ref <- read.csv2("div.ref.merged.csv")
+# Add fcm/16S data from previous publication (cooling water)
+div.ref <- read.csv2("REF_diversity.csv")
 
 data.total.final <- rbind.fill(data.total, div.ref[, c(2,4:9)])
 data.total.final[(nrow(data.total)+1):nrow(data.total.final), 16:25] <- div.ref[, c(10:19)]
@@ -119,14 +119,14 @@ data.total.final$Lake <- as.character(data.total.final$Lake)
 data.total.final$Lake[is.na(data.total.final$Lake)] <- "Cooling water"
 data.total.final$Lake <- factor(data.total.final$Lake, levels=c("Michigan","Muskegon","Cooling water"))
 data.total.final$Lake <- revalue(data.total.final$Lake, c("Michigan"="Lake Michigan", "Muskegon"="Muskegon Lake"))
-lb <- read.csv2("labels_ref.csv")
+lb <- read.csv2("REF_labels.csv")
 tmp <- left_join(data.total.final,lb, by=c("Sample_fcm"="Sample_fcm"))
 data.total.final$Sample[data.total.final$Lake == "Cooling water"] <- tmp$Sample_seq[!is.na(tmp$Sample_seq)]; remove(tmp)
 data.total.final$Lake[1:87][data.total.final$Site[1:87] == "MLB"] <- "Muskegon Lake"
 data.total.final$Season[1:87][data.total.final$Season[1:87]=="Winter"] <- "Fall"
 
 # Chlorophyl data
-Chl <- read.csv("chl.csv")
+Chl <- read.csv("Lakes_metadata_Chl.csv")
 Chl <- Chl[Chl$Sample_16S %in% data.total.final$Sample[data.total.final$Lake == "Lake Michigan"],]
 mean(aggregate(Chl~Sample_16S, data=Chl, mean)$Chl)
 sd(aggregate(Chl~Sample_16S, data=Chl, mean)$Chl)
@@ -704,7 +704,7 @@ colnames(results)[colnames(results)=="D0.2"|colnames(results)=="D1.2"|colnames(r
   c("D0.LNA","D1.LNA","D2.LNA")
 
 # Import metadata of the mussels for M&M
-meta.mus <- read.csv2("mussels_meta.csv")
+meta.mus <- read.csv2("Experiment_metadata_mussels.csv")
 meta.mus <- meta.mus[meta.mus$Treatment=="S",]
 mean(meta.mus$size_mm)
 sd(meta.mus$size_mm)
