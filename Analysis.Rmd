@@ -69,9 +69,9 @@ my.settings <- list(
 
 # Part 1: Validation of alpha diversity
 ```{r Regression analysis}
-div.FCM <- read.csv2("Lakes_diversityFCM_F.csv")
-div.16S <- read.csv2("Lakes_diversity16S_F.csv")
-metadata <- read.csv2("metadata.csv")
+div.FCM <- read.csv2("files/Lakes_diversityFCM_F.csv")
+div.16S <- read.csv2("files/Lakes_diversity16S_F.csv")
+metadata <- read.csv2("files/metadata.csv")
 metadata <- metadata[metadata$Platform == "Accuri",]
 metadata$Sample_fcm <- gsub(metadata$Sample_fcm, pattern="_rep.*", replacement="")
 metadata <- do.call(rbind,by(metadata, INDICES = factor(metadata$Sample_fcm), 
@@ -111,7 +111,7 @@ data.total <- inner_join(div.FCM.merged, data.16s, by="Sample_fcm")
 data.total <- data.total[data.total$counts>10000,]
 
 # Add fcm/16S data from previous publication (cooling water)
-div.ref <- read.csv2("REF_diversity.csv")
+div.ref <- read.csv2("files/REF_diversity.csv")
 
 data.total.final <- rbind.fill(data.total, div.ref[, c(2,4:9)])
 data.total.final[(nrow(data.total)+1):nrow(data.total.final), 16:25] <- div.ref[, c(10:19)]
@@ -119,14 +119,14 @@ data.total.final$Lake <- as.character(data.total.final$Lake)
 data.total.final$Lake[is.na(data.total.final$Lake)] <- "Cooling water"
 data.total.final$Lake <- factor(data.total.final$Lake, levels=c("Michigan","Muskegon","Cooling water"))
 data.total.final$Lake <- revalue(data.total.final$Lake, c("Michigan"="Lake Michigan", "Muskegon"="Muskegon Lake"))
-lb <- read.csv2("REF_labels.csv")
+lb <- read.csv2("files/REF_labels.csv")
 tmp <- left_join(data.total.final,lb, by=c("Sample_fcm"="Sample_fcm"))
 data.total.final$Sample[data.total.final$Lake == "Cooling water"] <- tmp$Sample_seq[!is.na(tmp$Sample_seq)]; remove(tmp)
 data.total.final$Lake[1:87][data.total.final$Site[1:87] == "MLB"] <- "Muskegon Lake"
 data.total.final$Season[1:87][data.total.final$Season[1:87]=="Winter"] <- "Fall"
 
 # Chlorophyl data
-Chl <- read.csv("Lakes_metadata_Chl.csv")
+Chl <- read.csv("files/Lakes_metadata_Chl.csv")
 Chl <- Chl[Chl$Sample_16S %in% data.total.final$Sample[data.total.final$Lake == "Lake Michigan"],]
 mean(aggregate(Chl~Sample_16S, data=Chl, mean)$Chl)
 sd(aggregate(Chl~Sample_16S, data=Chl, mean)$Chl)
@@ -327,7 +327,7 @@ physeq.otu <- prune_taxa(taxa_sums(physeq.otu)>0, physeq.otu)
 # Select samples for which you have FCM data
 sample_names(physeq.otu) <- gsub(sample_names(physeq.otu), pattern=".renamed", replacement="")
 sample_names(physeq.otu) <- gsub(sample_names(physeq.otu), pattern=".renamed", replacement="")
-meta.seq <- read.csv2("metadata.csv")
+meta.seq <- read.csv2("files/Lakes_metadata.csv")
 physeq.otu <- prune_samples(sample_names(physeq.otu) %in% data.total.final$Sample, physeq.otu)
 
 # Annotate with metadata
@@ -704,7 +704,7 @@ colnames(results)[colnames(results)=="D0.2"|colnames(results)=="D1.2"|colnames(r
   c("D0.LNA","D1.LNA","D2.LNA")
 
 # Import metadata of the mussels for M&M
-meta.mus <- read.csv2("Experiment_metadata_mussels.csv")
+meta.mus <- read.csv2("files/Experiment_metadata_mussels.csv")
 meta.mus <- meta.mus[meta.mus$Treatment=="S",]
 mean(meta.mus$size_mm)
 sd(meta.mus$size_mm)

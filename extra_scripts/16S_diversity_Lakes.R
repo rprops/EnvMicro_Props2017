@@ -17,7 +17,7 @@ sample_names(phy.otu) <- gsub(sample_names(phy.otu), pattern=".renamed",replacem
 sample_names(phy.otu) <- gsub(sample_names(phy.otu), pattern="-", replacement="")
 
 ### Select only the useful samples (F/W/P)
-sl <- read.csv2("Lakes_metadata")
+sl <- read.csv2("files/Lakes_metadata.csv")
 sl_F <- sl$Sample_16S[sl$Lake!="Inland" & sl$Platform=="Accuri"]
 sl_W <- gsub(sl_F, pattern="F", replace="W")
 sl_W[grep(sl_W, pattern="*.W.*")] <- paste(sl_W[grep(sl_W, pattern="*.W.*")],"D",sep="")
@@ -46,4 +46,4 @@ div.P <- Diversity_16S(phy.otu.P, R=100, brea=FALSE, thresh=500)
 div.P <- data.frame(div.P)
 
 ### Import FCM ref
-write.csv2(div.F, "Lakes_diversity16S_F.csv", row.names = FALSE)
+write.csv2(div.F, "files/Lakes_diversity16S_F.csv", row.names = FALSE)

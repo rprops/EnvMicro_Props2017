@@ -24,7 +24,7 @@ div.ref <- Diversity_16S(phy.ref, R=100, brea=FALSE, thresh=500)
 div.ref <- data.frame(div.ref)
 
 ### Export data
-write.csv2(div.ref, "tmp1.csv")
+write.csv2(div.ref, "files/tmp1.csv")
 
 ### Calculate FCM diversity for reference samples
 
@@ -74,7 +74,7 @@ Diversity.ref <- Diversity_rf(flowData_transformed, d = 3, param=param, R = 100)
 div.fcm.ref <- Diversity.ref 
 
 ### Now select the ones for which parallel sequencing data is available
-meta.seq <- read.csv2("REF_metadata.csv")
+meta.seq <- read.csv2("files/REF_metadata.csv")
 meta.seq <- meta.seq[meta.seq$Sequenced=="yes",]
 div.fcm.ref <- div.fcm.ref[grep(pattern = paste(meta.seq$Sample.name,collapse="|"),  x = as.character(div.fcm.ref$Sample_names)),]
 
@@ -87,8 +87,8 @@ errors <- do.call(rbind,by(div.fcm.ref[,5:7], INDICES = groupLevels,
 div.fcm.ref.merged <- data.frame(cbind(means,errors), sample_fcm = rownames(means))
 
 ### And match them to the corresponding sequencing data
-div.seq.ref <- read.csv2("tmp1.csv")
-lb <- read.csv2("REF_labels.csv")
+div.seq.ref <- read.csv2("files/tmp1.csv")
+lb <- read.csv2("files/REF_labels.csv")
 div.fcm.ref.merged <- inner_join(div.fcm.ref.merged, lb, by=c("sample_fcm"="Sample_fcm"))
 
 ### Adjust colnames
@@ -101,6 +101,6 @@ div.total.ref <- inner_join(div.fcm.ref.merged, div.seq.ref, by=c("Sample_seq"="
 div.total.ref <- data.frame(div.total.ref[,7:8], div.total.ref[,1:6], div.total.ref[,9:18])
 
 ### Write csv
-write.csv2(div.total.ref, "REF_diversity.csv")
+write.csv2(div.total.ref, "files/REF_diversity.csv")
 
 

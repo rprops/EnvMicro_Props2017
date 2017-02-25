@@ -74,4 +74,4 @@ Counts.Accuri <- data.frame(Samples=flowData_transformed@phenoData@data$name,
 tmp <- inner_join(Diversity.Accuri, Counts.Accuri, by=c("Sample_names"="Samples"))
 
 ### Write to file
-write.csv2(results,file="Lakes_diversityFCM_F.csv")
+write.csv2(results,file="files/Lakes_diversityFCM_F.csv")
