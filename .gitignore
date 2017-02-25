@@ -13,3 +13,13 @@ data_reference/FCM_CW/
 data_reference/FCM_MI/
 29012016.RData
 16S/
+Sample_size.R
+Comparison.R
+Visualization.R
+diversity_analysis.R
+div_comparison.R
+div.fcm.ref.R
+Comparison_W.R
+Comparison_P.R
+otu.diversity16S_W.csv
+otu.diversity16S_P.csv
