@@ -15,9 +15,9 @@ File structure should be
 ├── /extra_scripts
 ├── /files
 ├── /data_reference
-│   ├── **/FCM_CW**
-│   └── **/FCM_MI**
-└── **/16S**
+│   ├── /FCM_CW
+│   └── /FCM_MI
+└── /16S
 ```
 The phenotypic and taxonomic diversities (`REF_diversity.csv`, `Lakes_diversity16S_F.csv` and `Lakes_diversityFCM_F.csv`) were calculated by means of the external scripts in `/extra_scripts` as the computation can take some time.
 
