@@ -973,9 +973,9 @@ p12b <- ggplot(data=results, aes(x=Time, y=HNA.cells, fill=Treatment)) +
   geom_smooth(method="rlm",color="black", alpha=0.2)+
   scale_x_continuous(breaks=c(0,0.5,1,1.5,2,2.5,3))
 
-p13 <- ggplot(data=results, aes(x=factor(Time), y=LNA.cells, fill=Treatment)) + 
+p13 <- ggplot(data=results, aes(x=Time, y=LNA.cells, fill=Treatment)) + 
   # geom_boxplot(alpha=0.9)+
-  geom_point(shape=21, size=5,alpha=0.9, position=position_dodge(width=0.3))+
+  geom_point(shape=21, size=5,alpha=0.9)+
   scale_fill_manual(values=myColours[c(1,2)])+
   # geom_smooth(formula=y ~ x, color="black")+
   # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
@@ -986,9 +986,9 @@ p13 <- ggplot(data=results, aes(x=factor(Time), y=LNA.cells, fill=Treatment)) +
         legend.title=element_text(size=15),
         legend.direction = "horizontal",legend.position = "bottom")+ 
   # guides(fill=FALSE)+
-  geom_errorbar(aes(ymin=LNA.cells-sd.LNA.cells, ymax=LNA.cells+sd.LNA.cells), width=0.075
-                , position=position_dodge(width=0.3))+
-  ylim(1000,1325)
+  geom_errorbar(aes(ymin=LNA.cells-sd.LNA.cells, ymax=LNA.cells+sd.LNA.cells), width=0.075)+
+  ylim(1000,1325)+
+  scale_x_continuous(breaks=c(0,0.5,1,1.5,2,2.5,3))
 
 # Contrast plot
 vtot <- ggplot(comp_total, aes(`FL1.H`, `FL3.H`, z = Density))+
