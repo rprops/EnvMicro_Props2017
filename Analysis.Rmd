@@ -198,13 +198,50 @@ my_grob2 = grobTree(textGrob(bquote(r[p] == .(round(cor(y=log2(data.total.final$
 p5 <- ggplot(data=data.total.final,aes(x=D2.fcm,y=D2, fill=Lake))+ scale_fill_manual(values=c("#88419d","#a6cee3","#fc8d62")) +
   geom_point(shape=21,size=6,alpha=0.6,aes(fill=Lake))+
   theme_bw()+labs(y=expression('Taxonomic diversity - D'[2]),x=expression('Phenotypic diversity - D'[2]), fill="Environment")+
-  theme(axis.text=element_text(size=15),axis.title=element_text(size=20,face="bold"),legend.text=element_text(size=15),legend.title=element_text(size=16),strip.text.x = element_text(size = 22))+
+  theme(axis.text=element_text(size=15),axis.title=element_text(size=20,face="bold"),legend.text=element_text(size=15),
+        legend.title=element_text(size=16),strip.text.x = element_text(size = 22),
+         legend.position = c(0.05, .98), legend.justification = c(0, 1),
+        legend.background = element_rect(fill="transparent"))+
   scale_y_continuous(trans='log2', breaks = seq(5,60, 10),minor_breaks =NULL) +
-  scale_x_continuous(trans='log2', breaks = seq(1000,4250,250),minor_breaks =NULL) +
-  geom_smooth(method="lm",color="black",fill="lightblue",formula=y~x)+
+  scale_x_continuous(trans='log2', breaks = seq(1000,4250,250),minor_breaks =NULL, limits = c(NA, 2700)) +
+  geom_smooth(method="lm",color="black", fill ="lightblue", formula=y~x)+
   annotation_custom(my_grob)+
   annotation_custom(my_grob2)
+
+pdf("Fig1.pdf", width = 7, height = 6)
 print(p5)
+dev.off()
+
+```
+## Figure S1: Compare slopes of individual regressions
+```{r Compare slopes of individual regressions, fig.width = 8, fig.height = 5}
+# Supplementary figure for showing that the slopes for individual regressions of each lake are not significantly different
+# from each other. This allows us to make one global regression for further analysis.
+
+p5.si <- ggplot(data=data.total.final,aes(x=D2.fcm,y=D2, fill=Lake))+ scale_fill_manual(values=c("#88419d","#a6cee3","#fc8d62")) +
+  geom_point(shape=21,size=6,alpha=0.6,aes(fill=Lake))+
+  theme_bw()+labs(y=expression('Taxonomic diversity - D'[2]),x=expression('Phenotypic diversity - D'[2]), fill="Environment")+
+  theme(axis.text=element_text(size=15),axis.title=element_text(size=20,face="bold"),legend.text=element_text(size=15),
+        legend.title=element_text(size=16),strip.text.x = element_text(size = 22))+
+  scale_y_continuous(trans='log2', breaks = seq(5,60, 10),minor_breaks =NULL) +
+  scale_x_continuous(trans='log2', breaks = seq(1000,4250,250),minor_breaks =NULL, limits = c(NA, 2700)) +
+  geom_smooth(method="rlm",color="black",formula=y~x)
+
+lm_comp <- rlm(log2(D2)~log2(D2.fcm)*Lake, data=data.total.final)
+contrast_matrix <- rbind(
+  "Cooling water vs Muskegon Lake" = c(0,0,0,0,-1,1),
+  "Lake Michigan vs Cooling water" = c(0,0,0,0,0,1),
+  "Lake Michigan vs Muskegon Lake" = c(0,0,0,0,1,0)
+)
+
+
+# Adjusted p-values using Benjamini & Hochberg (1995) correction
+summary(glht(model = lm_comp, contrast_matrix), test = adjusted("BH"))
+
+# pdf("Fig1_SI.pdf", width = 9, height = 6)
+# png("Fig1_SI.png", width = 9, height = 6, res = 500, units = "in")
+print(p5.si)
+# dev.off()
 ```
 
 ## Figure S2: Regression of D0/D1
@@ -803,21 +840,31 @@ var <- round(vegan::eigenvals(beta.div.S)/sum(vegan::eigenvals(beta.div.S))*100,
 p.beta.S <- ggplot(data=beta.div.data.S, aes(x=X1, y=X2, fill=Treatment, size=Time))+
   geom_point(shape=21, alpha=1)+
   scale_size(range=c(4,10), breaks=c(0,0.5,1,1.5,2,2.5,3))+ 
-  guides(fill = guide_legend(override.aes = list(size=5)), size=FALSE)+
+  guides(fill = FALSE, size = guide_legend(nrow = 2))+
   theme_bw()+
   scale_fill_manual(values=myColours[c(1,2)])+
   labs(x = paste0("PCoA axis 1 (",var[1], "%)"), y = paste0("PCoA axis 2 (",var[2], "%)"), title="B",
-       fill="")+
+       fill="", size = "Time (h)")+
   theme(axis.text=element_text(size=14), axis.title=element_text(size=20),
         title=element_text(size=20), legend.text=element_text(size=16),
-        legend.direction = "horizontal",legend.position = "bottom")+
+        legend.direction = "horizontal",
+        legend.position = c(0.15, -0.13), 
+        legend.justification = c(0, 1),
+        legend.background = element_rect(fill="transparent"))+
   annotation_custom(my_grob)+
   annotation_custom(my_grob2)+
   annotation_custom(my_grob3)+
   ylim(-0.035,0.045)
 
 ### Plot diversity dynamics
-grid_arrange_shared_legend(p.alpha,p.beta.S, ncol=2)
+p.beta.S.plot <-  p.beta.S + theme(legend.position = "none")
+p.alpha.plot <-  p.alpha + theme(legend.position = "none")
+
+pdf("Fig3_revised.pdf", width = 12, height = 6)
+grid.arrange(p.alpha.plot, p.beta.S, g_legend(p.alpha), layout_matrix = rbind(c(1,2),
+                                                                               c(3,3)),
+             heights=c(6, 1))
+dev.off()
 ```
 
 ## Infer taxonomic diversity dynamics
