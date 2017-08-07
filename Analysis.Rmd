@@ -66,6 +66,7 @@ library("egg")
 library("phyloseq")
 library("splines")
 library("caret") # for cross validation
+library("foreach") # for parallelization
 source("functions.R")
 my.settings <- list(
   strip.background=list(col="transparent"),
@@ -225,15 +226,21 @@ p5.si <- ggplot(data=data.total.final,aes(x=D2.fcm,y=D2, fill=Lake))+ scale_fill
         legend.title=element_text(size=16),strip.text.x = element_text(size = 22))+
   scale_y_continuous(trans='log2', breaks = seq(5,60, 10),minor_breaks =NULL) +
   scale_x_continuous(trans='log2', breaks = seq(1000,4250,250),minor_breaks =NULL, limits = c(NA, 2700)) +
-  geom_smooth(method="rlm",color="black",formula=y~x)
+  geom_smooth(method="lm",color="black",formula=y~x)
 
-lm_comp <- rlm(log2(D2)~log2(D2.fcm)*Lake, data=data.total.final)
+
+lm_comp <- lm(log2(D2)~log2(D2.fcm)*Lake, data=data.total.final)
 contrast_matrix <- rbind(
   "Cooling water vs Muskegon Lake" = c(0,0,0,0,-1,1),
   "Lake Michigan vs Cooling water" = c(0,0,0,0,0,1),
   "Lake Michigan vs Muskegon Lake" = c(0,0,0,0,1,0)
 )
 
+# Adjusted R squared of individual models
+summary(lm_comp)$adj.r.squared
+
+# Adjusted R squared of single model
+summary(lm(log2(D2)~log2(D2.fcm), data=data.total.final))$adj.r.squared
 
 # Adjusted p-values using Benjamini & Hochberg (1995) correction
 summary(glht(model = lm_comp, contrast_matrix), test = adjusted("BH"))
@@ -469,7 +476,6 @@ dist.fcm <- vegan::vegdist(x)
 pcoa.fcm <- cmdscale(dist.fcm)
 dist.seq <- vegan::vegdist(otu_table(physeq.otu))
 pcoa.seq <- cmdscale(dist.seq)
-
 ```
 
 ## Procrustes analysis
@@ -626,7 +632,6 @@ fbasis <- flowBasis(flowData_transformed, param, nbin=128,
 # Diversity.fbasis <- Diversity(fbasis, d = 3, plot = TRUE, R = 999)
 Diversity.fbasis <- Diversity_rf(flowData_transformed, d=3, param = param, R = R.main)
 
-
 # make metadata table
 tmp <- strsplit(rownames(Diversity.fbasis)[1:42], "_")
 meta.div <- cbind(do.call(rbind, lapply(tmp, rbind))[,1],rep("C",42), do.call(rbind, lapply(tmp, rbind))[,2:3])
@@ -721,14 +726,29 @@ fbasis2<-fbasis; fbasis2@basis <- fbasis@basis[!Diversity.fbasis$Treatment=="S",
 beta.div.S <- beta_div_fcm(fbasis1, INDICES=pos[!Diversity.fbasis$Treatment=="T"], ord.type="PCoA")
 # Take average fingerprint for technical replicates
 fbasis1@basis <- fbasis1@basis/apply(fbasis1@basis, 1, max)
-fbasis1@basis <- round(fbasis1@basis, 4)
+fbasis1@basis <- round(fbasis1@basis, 3)
+
+# Remove shared zeroes for Bray-curtis
+fbasis1@basis <- fbasis1@basis[, !apply(fbasis1@basis==0, 2, all)]
 x <- by(fbasis1@basis, INDICES = pos[!Diversity.fbasis$Treatment=="T"], FUN = colMeans)
 x <- do.call(rbind, x)
+
+
 # Calculate distance matrix
 dist.S <- vegdist(x, method="bray")
 
-beta.div.T <- beta_div_fcm(fbasis2, INDICES=pos[!Diversity.fbasis$Treatment=="S"], ord.type="PCoA")
+int_Treat_Time <- interaction(Diversity.fbasis$Treatment,Diversity.fbasis$Time)
+dist.S.formatted <- as.matrix(dist.S)
+dist.S_C_T0 <- dist.S.formatted[colnames(dist.S.formatted) == "C1_t0.fcs" | colnames(dist.S.formatted) == "C2_t0.fcs", colnames(dist.S.formatted) == "Q2_S_t0.fcs" | colnames(dist.S.formatted) == "Q1_S_t0.fcs"| colnames(dist.S.formatted) == "Q3_S_t3.fcs"]
+mean(dist.S_C_T0)
+sd(dist.S_C_T0)
 
+dist.S_C_T3 <- dist.S.formatted[colnames(dist.S.formatted) == "C1_t3.fcs" | colnames(dist.S.formatted) == "C2_t3.fcs", colnames(dist.S.formatted) == "Q2_S_t3.fcs" | colnames(dist.S.formatted) == "Q1_S_t3.fcs"| colnames(dist.S.formatted) == "Q3_S_t3.fcs"]
+mean(dist.S_C_T3)
+sd(dist.S_C_T3)
+
+
+beta.div.T <- beta_div_fcm(fbasis2, INDICES=pos[!Diversity.fbasis$Treatment=="S"], ord.type="PCoA")
 
 results <- data.frame(cbind(Sample_names=levels(pos), do.call(rbind,by(results[,c(2,3,4,13,14,15,18,19,20,25,26,27)], INDICES=pos, FUN=colMeans)), 
                    do.call(rbind,by(results[,c(5,6,7,21,22,23,28,29,30)], INDICES=pos, FUN = function(x) sqrt(colSums(x^2))/nrow(x))),
@@ -922,6 +942,79 @@ df2.res <- predict(lm.F,df2)
 # at higher diversities
 2^(df2.res[4] - df2.res[3])
 ```
+## Compare diversity dynamics to literature (DOI: 10.1128/mSphere.00189-17)
+```{r compare-diversity-dynamics2MSphere}
+physeq_msphere <- import_mothur(mothur_shared_file = "./data_published/QMexp_IL_LM.contigs.good.unique.good.filter.unique.precluster.pick.pick.an.unique_list.shared", 
+                                mothur_constaxonomy_file = "./data_published/QMexp_IL_LM.contigs.good.unique.good.filter.unique.precluster.pick.pick.an.unique_list.0.03.cons.taxonomy")
+meta_msphere <- read.table("./data_published/QMexp_IL_LM_womockblanks.tsv", header = TRUE)
+rownames(meta_msphere) <- meta_msphere$Sample_ID
+sample_data(physeq_msphere) <- sample_data(meta_msphere)
+# Subset for lab feeding experiment data
+physeq_msphere <- subset_samples(physeq_msphere, Group == "Experiment")
+
+# Calculate diversity before and after rescaling
+div_msphere <- Diversity_16S(physeq_msphere, R=100, parallel = TRUE, ncores = 2)
+div_msphere_scaled <- Diversity_16S(scale_reads(physeq_msphere), R=100, parallel = TRUE, ncores = 2)
+div_msphere_scaled <- data.frame(div_msphere_scaled, Sample_ID = rownames(div_msphere_scaled))
+div_msphere <- data.frame(div_msphere, Sample_ID = rownames(div_msphere))
+
+# Compare pre- and postfeeding diversities
+results_msphere <- left_join(div_msphere, meta_msphere, by = "Sample_ID")
+results_msphere_scale <- left_join(div_msphere_scaled, meta_msphere, by = "Sample_ID")
+results_msphere <- results_msphere[results_msphere$Treatment == "Control" | results_msphere$Treatment == "Mussel", ]
+results_msphere$Treatment <- revalue(results_msphere$Treatment, c("Mussel" = "Feeding"))
+results_msphere <- droplevels(results_msphere)
+results_msphere$Date <- factor(results_msphere$Date,levels(results_msphere$Date)[c(3,1,2)])
+results_msphere_scale <- results_msphere_scale[results_msphere_scale$Treatment == "Control" | results_msphere_scale$Treatment == "Mussel", ]
+results_msphere_scale$Treatment <- revalue(results_msphere_scale$Treatment, c("Mussel" = "Feeding"))
+results_msphere_scale <- droplevels(results_msphere_scale)
+results_msphere_scale$Date <- factor(results_msphere_scale$Date,levels(results_msphere_scale$Date)[c(3,1,2)])
+
+# Hopefully this makes sense...
+p_msphere <- ggplot(data = results_msphere, aes(x = Time_point, y = D2, fill = Treatment))+
+  geom_boxplot(alpha = 0.5)+
+  geom_point(size = 4, shape = 21, position=position_dodge(width=0.75))+
+  theme_bw()+
+  facet_grid(.~Date)+
+  scale_fill_manual(values=myColours[c(1:3)])+
+  labs(y = expression('Taxonomic diversity - D'[2]), x = "Timepoint")+
+  theme(axis.title=element_text(size=16), strip.text.x=element_text(size=16),
+        legend.title=element_text(size=15),legend.text=element_text(size=14),
+        axis.text = element_text(size=14),title=element_text(size=20),
+        strip.background=element_rect(fill=adjustcolor("lightgray",0.2))
+        #,panel.grid.major = element_blank(), panel.grid.minor = element_blank()
+        )
+png(file="msphere_data.png",width=12,height=6,res=500,units="in", pointsize=12)
+p_msphere
+dev.off()
+
+p_msphere_scale <- ggplot(data = results_msphere_scale, aes(x = Time_point, y = D2, fill = Date))+
+  geom_boxplot(alpha = 0.5)+
+  geom_point(size = 4, shape = 21, position=position_dodge(width=0.75))+
+  theme_bw()+
+  facet_grid(.~Treatment)+
+  scale_fill_manual(values=myColours[c(1:3)])+
+  labs(y = expression('Taxonomic diversity - D'[2]), x = "Timepoint")+
+  theme(axis.title=element_text(size=16), strip.text.x=element_text(size=16),
+        legend.title=element_text(size=15),legend.text=element_text(size=14),
+        axis.text = element_text(size=14),title=element_text(size=20),
+        strip.background=element_rect(fill=adjustcolor("lightgray",0.2))
+        #,panel.grid.major = element_blank(), panel.grid.minor = element_blank()
+        )
+p_msphere_scale
+
+# Continuing with the non-scale diversity we calculate the average diversity reduction over all experiments
+## Mean reduction
+mean(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T0"] - results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T3"]) # 5.32
+## Standard deviation
+sd(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T0"] - results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T3"]) # 4.65
+
+# Same calculation but without the December experiment
+## Mean reduction
+mean(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T0" & results_msphere$Date != "Dec14"] - results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T3" & results_msphere$Date != "Dec14"]) # 7.46
+## Standard deviation
+sd(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T0" & results_msphere$Date != "Dec14"] - results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T3" & results_msphere$Date != "Dec14"]) # 4.13
+```
 
 ## Figure S3: Gating strategy
 ```{r Gating, fig.width = 15, fig.height = 10}
@@ -987,13 +1080,13 @@ print(xyplot(`FL3-H`~`FL1-H`, data=flowData_transformed,index.cond=list(c(1:6)),
 ``` {r Contrasts, fig.width = 15, fig.height = 12, warning = FALSE}
 comp_t0 <- fp_contrasts(x=fbasis, comp2=(pos=="C1_t0.fcs" | pos== "C2_t0.fcs"),
                         comp1=(pos=="Q1_T_t0.fcs" | pos== "Q2_T_t0.fcs" | pos== "Q3_T_t0.fcs"), 
-                        thresh=0.04)
+                        thresh=0.05)
 comp_t1.5 <- fp_contrasts(x=fbasis, comp2=(pos=="C1_t1.5.fcs" | pos== "C2_t1.5.fcs"),
                           comp1=(pos=="Q1_T_t1.5.fcs" | pos== "Q2_T_t1.5.fcs" | pos== "Q3_T_t1.5.fcs"), 
-                          thresh=0.04)
+                          thresh=0.05)
 comp_t3 <- fp_contrasts(x=fbasis, comp2=(pos=="C1_t3.fcs" | pos== "C2_t3.fcs"),
                         comp1=(pos=="Q1_T_t3.fcs" | pos== "Q2_T_t3.fcs" | pos== "Q3_T_t3.fcs"), 
-                        thresh=0.04)
+                        thresh=0.05)
 
 # Merge data frames
 comp_total <- rbind(comp_t0, comp_t1.5, comp_t3)
@@ -1065,7 +1158,11 @@ fg12 <- gtable_frame(cbind(fg1,fg2))
 fg3 <- gtable_frame(gv)
 grid.newpage()
 combined <- rbind(fg3, fg12)
+png(file = "contrasts_0.02.png", width = 12, height = 12, res = 500, 
+    units = "in", pointsize = 10)
 grid.draw(combined)
+dev.off()
+
 ```
 
 ## Calculate removal statistics
