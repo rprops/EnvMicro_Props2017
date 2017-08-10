@@ -970,7 +970,7 @@ results_msphere_scale$Treatment <- revalue(results_msphere_scale$Treatment, c("M
 results_msphere_scale <- droplevels(results_msphere_scale)
 results_msphere_scale$Date <- factor(results_msphere_scale$Date,levels(results_msphere_scale$Date)[c(3,1,2)])
 
-# Hopefully this makes sense...
+# Plot diversity dynamics from literature study
 p_msphere <- ggplot(data = results_msphere, aes(x = Time_point, y = D2, fill = Treatment))+
   geom_boxplot(alpha = 0.5)+
   geom_point(size = 4, shape = 21, position=position_dodge(width=0.75))+
@@ -1015,6 +1015,59 @@ mean(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere
 ## Standard deviation
 sd(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T0" & results_msphere$Date != "Dec14"] - results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T3" & results_msphere$Date != "Dec14"]) # 4.13
 ```
+
+## Figure 5: Predict diversity and put in juxtaposition of literature (DOI: 10.1128/mSphere.00189-17)
+```{r Gating, fig.width = 15, fig.height = 10}
+# Predict the shift in taxonomic diversity based on FCM for the T0 and T3 samples
+df_mp <- data.frame(D2.fcm = results$D2[results$Time==3 | results$Time==0],
+                 time= results$Time[results$Time==3 | results$Time==0],
+                 Treatment = results$Treatment[results$Time==3 | results$Time==0])
+df_mp_pred <- data.frame(D2.16S = predict(lm.F, df_mp, se=TRUE)$fit, D2.16S.error = predict(lm.F, df_mp, se=TRUE)$se.fit, time = df_mp$time, treatment = df_mp$Treatment)
+df_mp_pred$D2.16S <- 2^df_mp_pred$D2.16S
+df_mp_pred$time[df_mp_pred$time == 0] <- "T0"
+df_mp_pred$time[df_mp_pred$time == 3] <- "T3"
+df_mp_pred$Date <- "Nov18"
+# Merge these predicted values into the data set from (DOI: 10.1128/mSphere.00189-17)
+results_prediction <- data.frame(D2 = c(results_msphere$D2, df_mp_pred$D2.16S),
+                                 Time_point = c(as.character(results_msphere$Time_point), df_mp_pred$time),
+                                 Treatment = c(as.character(results_msphere$Treatment), as.character(df_mp_pred$treatment)),
+                                 Measurement = as.factor(c(rep("Measured",42), rep("Predicted", 10))),
+                                 Date = c(as.character(results_msphere$Date), df_mp_pred$Date)
+                                 )
+results_prediction$Date <- factor(results_prediction$Date, levels = c("Jul13", "Aug14", "Nov18", "Dec14"))
+
+# Create a data frame with the faceting variables
+# and some dummy data (that will be overwritten)
+tp <- results_prediction
+# Annotation text
+ann_text <- data.frame(D2 = 15, Time_point = 5,lab = "Text",
+                       cyl = factor(8,levels = c("4","6","8")))
+p + geom_text(data = ann_text,label = "Text")
+
+p_msphere_predict <- ggplot(data = results_prediction, aes(x = Time_point, y = D2))+
+  geom_rect(data = tp, aes(fill = Measurement), xmin = -Inf, xmax = Inf,
+            ymin = -Inf,ymax = Inf, alpha = 0.005, show.legend =FALSE, inherit.aes = FALSE)+
+  geom_boxplot(alpha = 0.5, aes(fill = Treatment), position = position_dodge(width = .8))+
+  geom_point(size = 4, shape = 21, position = position_dodge(width=0.8), aes(fill = Treatment))+
+  theme_bw()+
+  facet_grid(.~Date)+
+  scale_fill_manual(breaks = c("Control","Feeding"), values=c(myColours[c(1:2)], "blue","red"))+
+  labs(y = expression('Taxonomic diversity - D'[2]), x = "Timepoint", fill = "Treatment")+
+  theme(axis.title=element_text(size=16), strip.text.x=element_text(size=16),
+        legend.title=element_text(size=15),legend.text=element_text(size=14),
+        axis.text = element_text(size=14),title=element_text(size=20),
+        strip.background=element_rect(fill=adjustcolor("lightgray",0.2))
+        #,panel.grid.major = element_blank(), panel.grid.minor = element_blank()
+        )+ 
+  geom_text(data = tp, aes(x=1.5,y=11,label=Measurement), size = 8, inherit.aes = FALSE,
+            hjust = 0.5)
+
+png(file="Fig5_PROPS.png",width=12,height=6,res=500,units="in", pointsize=12)
+pdf(file="Fig5_PROPS.pdf",width=12,height=6)
+p_msphere_predict
+dev.off()
+```
+
 
 ## Figure S3: Gating strategy
 ```{r Gating, fig.width = 15, fig.height = 10}
