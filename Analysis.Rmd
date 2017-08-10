@@ -984,15 +984,15 @@ p_msphere <- ggplot(data = results_msphere, aes(x = Time_point, y = D2, fill = T
         strip.background=element_rect(fill=adjustcolor("lightgray",0.2))
         #,panel.grid.major = element_blank(), panel.grid.minor = element_blank()
         )
-png(file="msphere_data.png",width=12,height=6,res=500,units="in", pointsize=12)
+# png(file="msphere_data.png",width=12,height=6,res=500,units="in", pointsize=12)
 p_msphere
-dev.off()
+# dev.off()
 
-p_msphere_scale <- ggplot(data = results_msphere_scale, aes(x = Time_point, y = D2, fill = Date))+
+p_msphere_scale <- ggplot(data = results_msphere_scale, aes(x = Time_point, y = D2, fill = Treatment))+
   geom_boxplot(alpha = 0.5)+
   geom_point(size = 4, shape = 21, position=position_dodge(width=0.75))+
   theme_bw()+
-  facet_grid(.~Treatment)+
+  facet_grid(.~Date)+
   scale_fill_manual(values=myColours[c(1:3)])+
   labs(y = expression('Taxonomic diversity - D'[2]), x = "Timepoint")+
   theme(axis.title=element_text(size=16), strip.text.x=element_text(size=16),
@@ -1158,10 +1158,10 @@ fg12 <- gtable_frame(cbind(fg1,fg2))
 fg3 <- gtable_frame(gv)
 grid.newpage()
 combined <- rbind(fg3, fg12)
-png(file = "contrasts_0.02.png", width = 12, height = 12, res = 500, 
+# png(file = "contrasts_0.02.png", width = 12, height = 12, res = 500, 
     units = "in", pointsize = 10)
 grid.draw(combined)
-dev.off()
+# dev.off()
 
 ```
 

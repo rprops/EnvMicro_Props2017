@@ -84,3 +84,11 @@ scale_reads <- function(physeq, n = min(sample_sums(physeq)), round = "floor") {
   physeq.scale <- prune_taxa(taxa_sums(physeq.scale) > 0, physeq.scale)
   return(physeq.scale)
 }
+
+# Extract Legend from ggplot2 object
+g_legend <- function(a.gplot){ 
+  tmp <- ggplot_gtable(ggplot_build(a.gplot)) 
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box") 
+  legend <- tmp$grobs[[leg]] 
+  return(legend)
+  } 
