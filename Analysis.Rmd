@@ -209,9 +209,9 @@ p5 <- ggplot(data=data.total.final,aes(x=D2.fcm,y=D2, fill=Lake))+ scale_fill_ma
   annotation_custom(my_grob)+
   annotation_custom(my_grob2)
 
-pdf("Fig1.pdf", width = 7, height = 6)
+# pdf("Fig1.pdf", width = 7, height = 6)
 print(p5)
-dev.off()
+# dev.off()
 
 ```
 ## Figure S1: Compare slopes of individual regressions
@@ -880,11 +880,11 @@ p.beta.S <- ggplot(data=beta.div.data.S, aes(x=X1, y=X2, fill=Treatment, size=Ti
 p.beta.S.plot <-  p.beta.S + theme(legend.position = "none")
 p.alpha.plot <-  p.alpha + theme(legend.position = "none")
 
-pdf("Fig3_revised.pdf", width = 12, height = 6)
+# pdf("Fig3_revised.pdf", width = 12, height = 6)
 grid.arrange(p.alpha.plot, p.beta.S, g_legend(p.alpha), layout_matrix = rbind(c(1,2),
                                                                                c(3,3)),
              heights=c(6, 1))
-dev.off()
+# dev.off()
 ```
 
 ## Infer taxonomic diversity dynamics
@@ -1003,7 +1003,7 @@ p_msphere_scale <- ggplot(data = results_msphere_scale, aes(x = Time_point, y = 
         )
 p_msphere_scale
 
-# Continuing with the non-scale diversity we calculate the average diversity reduction over all experiments
+# Continuing with the non-scaled diversity we calculate the average diversity reduction over all experiments
 ## Mean reduction
 mean(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T0"] - results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T3"]) # 5.32
 ## Standard deviation
@@ -1016,8 +1016,8 @@ mean(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere
 sd(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T0" & results_msphere$Date != "Dec14"] - results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T3" & results_msphere$Date != "Dec14"]) # 4.13
 ```
 
-## Figure 5: Predict diversity and put in juxtaposition of literature (DOI: 10.1128/mSphere.00189-17)
-```{r Gating, fig.width = 15, fig.height = 10}
+## Figure 4: Predict diversity and put in juxtaposition of literature (DOI: 10.1128/mSphere.00189-17)
+```{r predict-diversity, fig.width = 15, fig.height = 10}
 # Predict the shift in taxonomic diversity based on FCM for the T0 and T3 samples
 df_mp <- data.frame(D2.fcm = results$D2[results$Time==3 | results$Time==0],
                  time= results$Time[results$Time==3 | results$Time==0],
@@ -1062,10 +1062,10 @@ p_msphere_predict <- ggplot(data = results_prediction, aes(x = Time_point, y = D
   geom_text(data = tp, aes(x=1.5,y=11,label=Measurement), size = 8, inherit.aes = FALSE,
             hjust = 0.5)
 
-png(file="Fig5_PROPS.png",width=12,height=6,res=500,units="in", pointsize=12)
-pdf(file="Fig5_PROPS.pdf",width=12,height=6)
+# png(file="Fig5_PROPS.png",width=12,height=6,res=500,units="in", pointsize=12)
+# pdf(file="Fig5_PROPS.pdf",width=12,height=6)
 p_msphere_predict
-dev.off()
+# dev.off()
 ```
 
 
@@ -1129,17 +1129,17 @@ print(xyplot(`FL3-H`~`FL1-H`, data=flowData_transformed,index.cond=list(c(1:6)),
 )
 ```
 
-## Figure 4: Identify physiological populations
+## Figure 5: Identify physiological populations
 ``` {r Contrasts, fig.width = 15, fig.height = 12, warning = FALSE}
 comp_t0 <- fp_contrasts(x=fbasis, comp2=(pos=="C1_t0.fcs" | pos== "C2_t0.fcs"),
                         comp1=(pos=="Q1_T_t0.fcs" | pos== "Q2_T_t0.fcs" | pos== "Q3_T_t0.fcs"), 
-                        thresh=0.05)
+                        thresh=0.04)
 comp_t1.5 <- fp_contrasts(x=fbasis, comp2=(pos=="C1_t1.5.fcs" | pos== "C2_t1.5.fcs"),
                           comp1=(pos=="Q1_T_t1.5.fcs" | pos== "Q2_T_t1.5.fcs" | pos== "Q3_T_t1.5.fcs"), 
-                          thresh=0.05)
+                          thresh=0.04)
 comp_t3 <- fp_contrasts(x=fbasis, comp2=(pos=="C1_t3.fcs" | pos== "C2_t3.fcs"),
                         comp1=(pos=="Q1_T_t3.fcs" | pos== "Q2_T_t3.fcs" | pos== "Q3_T_t3.fcs"), 
-                        thresh=0.05)
+                        thresh=0.04)
 
 # Merge data frames
 comp_total <- rbind(comp_t0, comp_t1.5, comp_t3)
@@ -1212,7 +1212,7 @@ fg3 <- gtable_frame(gv)
 grid.newpage()
 combined <- rbind(fg3, fg12)
 # png(file = "contrasts_0.02.png", width = 12, height = 12, res = 500, 
-    units = "in", pointsize = 10)
+    # units = "in", pointsize = 10)
 grid.draw(combined)
 # dev.off()
 
