@@ -1001,111 +1001,16 @@ fbasis <- flowBasis(flowData_transformed, param, nbin=128,
 # Densities will be normalized to the interval [0,1]
 # d = rounding factor
 # Diversity.fbasis <- Diversity(fbasis, d = 3, plot = TRUE, R = 999)
-Diversity.fbasis <- Diversity_rf(flowData_transformed, d=3, param = param, R = R.main)
+Diversity.fbasis <- Diversity_rf(flowData_transformed, d=3, param = param, R = R.main,
+                                 parallel = TRUE, ncores = 10)
 ```
 
 ```
-## Thu Aug 10 19:10:42 2017 --- Starting resample run 1
-## Thu Aug 10 19:11:46 2017 --- Starting resample run 2
-## Thu Aug 10 19:12:52 2017 --- Starting resample run 3
-## Thu Aug 10 19:13:58 2017 --- Starting resample run 4
-## Thu Aug 10 19:15:03 2017 --- Starting resample run 5
-## Thu Aug 10 19:16:10 2017 --- Starting resample run 6
-## Thu Aug 10 19:17:15 2017 --- Starting resample run 7
-## Thu Aug 10 19:18:19 2017 --- Starting resample run 8
-## Thu Aug 10 19:19:24 2017 --- Starting resample run 9
-## Thu Aug 10 19:20:28 2017 --- Starting resample run 10
-## Thu Aug 10 19:21:32 2017 --- Starting resample run 11
-## Thu Aug 10 19:22:37 2017 --- Starting resample run 12
-## Thu Aug 10 19:23:41 2017 --- Starting resample run 13
-## Thu Aug 10 19:25:49 2017 --- Starting resample run 14
-## Thu Aug 10 19:27:10 2017 --- Starting resample run 15
-## Thu Aug 10 19:28:33 2017 --- Starting resample run 16
-## Thu Aug 10 19:29:40 2017 --- Starting resample run 17
-## Thu Aug 10 19:30:48 2017 --- Starting resample run 18
-## Thu Aug 10 19:31:55 2017 --- Starting resample run 19
-## Thu Aug 10 19:33:02 2017 --- Starting resample run 20
-## Thu Aug 10 19:34:07 2017 --- Starting resample run 21
-## Thu Aug 10 19:35:12 2017 --- Starting resample run 22
-## Thu Aug 10 19:36:16 2017 --- Starting resample run 23
-## Thu Aug 10 19:37:20 2017 --- Starting resample run 24
-## Thu Aug 10 19:38:26 2017 --- Starting resample run 25
-## Thu Aug 10 19:39:33 2017 --- Starting resample run 26
-## Thu Aug 10 19:40:41 2017 --- Starting resample run 27
-## Thu Aug 10 19:41:47 2017 --- Starting resample run 28
-## Thu Aug 10 19:42:53 2017 --- Starting resample run 29
-## Thu Aug 10 19:43:59 2017 --- Starting resample run 30
-## Thu Aug 10 19:45:04 2017 --- Starting resample run 31
-## Thu Aug 10 19:46:08 2017 --- Starting resample run 32
-## Thu Aug 10 19:47:14 2017 --- Starting resample run 33
-## Thu Aug 10 19:48:20 2017 --- Starting resample run 34
-## Thu Aug 10 19:49:25 2017 --- Starting resample run 35
-## Thu Aug 10 19:50:30 2017 --- Starting resample run 36
-## Thu Aug 10 19:51:36 2017 --- Starting resample run 37
-## Thu Aug 10 19:52:46 2017 --- Starting resample run 38
-## Thu Aug 10 19:53:53 2017 --- Starting resample run 39
-## Thu Aug 10 19:54:59 2017 --- Starting resample run 40
-## Thu Aug 10 19:56:06 2017 --- Starting resample run 41
-## Thu Aug 10 19:57:13 2017 --- Starting resample run 42
-## Thu Aug 10 19:58:18 2017 --- Starting resample run 43
-## Thu Aug 10 19:59:25 2017 --- Starting resample run 44
-## Thu Aug 10 20:00:31 2017 --- Starting resample run 45
-## Thu Aug 10 20:01:38 2017 --- Starting resample run 46
-## Thu Aug 10 20:02:47 2017 --- Starting resample run 47
-## Thu Aug 10 20:03:54 2017 --- Starting resample run 48
-## Thu Aug 10 20:04:58 2017 --- Starting resample run 49
-## Thu Aug 10 20:06:02 2017 --- Starting resample run 50
-## Thu Aug 10 20:07:06 2017 --- Starting resample run 51
-## Thu Aug 10 20:08:09 2017 --- Starting resample run 52
-## Thu Aug 10 20:09:14 2017 --- Starting resample run 53
-## Thu Aug 10 20:10:19 2017 --- Starting resample run 54
-## Thu Aug 10 20:11:25 2017 --- Starting resample run 55
-## Thu Aug 10 20:12:31 2017 --- Starting resample run 56
-## Thu Aug 10 20:13:35 2017 --- Starting resample run 57
-## Thu Aug 10 20:14:40 2017 --- Starting resample run 58
-## Thu Aug 10 20:15:45 2017 --- Starting resample run 59
-## Thu Aug 10 20:16:48 2017 --- Starting resample run 60
-## Thu Aug 10 20:17:54 2017 --- Starting resample run 61
-## Thu Aug 10 20:19:00 2017 --- Starting resample run 62
-## Thu Aug 10 20:20:07 2017 --- Starting resample run 63
-## Thu Aug 10 20:21:12 2017 --- Starting resample run 64
-## Thu Aug 10 20:22:17 2017 --- Starting resample run 65
-## Thu Aug 10 20:23:23 2017 --- Starting resample run 66
-## Thu Aug 10 20:24:28 2017 --- Starting resample run 67
-## Thu Aug 10 20:25:32 2017 --- Starting resample run 68
-## Thu Aug 10 20:26:39 2017 --- Starting resample run 69
-## Thu Aug 10 20:27:44 2017 --- Starting resample run 70
-## Thu Aug 10 20:28:49 2017 --- Starting resample run 71
-## Thu Aug 10 20:29:53 2017 --- Starting resample run 72
-## Thu Aug 10 20:31:00 2017 --- Starting resample run 73
-## Thu Aug 10 20:32:06 2017 --- Starting resample run 74
-## Thu Aug 10 20:33:13 2017 --- Starting resample run 75
-## Thu Aug 10 20:34:20 2017 --- Starting resample run 76
-## Thu Aug 10 20:35:28 2017 --- Starting resample run 77
-## Thu Aug 10 20:36:33 2017 --- Starting resample run 78
-## Thu Aug 10 20:37:41 2017 --- Starting resample run 79
-## Thu Aug 10 20:38:48 2017 --- Starting resample run 80
-## Thu Aug 10 20:39:54 2017 --- Starting resample run 81
-## Thu Aug 10 20:41:00 2017 --- Starting resample run 82
-## Thu Aug 10 20:42:06 2017 --- Starting resample run 83
-## Thu Aug 10 20:43:10 2017 --- Starting resample run 84
-## Thu Aug 10 20:44:20 2017 --- Starting resample run 85
-## Thu Aug 10 20:45:27 2017 --- Starting resample run 86
-## Thu Aug 10 20:46:34 2017 --- Starting resample run 87
-## Thu Aug 10 20:47:47 2017 --- Starting resample run 88
-## Thu Aug 10 20:48:57 2017 --- Starting resample run 89
-## Thu Aug 10 20:50:06 2017 --- Starting resample run 90
-## Thu Aug 10 20:51:14 2017 --- Starting resample run 91
-## Thu Aug 10 20:52:22 2017 --- Starting resample run 92
-## Thu Aug 10 20:53:31 2017 --- Starting resample run 93
-## Thu Aug 10 20:54:41 2017 --- Starting resample run 94
-## Thu Aug 10 20:55:51 2017 --- Starting resample run 95
-## Thu Aug 10 20:57:00 2017 --- Starting resample run 96
-## Thu Aug 10 20:58:06 2017 --- Starting resample run 97
-## Thu Aug 10 20:59:12 2017 --- Starting resample run 98
-## Thu Aug 10 21:00:18 2017 --- Starting resample run 99
-## Thu Aug 10 21:01:23 2017 --- Starting resample run 100
-## Thu Aug 10 21:02:28 2017 --- Alpha diversity metrics (D0,D1,D2) have been computed after 100 bootstraps
+## Tue Sep 19 16:03:24 2017 --- Using 10 cores for calculations
+## Tue Sep 19 16:05:08 2017 --- Closing workers
+## Tue Sep 19 16:05:08 2017 --- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
+## -----------------------------------------------------------------------------------------------------
+## 
 ```
 
 ```r
@@ -1137,219 +1042,29 @@ rGate_LNA <- polygonGate(.gate=sqrcut1, filterId = "LNA")
 flowData_HNA <- split(flowData_transformed, rGate_HNA)$`HNA+`
 flowData_LNA <- split(flowData_transformed, rGate_LNA)$`LNA+`
 
-Diversity.HNA <- Diversity_rf(flowData_HNA, d=3, param = param, R = R.main)
+Diversity.HNA <- Diversity_rf(flowData_HNA, d=3, param = param, R = R.main,
+                                 parallel = TRUE, ncores = 10)
 ```
 
 ```
-## Thu Aug 10 21:02:44 2017 --- Starting resample run 1
-## Thu Aug 10 21:03:35 2017 --- Starting resample run 2
-## Thu Aug 10 21:04:25 2017 --- Starting resample run 3
-## Thu Aug 10 21:05:17 2017 --- Starting resample run 4
-## Thu Aug 10 21:06:06 2017 --- Starting resample run 5
-## Thu Aug 10 21:06:56 2017 --- Starting resample run 6
-## Thu Aug 10 21:07:45 2017 --- Starting resample run 7
-## Thu Aug 10 21:08:34 2017 --- Starting resample run 8
-## Thu Aug 10 21:09:24 2017 --- Starting resample run 9
-## Thu Aug 10 21:10:13 2017 --- Starting resample run 10
-## Thu Aug 10 21:11:01 2017 --- Starting resample run 11
-## Thu Aug 10 21:11:50 2017 --- Starting resample run 12
-## Thu Aug 10 21:12:40 2017 --- Starting resample run 13
-## Thu Aug 10 21:13:31 2017 --- Starting resample run 14
-## Thu Aug 10 21:14:22 2017 --- Starting resample run 15
-## Thu Aug 10 21:15:13 2017 --- Starting resample run 16
-## Thu Aug 10 21:16:04 2017 --- Starting resample run 17
-## Thu Aug 10 21:16:54 2017 --- Starting resample run 18
-## Thu Aug 10 21:17:44 2017 --- Starting resample run 19
-## Thu Aug 10 21:18:34 2017 --- Starting resample run 20
-## Thu Aug 10 21:19:26 2017 --- Starting resample run 21
-## Thu Aug 10 21:20:16 2017 --- Starting resample run 22
-## Thu Aug 10 21:21:06 2017 --- Starting resample run 23
-## Thu Aug 10 21:21:55 2017 --- Starting resample run 24
-## Thu Aug 10 21:22:47 2017 --- Starting resample run 25
-## Thu Aug 10 21:23:39 2017 --- Starting resample run 26
-## Thu Aug 10 21:24:33 2017 --- Starting resample run 27
-## Thu Aug 10 21:25:21 2017 --- Starting resample run 28
-## Thu Aug 10 21:26:10 2017 --- Starting resample run 29
-## Thu Aug 10 21:27:00 2017 --- Starting resample run 30
-## Thu Aug 10 21:27:51 2017 --- Starting resample run 31
-## Thu Aug 10 21:28:43 2017 --- Starting resample run 32
-## Thu Aug 10 21:29:35 2017 --- Starting resample run 33
-## Thu Aug 10 21:30:27 2017 --- Starting resample run 34
-## Thu Aug 10 21:31:17 2017 --- Starting resample run 35
-## Thu Aug 10 21:32:07 2017 --- Starting resample run 36
-## Thu Aug 10 21:32:57 2017 --- Starting resample run 37
-## Thu Aug 10 21:33:47 2017 --- Starting resample run 38
-## Thu Aug 10 21:34:38 2017 --- Starting resample run 39
-## Thu Aug 10 21:35:28 2017 --- Starting resample run 40
-## Thu Aug 10 21:36:17 2017 --- Starting resample run 41
-## Thu Aug 10 21:37:06 2017 --- Starting resample run 42
-## Thu Aug 10 21:37:56 2017 --- Starting resample run 43
-## Thu Aug 10 21:38:44 2017 --- Starting resample run 44
-## Thu Aug 10 21:39:31 2017 --- Starting resample run 45
-## Thu Aug 10 21:40:18 2017 --- Starting resample run 46
-## Thu Aug 10 21:41:07 2017 --- Starting resample run 47
-## Thu Aug 10 21:41:56 2017 --- Starting resample run 48
-## Thu Aug 10 21:42:44 2017 --- Starting resample run 49
-## Thu Aug 10 21:43:34 2017 --- Starting resample run 50
-## Thu Aug 10 21:44:22 2017 --- Starting resample run 51
-## Thu Aug 10 21:45:11 2017 --- Starting resample run 52
-## Thu Aug 10 21:45:59 2017 --- Starting resample run 53
-## Thu Aug 10 21:46:47 2017 --- Starting resample run 54
-## Thu Aug 10 21:47:36 2017 --- Starting resample run 55
-## Thu Aug 10 21:48:25 2017 --- Starting resample run 56
-## Thu Aug 10 21:49:14 2017 --- Starting resample run 57
-## Thu Aug 10 21:50:02 2017 --- Starting resample run 58
-## Thu Aug 10 21:50:51 2017 --- Starting resample run 59
-## Thu Aug 10 21:51:39 2017 --- Starting resample run 60
-## Thu Aug 10 21:52:26 2017 --- Starting resample run 61
-## Thu Aug 10 21:53:15 2017 --- Starting resample run 62
-## Thu Aug 10 21:54:04 2017 --- Starting resample run 63
-## Thu Aug 10 21:54:52 2017 --- Starting resample run 64
-## Thu Aug 10 21:55:39 2017 --- Starting resample run 65
-## Thu Aug 10 21:56:27 2017 --- Starting resample run 66
-## Thu Aug 10 21:57:16 2017 --- Starting resample run 67
-## Thu Aug 10 21:58:04 2017 --- Starting resample run 68
-## Thu Aug 10 21:58:52 2017 --- Starting resample run 69
-## Thu Aug 10 21:59:41 2017 --- Starting resample run 70
-## Thu Aug 10 22:00:29 2017 --- Starting resample run 71
-## Thu Aug 10 22:01:18 2017 --- Starting resample run 72
-## Thu Aug 10 22:02:05 2017 --- Starting resample run 73
-## Thu Aug 10 22:02:53 2017 --- Starting resample run 74
-## Thu Aug 10 22:03:42 2017 --- Starting resample run 75
-## Thu Aug 10 22:04:31 2017 --- Starting resample run 76
-## Thu Aug 10 22:05:19 2017 --- Starting resample run 77
-## Thu Aug 10 22:06:08 2017 --- Starting resample run 78
-## Thu Aug 10 22:07:08 2017 --- Starting resample run 79
-## Thu Aug 10 22:08:30 2017 --- Starting resample run 80
-## Thu Aug 10 22:09:24 2017 --- Starting resample run 81
-## Thu Aug 10 22:10:13 2017 --- Starting resample run 82
-## Thu Aug 10 22:11:01 2017 --- Starting resample run 83
-## Thu Aug 10 22:11:53 2017 --- Starting resample run 84
-## Thu Aug 10 22:12:45 2017 --- Starting resample run 85
-## Thu Aug 10 22:13:37 2017 --- Starting resample run 86
-## Thu Aug 10 22:14:27 2017 --- Starting resample run 87
-## Thu Aug 10 22:15:17 2017 --- Starting resample run 88
-## Thu Aug 10 22:16:08 2017 --- Starting resample run 89
-## Thu Aug 10 22:17:00 2017 --- Starting resample run 90
-## Thu Aug 10 22:17:50 2017 --- Starting resample run 91
-## Thu Aug 10 22:18:41 2017 --- Starting resample run 92
-## Thu Aug 10 22:19:31 2017 --- Starting resample run 93
-## Thu Aug 10 22:20:20 2017 --- Starting resample run 94
-## Thu Aug 10 22:21:09 2017 --- Starting resample run 95
-## Thu Aug 10 22:21:58 2017 --- Starting resample run 96
-## Thu Aug 10 22:22:47 2017 --- Starting resample run 97
-## Thu Aug 10 22:23:35 2017 --- Starting resample run 98
-## Thu Aug 10 22:24:23 2017 --- Starting resample run 99
-## Thu Aug 10 22:25:11 2017 --- Starting resample run 100
-## Thu Aug 10 22:26:01 2017 --- Alpha diversity metrics (D0,D1,D2) have been computed after 100 bootstraps
+## Tue Sep 19 16:05:23 2017 --- Using 10 cores for calculations
+## Tue Sep 19 16:06:37 2017 --- Closing workers
+## Tue Sep 19 16:06:37 2017 --- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
+## -----------------------------------------------------------------------------------------------------
+## 
 ```
 
 ```r
-Diversity.LNA <- Diversity_rf(flowData_LNA, d=3, param = param, R = R.main)
+Diversity.LNA <- Diversity_rf(flowData_LNA, d=3, param = param, R = R.main,
+                                 parallel = TRUE, ncores = 10)
 ```
 
 ```
-## Thu Aug 10 22:26:01 2017 --- Starting resample run 1
-## Thu Aug 10 22:27:07 2017 --- Starting resample run 2
-## Thu Aug 10 22:28:01 2017 --- Starting resample run 3
-## Thu Aug 10 22:28:54 2017 --- Starting resample run 4
-## Thu Aug 10 22:29:56 2017 --- Starting resample run 5
-## Thu Aug 10 22:30:49 2017 --- Starting resample run 6
-## Thu Aug 10 22:31:43 2017 --- Starting resample run 7
-## Thu Aug 10 22:32:36 2017 --- Starting resample run 8
-## Thu Aug 10 22:33:29 2017 --- Starting resample run 9
-## Thu Aug 10 22:34:22 2017 --- Starting resample run 10
-## Thu Aug 10 22:35:15 2017 --- Starting resample run 11
-## Thu Aug 10 22:36:07 2017 --- Starting resample run 12
-## Thu Aug 10 22:36:59 2017 --- Starting resample run 13
-## Thu Aug 10 22:37:53 2017 --- Starting resample run 14
-## Thu Aug 10 22:38:48 2017 --- Starting resample run 15
-## Thu Aug 10 22:39:52 2017 --- Starting resample run 16
-## Thu Aug 10 22:40:46 2017 --- Starting resample run 17
-## Thu Aug 10 22:41:41 2017 --- Starting resample run 18
-## Thu Aug 10 22:42:35 2017 --- Starting resample run 19
-## Thu Aug 10 22:43:31 2017 --- Starting resample run 20
-## Thu Aug 10 22:44:29 2017 --- Starting resample run 21
-## Thu Aug 10 22:45:37 2017 --- Starting resample run 22
-## Thu Aug 10 22:46:33 2017 --- Starting resample run 23
-## Thu Aug 10 22:47:30 2017 --- Starting resample run 24
-## Thu Aug 10 22:48:27 2017 --- Starting resample run 25
-## Thu Aug 10 22:49:22 2017 --- Starting resample run 26
-## Thu Aug 10 22:50:15 2017 --- Starting resample run 27
-## Thu Aug 10 22:51:07 2017 --- Starting resample run 28
-## Thu Aug 10 22:52:04 2017 --- Starting resample run 29
-## Thu Aug 10 22:52:56 2017 --- Starting resample run 30
-## Thu Aug 10 22:53:53 2017 --- Starting resample run 31
-## Thu Aug 10 22:54:45 2017 --- Starting resample run 32
-## Thu Aug 10 22:55:36 2017 --- Starting resample run 33
-## Thu Aug 10 22:56:28 2017 --- Starting resample run 34
-## Thu Aug 10 22:57:22 2017 --- Starting resample run 35
-## Thu Aug 10 22:58:14 2017 --- Starting resample run 36
-## Thu Aug 10 22:59:12 2017 --- Starting resample run 37
-## Thu Aug 10 23:00:03 2017 --- Starting resample run 38
-## Thu Aug 10 23:00:55 2017 --- Starting resample run 39
-## Thu Aug 10 23:01:47 2017 --- Starting resample run 40
-## Thu Aug 10 23:02:45 2017 --- Starting resample run 41
-## Thu Aug 10 23:03:38 2017 --- Starting resample run 42
-## Thu Aug 10 23:04:32 2017 --- Starting resample run 43
-## Thu Aug 10 23:05:25 2017 --- Starting resample run 44
-## Thu Aug 10 23:06:17 2017 --- Starting resample run 45
-## Thu Aug 10 23:07:13 2017 --- Starting resample run 46
-## Thu Aug 10 23:08:05 2017 --- Starting resample run 47
-## Thu Aug 10 23:08:58 2017 --- Starting resample run 48
-## Thu Aug 10 23:09:51 2017 --- Starting resample run 49
-## Thu Aug 10 23:10:45 2017 --- Starting resample run 50
-## Thu Aug 10 23:11:36 2017 --- Starting resample run 51
-## Thu Aug 10 23:12:28 2017 --- Starting resample run 52
-## Thu Aug 10 23:13:19 2017 --- Starting resample run 53
-## Thu Aug 10 23:14:11 2017 --- Starting resample run 54
-## Thu Aug 10 23:15:03 2017 --- Starting resample run 55
-## Thu Aug 10 23:15:56 2017 --- Starting resample run 56
-## Thu Aug 10 23:16:47 2017 --- Starting resample run 57
-## Thu Aug 10 23:17:40 2017 --- Starting resample run 58
-## Thu Aug 10 23:18:32 2017 --- Starting resample run 59
-## Thu Aug 10 23:19:23 2017 --- Starting resample run 60
-## Thu Aug 10 23:20:16 2017 --- Starting resample run 61
-## Thu Aug 10 23:21:09 2017 --- Starting resample run 62
-## Thu Aug 10 23:22:02 2017 --- Starting resample run 63
-## Thu Aug 10 23:23:02 2017 --- Starting resample run 64
-## Thu Aug 10 23:23:54 2017 --- Starting resample run 65
-## Thu Aug 10 23:24:46 2017 --- Starting resample run 66
-## Thu Aug 10 23:25:38 2017 --- Starting resample run 67
-## Thu Aug 10 23:26:32 2017 --- Starting resample run 68
-## Thu Aug 10 23:27:27 2017 --- Starting resample run 69
-## Thu Aug 10 23:28:26 2017 --- Starting resample run 70
-## Thu Aug 10 23:29:20 2017 --- Starting resample run 71
-## Thu Aug 10 23:30:14 2017 --- Starting resample run 72
-## Thu Aug 10 23:31:07 2017 --- Starting resample run 73
-## Thu Aug 10 23:32:00 2017 --- Starting resample run 74
-## Thu Aug 10 23:32:54 2017 --- Starting resample run 75
-## Thu Aug 10 23:33:46 2017 --- Starting resample run 76
-## Thu Aug 10 23:34:39 2017 --- Starting resample run 77
-## Thu Aug 10 23:35:31 2017 --- Starting resample run 78
-## Thu Aug 10 23:36:24 2017 --- Starting resample run 79
-## Thu Aug 10 23:37:17 2017 --- Starting resample run 80
-## Thu Aug 10 23:38:10 2017 --- Starting resample run 81
-## Thu Aug 10 23:39:03 2017 --- Starting resample run 82
-## Thu Aug 10 23:39:57 2017 --- Starting resample run 83
-## Thu Aug 10 23:40:50 2017 --- Starting resample run 84
-## Thu Aug 10 23:41:43 2017 --- Starting resample run 85
-## Thu Aug 10 23:42:36 2017 --- Starting resample run 86
-## Thu Aug 10 23:43:29 2017 --- Starting resample run 87
-## Thu Aug 10 23:44:23 2017 --- Starting resample run 88
-## Thu Aug 10 23:45:16 2017 --- Starting resample run 89
-## Thu Aug 10 23:46:10 2017 --- Starting resample run 90
-## Thu Aug 10 23:47:04 2017 --- Starting resample run 91
-## Thu Aug 10 23:47:57 2017 --- Starting resample run 92
-## Thu Aug 10 23:48:51 2017 --- Starting resample run 93
-## Thu Aug 10 23:49:44 2017 --- Starting resample run 94
-## Thu Aug 10 23:50:37 2017 --- Starting resample run 95
-## Thu Aug 10 23:51:30 2017 --- Starting resample run 96
-## Thu Aug 10 23:52:24 2017 --- Starting resample run 97
-## Thu Aug 10 23:53:17 2017 --- Starting resample run 98
-## Thu Aug 10 23:54:09 2017 --- Starting resample run 99
-## Thu Aug 10 23:55:03 2017 --- Starting resample run 100
-## Thu Aug 10 23:55:56 2017 --- Alpha diversity metrics (D0,D1,D2) have been computed after 100 bootstraps
+## Tue Sep 19 16:06:42 2017 --- Using 10 cores for calculations
+## Tue Sep 19 16:08:04 2017 --- Closing workers
+## Tue Sep 19 16:08:04 2017 --- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
+## -----------------------------------------------------------------------------------------------------
+## 
 ```
 
 ```r
@@ -2897,219 +2612,219 @@ sample_data(physeq_msphere) <- sample_data(meta_msphere)
 physeq_msphere <- subset_samples(physeq_msphere, Group == "Experiment")
 
 # Calculate diversity before and after rescaling
-div_msphere <- Diversity_16S(physeq_msphere, R=100, parallel = TRUE, ncores = 2)
+div_msphere <- Diversity_16S(physeq_msphere, R=100, parallel = TRUE, ncores = 10)
 ```
 
 ```
 ## 	**WARNING** this functions assumes that rows are samples and columns
 ##       	are taxa in your phyloseq object, please verify.
-## Thu Aug 24 18:28:27 2017 	Using 2 cores for calculations
-## Thu Aug 24 18:28:27 2017	Calculating diversity for sample 1/48 --- C1T0.1214
-## Thu Aug 24 18:28:42 2017	Done with sample C1T0.1214
-## Thu Aug 24 18:28:42 2017	Calculating diversity for sample 2/48 --- C1T0.813
-## Thu Aug 24 18:28:51 2017	Done with sample C1T0.813
-## Thu Aug 24 18:28:51 2017	Calculating diversity for sample 3/48 --- C1T0.814
-## Thu Aug 24 18:28:59 2017	Done with sample C1T0.814
-## Thu Aug 24 18:28:59 2017	Calculating diversity for sample 4/48 --- C1T3.1214
-## Thu Aug 24 18:29:07 2017	Done with sample C1T3.1214
-## Thu Aug 24 18:29:07 2017	Calculating diversity for sample 5/48 --- C1T3.813
-## Thu Aug 24 18:29:15 2017	Done with sample C1T3.813
-## Thu Aug 24 18:29:15 2017	Calculating diversity for sample 6/48 --- C1T3.814
-## Thu Aug 24 18:29:22 2017	Done with sample C1T3.814
-## Thu Aug 24 18:29:22 2017	Calculating diversity for sample 7/48 --- C2T0.1214
-## Thu Aug 24 18:29:30 2017	Done with sample C2T0.1214
-## Thu Aug 24 18:29:30 2017	Calculating diversity for sample 8/48 --- C2T0.813
-## Thu Aug 24 18:29:38 2017	Done with sample C2T0.813
-## Thu Aug 24 18:29:38 2017	Calculating diversity for sample 9/48 --- C2T0.814
-## Thu Aug 24 18:29:45 2017	Done with sample C2T0.814
-## Thu Aug 24 18:29:45 2017	Calculating diversity for sample 10/48 --- C2T3.1214
-## Thu Aug 24 18:29:53 2017	Done with sample C2T3.1214
-## Thu Aug 24 18:29:53 2017	Calculating diversity for sample 11/48 --- C2T3.813
-## Thu Aug 24 18:30:01 2017	Done with sample C2T3.813
-## Thu Aug 24 18:30:01 2017	Calculating diversity for sample 12/48 --- C2T3.814
-## Thu Aug 24 18:30:11 2017	Done with sample C2T3.814
-## Thu Aug 24 18:30:11 2017	Calculating diversity for sample 13/48 --- C3T0.1214
-## Thu Aug 24 18:30:21 2017	Done with sample C3T0.1214
-## Thu Aug 24 18:30:21 2017	Calculating diversity for sample 14/48 --- C3T0.813
-## Thu Aug 24 18:30:28 2017	Done with sample C3T0.813
-## Thu Aug 24 18:30:28 2017	Calculating diversity for sample 15/48 --- C3T0.814
-## Thu Aug 24 18:30:36 2017	Done with sample C3T0.814
-## Thu Aug 24 18:30:36 2017	Calculating diversity for sample 16/48 --- C3T3.1214
-## Thu Aug 24 18:30:43 2017	Done with sample C3T3.1214
-## Thu Aug 24 18:30:43 2017	Calculating diversity for sample 17/48 --- C3T3.813
-## Thu Aug 24 18:30:51 2017	Done with sample C3T3.813
-## Thu Aug 24 18:30:51 2017	Calculating diversity for sample 18/48 --- C3T3.814
-## Thu Aug 24 18:30:59 2017	Done with sample C3T3.814
-## Thu Aug 24 18:30:59 2017	Calculating diversity for sample 19/48 --- E1T0.1214
-## Thu Aug 24 18:31:09 2017	Done with sample E1T0.1214
-## Thu Aug 24 18:31:09 2017	Calculating diversity for sample 20/48 --- E1T0.813
-## Thu Aug 24 18:31:19 2017	Done with sample E1T0.813
-## Thu Aug 24 18:31:19 2017	Calculating diversity for sample 21/48 --- E1T0.814
-## Thu Aug 24 18:31:27 2017	Done with sample E1T0.814
-## Thu Aug 24 18:31:27 2017	Calculating diversity for sample 22/48 --- E1T3.1214
-## Thu Aug 24 18:31:37 2017	Done with sample E1T3.1214
-## Thu Aug 24 18:31:37 2017	Calculating diversity for sample 23/48 --- E1T3.813
-## Thu Aug 24 18:31:45 2017	Done with sample E1T3.813
-## Thu Aug 24 18:31:45 2017	Calculating diversity for sample 24/48 --- E1T3.814
-## Thu Aug 24 18:31:52 2017	Done with sample E1T3.814
-## Thu Aug 24 18:31:52 2017	Calculating diversity for sample 25/48 --- E2T0.1214
-## Thu Aug 24 18:32:00 2017	Done with sample E2T0.1214
-## Thu Aug 24 18:32:00 2017	Calculating diversity for sample 26/48 --- E2T0.813
-## Thu Aug 24 18:32:08 2017	Done with sample E2T0.813
-## Thu Aug 24 18:32:08 2017	Calculating diversity for sample 27/48 --- E2T0.814
-## Thu Aug 24 18:32:16 2017	Done with sample E2T0.814
-## Thu Aug 24 18:32:16 2017	Calculating diversity for sample 28/48 --- E2T3.1214
-## Thu Aug 24 18:32:25 2017	Done with sample E2T3.1214
-## Thu Aug 24 18:32:25 2017	Calculating diversity for sample 29/48 --- E2T3.813
-## Thu Aug 24 18:32:33 2017	Done with sample E2T3.813
-## Thu Aug 24 18:32:33 2017	Calculating diversity for sample 30/48 --- E2T3.814
-## Thu Aug 24 18:32:40 2017	Done with sample E2T3.814
-## Thu Aug 24 18:32:40 2017	Calculating diversity for sample 31/48 --- E3T0.1214
-## Thu Aug 24 18:32:47 2017	Done with sample E3T0.1214
-## Thu Aug 24 18:32:47 2017	Calculating diversity for sample 32/48 --- E3T0.813
-## Thu Aug 24 18:32:55 2017	Done with sample E3T0.813
-## Thu Aug 24 18:32:55 2017	Calculating diversity for sample 33/48 --- E3T0.814
-## Thu Aug 24 18:33:03 2017	Done with sample E3T0.814
-## Thu Aug 24 18:33:03 2017	Calculating diversity for sample 34/48 --- E3T3.1214
-## Thu Aug 24 18:33:11 2017	Done with sample E3T3.1214
-## Thu Aug 24 18:33:11 2017	Calculating diversity for sample 35/48 --- E3T3.813
-## Thu Aug 24 18:33:18 2017	Done with sample E3T3.813
-## Thu Aug 24 18:33:18 2017	Calculating diversity for sample 36/48 --- E3T3.814
-## Thu Aug 24 18:33:27 2017	Done with sample E3T3.814
-## Thu Aug 24 18:33:27 2017	Calculating diversity for sample 37/48 --- E4T0.1214
-## Thu Aug 24 18:33:35 2017	Done with sample E4T0.1214
-## Thu Aug 24 18:33:35 2017	Calculating diversity for sample 38/48 --- E4T0.813
-## Thu Aug 24 18:33:42 2017	Done with sample E4T0.813
-## Thu Aug 24 18:33:42 2017	Calculating diversity for sample 39/48 --- E4T0.814
-## Thu Aug 24 18:33:50 2017	Done with sample E4T0.814
-## Thu Aug 24 18:33:50 2017	Calculating diversity for sample 40/48 --- E4T3.1214
-## Thu Aug 24 18:33:58 2017	Done with sample E4T3.1214
-## Thu Aug 24 18:33:58 2017	Calculating diversity for sample 41/48 --- E4T3.813
-## Thu Aug 24 18:34:06 2017	Done with sample E4T3.813
-## Thu Aug 24 18:34:06 2017	Calculating diversity for sample 42/48 --- E4T3.814
-## Thu Aug 24 18:34:14 2017	Done with sample E4T3.814
-## Thu Aug 24 18:34:14 2017	Calculating diversity for sample 43/48 --- W1FR.814
-## Thu Aug 24 18:34:22 2017	Done with sample W1FR.814
-## Thu Aug 24 18:34:22 2017	Calculating diversity for sample 44/48 --- W1WH.814
-## Thu Aug 24 18:34:30 2017	Done with sample W1WH.814
-## Thu Aug 24 18:34:30 2017	Calculating diversity for sample 45/48 --- W2FR.814
-## Thu Aug 24 18:34:37 2017	Done with sample W2FR.814
-## Thu Aug 24 18:34:37 2017	Calculating diversity for sample 46/48 --- W2WH.814
-## Thu Aug 24 18:34:44 2017	Done with sample W2WH.814
-## Thu Aug 24 18:34:44 2017	Calculating diversity for sample 47/48 --- W3FR.814
-## Thu Aug 24 18:34:52 2017	Done with sample W3FR.814
-## Thu Aug 24 18:34:52 2017	Calculating diversity for sample 48/48 --- W3WH.814
-## Thu Aug 24 18:34:59 2017	Done with sample W3WH.814
-## Thu Aug 24 18:34:59 2017 	Closing workers
-## Thu Aug 24 18:34:59 2017 	Done with all 48 samples
+## Tue Sep 19 16:13:40 2017 	Using 10 cores for calculations
+## Tue Sep 19 16:13:40 2017	Calculating diversity for sample 1/48 --- C1T0.1214
+## Tue Sep 19 16:13:52 2017	Done with sample C1T0.1214
+## Tue Sep 19 16:13:52 2017	Calculating diversity for sample 2/48 --- C1T0.813
+## Tue Sep 19 16:13:56 2017	Done with sample C1T0.813
+## Tue Sep 19 16:13:56 2017	Calculating diversity for sample 3/48 --- C1T0.814
+## Tue Sep 19 16:14:00 2017	Done with sample C1T0.814
+## Tue Sep 19 16:14:00 2017	Calculating diversity for sample 4/48 --- C1T3.1214
+## Tue Sep 19 16:14:03 2017	Done with sample C1T3.1214
+## Tue Sep 19 16:14:03 2017	Calculating diversity for sample 5/48 --- C1T3.813
+## Tue Sep 19 16:14:06 2017	Done with sample C1T3.813
+## Tue Sep 19 16:14:06 2017	Calculating diversity for sample 6/48 --- C1T3.814
+## Tue Sep 19 16:14:09 2017	Done with sample C1T3.814
+## Tue Sep 19 16:14:09 2017	Calculating diversity for sample 7/48 --- C2T0.1214
+## Tue Sep 19 16:14:12 2017	Done with sample C2T0.1214
+## Tue Sep 19 16:14:12 2017	Calculating diversity for sample 8/48 --- C2T0.813
+## Tue Sep 19 16:14:15 2017	Done with sample C2T0.813
+## Tue Sep 19 16:14:15 2017	Calculating diversity for sample 9/48 --- C2T0.814
+## Tue Sep 19 16:14:18 2017	Done with sample C2T0.814
+## Tue Sep 19 16:14:18 2017	Calculating diversity for sample 10/48 --- C2T3.1214
+## Tue Sep 19 16:14:21 2017	Done with sample C2T3.1214
+## Tue Sep 19 16:14:21 2017	Calculating diversity for sample 11/48 --- C2T3.813
+## Tue Sep 19 16:14:23 2017	Done with sample C2T3.813
+## Tue Sep 19 16:14:23 2017	Calculating diversity for sample 12/48 --- C2T3.814
+## Tue Sep 19 16:14:30 2017	Done with sample C2T3.814
+## Tue Sep 19 16:14:30 2017	Calculating diversity for sample 13/48 --- C3T0.1214
+## Tue Sep 19 16:14:34 2017	Done with sample C3T0.1214
+## Tue Sep 19 16:14:34 2017	Calculating diversity for sample 14/48 --- C3T0.813
+## Tue Sep 19 16:14:37 2017	Done with sample C3T0.813
+## Tue Sep 19 16:14:37 2017	Calculating diversity for sample 15/48 --- C3T0.814
+## Tue Sep 19 16:14:40 2017	Done with sample C3T0.814
+## Tue Sep 19 16:14:40 2017	Calculating diversity for sample 16/48 --- C3T3.1214
+## Tue Sep 19 16:14:43 2017	Done with sample C3T3.1214
+## Tue Sep 19 16:14:43 2017	Calculating diversity for sample 17/48 --- C3T3.813
+## Tue Sep 19 16:14:46 2017	Done with sample C3T3.813
+## Tue Sep 19 16:14:46 2017	Calculating diversity for sample 18/48 --- C3T3.814
+## Tue Sep 19 16:14:49 2017	Done with sample C3T3.814
+## Tue Sep 19 16:14:49 2017	Calculating diversity for sample 19/48 --- E1T0.1214
+## Tue Sep 19 16:14:55 2017	Done with sample E1T0.1214
+## Tue Sep 19 16:14:55 2017	Calculating diversity for sample 20/48 --- E1T0.813
+## Tue Sep 19 16:15:00 2017	Done with sample E1T0.813
+## Tue Sep 19 16:15:00 2017	Calculating diversity for sample 21/48 --- E1T0.814
+## Tue Sep 19 16:15:04 2017	Done with sample E1T0.814
+## Tue Sep 19 16:15:04 2017	Calculating diversity for sample 22/48 --- E1T3.1214
+## Tue Sep 19 16:15:09 2017	Done with sample E1T3.1214
+## Tue Sep 19 16:15:09 2017	Calculating diversity for sample 23/48 --- E1T3.813
+## Tue Sep 19 16:15:12 2017	Done with sample E1T3.813
+## Tue Sep 19 16:15:12 2017	Calculating diversity for sample 24/48 --- E1T3.814
+## Tue Sep 19 16:15:15 2017	Done with sample E1T3.814
+## Tue Sep 19 16:15:15 2017	Calculating diversity for sample 25/48 --- E2T0.1214
+## Tue Sep 19 16:15:18 2017	Done with sample E2T0.1214
+## Tue Sep 19 16:15:18 2017	Calculating diversity for sample 26/48 --- E2T0.813
+## Tue Sep 19 16:15:21 2017	Done with sample E2T0.813
+## Tue Sep 19 16:15:21 2017	Calculating diversity for sample 27/48 --- E2T0.814
+## Tue Sep 19 16:15:24 2017	Done with sample E2T0.814
+## Tue Sep 19 16:15:24 2017	Calculating diversity for sample 28/48 --- E2T3.1214
+## Tue Sep 19 16:15:28 2017	Done with sample E2T3.1214
+## Tue Sep 19 16:15:28 2017	Calculating diversity for sample 29/48 --- E2T3.813
+## Tue Sep 19 16:15:31 2017	Done with sample E2T3.813
+## Tue Sep 19 16:15:31 2017	Calculating diversity for sample 30/48 --- E2T3.814
+## Tue Sep 19 16:15:33 2017	Done with sample E2T3.814
+## Tue Sep 19 16:15:33 2017	Calculating diversity for sample 31/48 --- E3T0.1214
+## Tue Sep 19 16:15:36 2017	Done with sample E3T0.1214
+## Tue Sep 19 16:15:36 2017	Calculating diversity for sample 32/48 --- E3T0.813
+## Tue Sep 19 16:15:39 2017	Done with sample E3T0.813
+## Tue Sep 19 16:15:39 2017	Calculating diversity for sample 33/48 --- E3T0.814
+## Tue Sep 19 16:15:42 2017	Done with sample E3T0.814
+## Tue Sep 19 16:15:42 2017	Calculating diversity for sample 34/48 --- E3T3.1214
+## Tue Sep 19 16:15:45 2017	Done with sample E3T3.1214
+## Tue Sep 19 16:15:45 2017	Calculating diversity for sample 35/48 --- E3T3.813
+## Tue Sep 19 16:15:47 2017	Done with sample E3T3.813
+## Tue Sep 19 16:15:47 2017	Calculating diversity for sample 36/48 --- E3T3.814
+## Tue Sep 19 16:15:52 2017	Done with sample E3T3.814
+## Tue Sep 19 16:15:52 2017	Calculating diversity for sample 37/48 --- E4T0.1214
+## Tue Sep 19 16:15:55 2017	Done with sample E4T0.1214
+## Tue Sep 19 16:15:55 2017	Calculating diversity for sample 38/48 --- E4T0.813
+## Tue Sep 19 16:15:58 2017	Done with sample E4T0.813
+## Tue Sep 19 16:15:58 2017	Calculating diversity for sample 39/48 --- E4T0.814
+## Tue Sep 19 16:16:01 2017	Done with sample E4T0.814
+## Tue Sep 19 16:16:01 2017	Calculating diversity for sample 40/48 --- E4T3.1214
+## Tue Sep 19 16:16:04 2017	Done with sample E4T3.1214
+## Tue Sep 19 16:16:04 2017	Calculating diversity for sample 41/48 --- E4T3.813
+## Tue Sep 19 16:16:06 2017	Done with sample E4T3.813
+## Tue Sep 19 16:16:06 2017	Calculating diversity for sample 42/48 --- E4T3.814
+## Tue Sep 19 16:16:09 2017	Done with sample E4T3.814
+## Tue Sep 19 16:16:09 2017	Calculating diversity for sample 43/48 --- W1FR.814
+## Tue Sep 19 16:16:13 2017	Done with sample W1FR.814
+## Tue Sep 19 16:16:13 2017	Calculating diversity for sample 44/48 --- W1WH.814
+## Tue Sep 19 16:16:15 2017	Done with sample W1WH.814
+## Tue Sep 19 16:16:15 2017	Calculating diversity for sample 45/48 --- W2FR.814
+## Tue Sep 19 16:16:18 2017	Done with sample W2FR.814
+## Tue Sep 19 16:16:18 2017	Calculating diversity for sample 46/48 --- W2WH.814
+## Tue Sep 19 16:16:21 2017	Done with sample W2WH.814
+## Tue Sep 19 16:16:21 2017	Calculating diversity for sample 47/48 --- W3FR.814
+## Tue Sep 19 16:16:24 2017	Done with sample W3FR.814
+## Tue Sep 19 16:16:24 2017	Calculating diversity for sample 48/48 --- W3WH.814
+## Tue Sep 19 16:16:27 2017	Done with sample W3WH.814
+## Tue Sep 19 16:16:27 2017 	Closing workers
+## Tue Sep 19 16:16:27 2017 	Done with all 48 samples
 ```
 
 ```r
-div_msphere_scaled <- Diversity_16S(scale_reads(physeq_msphere), R=100, parallel = TRUE, ncores = 2)
+div_msphere_scaled <- Diversity_16S(scale_reads(physeq_msphere), R=100, parallel = TRUE, ncores = 10)
 ```
 
 ```
 ## 	**WARNING** this functions assumes that rows are samples and columns
 ##       	are taxa in your phyloseq object, please verify.
-## Thu Aug 24 18:35:00 2017 	Using 2 cores for calculations
-## Thu Aug 24 18:35:00 2017	Calculating diversity for sample 1/48 --- C1T0.1214
-## Thu Aug 24 18:35:10 2017	Done with sample C1T0.1214
-## Thu Aug 24 18:35:10 2017	Calculating diversity for sample 2/48 --- C1T0.813
-## Thu Aug 24 18:35:14 2017	Done with sample C1T0.813
-## Thu Aug 24 18:35:14 2017	Calculating diversity for sample 3/48 --- C1T0.814
-## Thu Aug 24 18:35:18 2017	Done with sample C1T0.814
-## Thu Aug 24 18:35:18 2017	Calculating diversity for sample 4/48 --- C1T3.1214
-## Thu Aug 24 18:35:21 2017	Done with sample C1T3.1214
-## Thu Aug 24 18:35:21 2017	Calculating diversity for sample 5/48 --- C1T3.813
-## Thu Aug 24 18:35:25 2017	Done with sample C1T3.813
-## Thu Aug 24 18:35:25 2017	Calculating diversity for sample 6/48 --- C1T3.814
-## Thu Aug 24 18:35:28 2017	Done with sample C1T3.814
-## Thu Aug 24 18:35:28 2017	Calculating diversity for sample 7/48 --- C2T0.1214
-## Thu Aug 24 18:35:32 2017	Done with sample C2T0.1214
-## Thu Aug 24 18:35:32 2017	Calculating diversity for sample 8/48 --- C2T0.813
-## Thu Aug 24 18:35:35 2017	Done with sample C2T0.813
-## Thu Aug 24 18:35:36 2017	Calculating diversity for sample 9/48 --- C2T0.814
-## Thu Aug 24 18:35:39 2017	Done with sample C2T0.814
-## Thu Aug 24 18:35:39 2017	Calculating diversity for sample 10/48 --- C2T3.1214
-## Thu Aug 24 18:35:43 2017	Done with sample C2T3.1214
-## Thu Aug 24 18:35:43 2017	Calculating diversity for sample 11/48 --- C2T3.813
-## Thu Aug 24 18:35:46 2017	Done with sample C2T3.813
-## Thu Aug 24 18:35:46 2017	Calculating diversity for sample 12/48 --- C2T3.814
-## Thu Aug 24 18:35:51 2017	Done with sample C2T3.814
-## Thu Aug 24 18:35:51 2017	Calculating diversity for sample 13/48 --- C3T0.1214
-## Thu Aug 24 18:35:55 2017	Done with sample C3T0.1214
-## Thu Aug 24 18:35:55 2017	Calculating diversity for sample 14/48 --- C3T0.813
-## Thu Aug 24 18:35:59 2017	Done with sample C3T0.813
-## Thu Aug 24 18:35:59 2017	Calculating diversity for sample 15/48 --- C3T0.814
-## Thu Aug 24 18:36:02 2017	Done with sample C3T0.814
-## Thu Aug 24 18:36:02 2017	Calculating diversity for sample 16/48 --- C3T3.1214
-## Thu Aug 24 18:36:07 2017	Done with sample C3T3.1214
-## Thu Aug 24 18:36:07 2017	Calculating diversity for sample 17/48 --- C3T3.813
-## Thu Aug 24 18:36:11 2017	Done with sample C3T3.813
-## Thu Aug 24 18:36:11 2017	Calculating diversity for sample 18/48 --- C3T3.814
-## Thu Aug 24 18:36:14 2017	Done with sample C3T3.814
-## Thu Aug 24 18:36:14 2017	Calculating diversity for sample 19/48 --- E1T0.1214
-## Thu Aug 24 18:36:20 2017	Done with sample E1T0.1214
-## Thu Aug 24 18:36:20 2017	Calculating diversity for sample 20/48 --- E1T0.813
-## Thu Aug 24 18:36:23 2017	Done with sample E1T0.813
-## Thu Aug 24 18:36:23 2017	Calculating diversity for sample 21/48 --- E1T0.814
-## Thu Aug 24 18:36:27 2017	Done with sample E1T0.814
-## Thu Aug 24 18:36:27 2017	Calculating diversity for sample 22/48 --- E1T3.1214
-## Thu Aug 24 18:36:30 2017	Done with sample E1T3.1214
-## Thu Aug 24 18:36:31 2017	Calculating diversity for sample 23/48 --- E1T3.813
-## Thu Aug 24 18:36:34 2017	Done with sample E1T3.813
-## Thu Aug 24 18:36:34 2017	Calculating diversity for sample 24/48 --- E1T3.814
-## Thu Aug 24 18:36:37 2017	Done with sample E1T3.814
-## Thu Aug 24 18:36:37 2017	Calculating diversity for sample 25/48 --- E2T0.1214
-## Thu Aug 24 18:36:41 2017	Done with sample E2T0.1214
-## Thu Aug 24 18:36:41 2017	Calculating diversity for sample 26/48 --- E2T0.813
-## Thu Aug 24 18:36:44 2017	Done with sample E2T0.813
-## Thu Aug 24 18:36:44 2017	Calculating diversity for sample 27/48 --- E2T0.814
-## Thu Aug 24 18:36:48 2017	Done with sample E2T0.814
-## Thu Aug 24 18:36:48 2017	Calculating diversity for sample 28/48 --- E2T3.1214
-## Thu Aug 24 18:36:52 2017	Done with sample E2T3.1214
-## Thu Aug 24 18:36:52 2017	Calculating diversity for sample 29/48 --- E2T3.813
-## Thu Aug 24 18:36:56 2017	Done with sample E2T3.813
-## Thu Aug 24 18:36:56 2017	Calculating diversity for sample 30/48 --- E2T3.814
-## Thu Aug 24 18:37:01 2017	Done with sample E2T3.814
-## Thu Aug 24 18:37:01 2017	Calculating diversity for sample 31/48 --- E3T0.1214
-## Thu Aug 24 18:37:04 2017	Done with sample E3T0.1214
-## Thu Aug 24 18:37:04 2017	Calculating diversity for sample 32/48 --- E3T0.813
-## Thu Aug 24 18:37:08 2017	Done with sample E3T0.813
-## Thu Aug 24 18:37:08 2017	Calculating diversity for sample 33/48 --- E3T0.814
-## Thu Aug 24 18:37:12 2017	Done with sample E3T0.814
-## Thu Aug 24 18:37:12 2017	Calculating diversity for sample 34/48 --- E3T3.1214
-## Thu Aug 24 18:37:15 2017	Done with sample E3T3.1214
-## Thu Aug 24 18:37:15 2017	Calculating diversity for sample 35/48 --- E3T3.813
-## Thu Aug 24 18:37:18 2017	Done with sample E3T3.813
-## Thu Aug 24 18:37:18 2017	Calculating diversity for sample 36/48 --- E3T3.814
-## Thu Aug 24 18:37:22 2017	Done with sample E3T3.814
-## Thu Aug 24 18:37:22 2017	Calculating diversity for sample 37/48 --- E4T0.1214
-## Thu Aug 24 18:37:25 2017	Done with sample E4T0.1214
-## Thu Aug 24 18:37:25 2017	Calculating diversity for sample 38/48 --- E4T0.813
-## Thu Aug 24 18:37:29 2017	Done with sample E4T0.813
-## Thu Aug 24 18:37:29 2017	Calculating diversity for sample 39/48 --- E4T0.814
-## Thu Aug 24 18:37:33 2017	Done with sample E4T0.814
-## Thu Aug 24 18:37:33 2017	Calculating diversity for sample 40/48 --- E4T3.1214
-## Thu Aug 24 18:37:36 2017	Done with sample E4T3.1214
-## Thu Aug 24 18:37:36 2017	Calculating diversity for sample 41/48 --- E4T3.813
-## Thu Aug 24 18:37:40 2017	Done with sample E4T3.813
-## Thu Aug 24 18:37:40 2017	Calculating diversity for sample 42/48 --- E4T3.814
-## Thu Aug 24 18:37:44 2017	Done with sample E4T3.814
-## Thu Aug 24 18:37:44 2017	Calculating diversity for sample 43/48 --- W1FR.814
-## Thu Aug 24 18:37:47 2017	Done with sample W1FR.814
-## Thu Aug 24 18:37:47 2017	Calculating diversity for sample 44/48 --- W1WH.814
-## Thu Aug 24 18:37:53 2017	Done with sample W1WH.814
-## Thu Aug 24 18:37:53 2017	Calculating diversity for sample 45/48 --- W2FR.814
-## Thu Aug 24 18:37:57 2017	Done with sample W2FR.814
-## Thu Aug 24 18:37:57 2017	Calculating diversity for sample 46/48 --- W2WH.814
-## Thu Aug 24 18:38:01 2017	Done with sample W2WH.814
-## Thu Aug 24 18:38:01 2017	Calculating diversity for sample 47/48 --- W3FR.814
-## Thu Aug 24 18:38:05 2017	Done with sample W3FR.814
-## Thu Aug 24 18:38:05 2017	Calculating diversity for sample 48/48 --- W3WH.814
-## Thu Aug 24 18:38:09 2017	Done with sample W3WH.814
-## Thu Aug 24 18:38:09 2017 	Closing workers
-## Thu Aug 24 18:38:09 2017 	Done with all 48 samples
+## Tue Sep 19 16:16:31 2017 	Using 10 cores for calculations
+## Tue Sep 19 16:16:31 2017	Calculating diversity for sample 1/48 --- C1T0.1214
+## Tue Sep 19 16:16:39 2017	Done with sample C1T0.1214
+## Tue Sep 19 16:16:39 2017	Calculating diversity for sample 2/48 --- C1T0.813
+## Tue Sep 19 16:16:40 2017	Done with sample C1T0.813
+## Tue Sep 19 16:16:40 2017	Calculating diversity for sample 3/48 --- C1T0.814
+## Tue Sep 19 16:16:42 2017	Done with sample C1T0.814
+## Tue Sep 19 16:16:42 2017	Calculating diversity for sample 4/48 --- C1T3.1214
+## Tue Sep 19 16:16:43 2017	Done with sample C1T3.1214
+## Tue Sep 19 16:16:43 2017	Calculating diversity for sample 5/48 --- C1T3.813
+## Tue Sep 19 16:16:44 2017	Done with sample C1T3.813
+## Tue Sep 19 16:16:44 2017	Calculating diversity for sample 6/48 --- C1T3.814
+## Tue Sep 19 16:16:45 2017	Done with sample C1T3.814
+## Tue Sep 19 16:16:45 2017	Calculating diversity for sample 7/48 --- C2T0.1214
+## Tue Sep 19 16:16:47 2017	Done with sample C2T0.1214
+## Tue Sep 19 16:16:47 2017	Calculating diversity for sample 8/48 --- C2T0.813
+## Tue Sep 19 16:16:48 2017	Done with sample C2T0.813
+## Tue Sep 19 16:16:48 2017	Calculating diversity for sample 9/48 --- C2T0.814
+## Tue Sep 19 16:16:49 2017	Done with sample C2T0.814
+## Tue Sep 19 16:16:49 2017	Calculating diversity for sample 10/48 --- C2T3.1214
+## Tue Sep 19 16:16:51 2017	Done with sample C2T3.1214
+## Tue Sep 19 16:16:51 2017	Calculating diversity for sample 11/48 --- C2T3.813
+## Tue Sep 19 16:16:52 2017	Done with sample C2T3.813
+## Tue Sep 19 16:16:52 2017	Calculating diversity for sample 12/48 --- C2T3.814
+## Tue Sep 19 16:16:54 2017	Done with sample C2T3.814
+## Tue Sep 19 16:16:54 2017	Calculating diversity for sample 13/48 --- C3T0.1214
+## Tue Sep 19 16:16:56 2017	Done with sample C3T0.1214
+## Tue Sep 19 16:16:56 2017	Calculating diversity for sample 14/48 --- C3T0.813
+## Tue Sep 19 16:16:57 2017	Done with sample C3T0.813
+## Tue Sep 19 16:16:57 2017	Calculating diversity for sample 15/48 --- C3T0.814
+## Tue Sep 19 16:16:58 2017	Done with sample C3T0.814
+## Tue Sep 19 16:16:58 2017	Calculating diversity for sample 16/48 --- C3T3.1214
+## Tue Sep 19 16:17:01 2017	Done with sample C3T3.1214
+## Tue Sep 19 16:17:01 2017	Calculating diversity for sample 17/48 --- C3T3.813
+## Tue Sep 19 16:17:02 2017	Done with sample C3T3.813
+## Tue Sep 19 16:17:02 2017	Calculating diversity for sample 18/48 --- C3T3.814
+## Tue Sep 19 16:17:04 2017	Done with sample C3T3.814
+## Tue Sep 19 16:17:04 2017	Calculating diversity for sample 19/48 --- E1T0.1214
+## Tue Sep 19 16:17:07 2017	Done with sample E1T0.1214
+## Tue Sep 19 16:17:07 2017	Calculating diversity for sample 20/48 --- E1T0.813
+## Tue Sep 19 16:17:08 2017	Done with sample E1T0.813
+## Tue Sep 19 16:17:08 2017	Calculating diversity for sample 21/48 --- E1T0.814
+## Tue Sep 19 16:17:09 2017	Done with sample E1T0.814
+## Tue Sep 19 16:17:09 2017	Calculating diversity for sample 22/48 --- E1T3.1214
+## Tue Sep 19 16:17:11 2017	Done with sample E1T3.1214
+## Tue Sep 19 16:17:11 2017	Calculating diversity for sample 23/48 --- E1T3.813
+## Tue Sep 19 16:17:12 2017	Done with sample E1T3.813
+## Tue Sep 19 16:17:12 2017	Calculating diversity for sample 24/48 --- E1T3.814
+## Tue Sep 19 16:17:13 2017	Done with sample E1T3.814
+## Tue Sep 19 16:17:13 2017	Calculating diversity for sample 25/48 --- E2T0.1214
+## Tue Sep 19 16:17:14 2017	Done with sample E2T0.1214
+## Tue Sep 19 16:17:14 2017	Calculating diversity for sample 26/48 --- E2T0.813
+## Tue Sep 19 16:17:15 2017	Done with sample E2T0.813
+## Tue Sep 19 16:17:15 2017	Calculating diversity for sample 27/48 --- E2T0.814
+## Tue Sep 19 16:17:16 2017	Done with sample E2T0.814
+## Tue Sep 19 16:17:16 2017	Calculating diversity for sample 28/48 --- E2T3.1214
+## Tue Sep 19 16:17:18 2017	Done with sample E2T3.1214
+## Tue Sep 19 16:17:18 2017	Calculating diversity for sample 29/48 --- E2T3.813
+## Tue Sep 19 16:17:19 2017	Done with sample E2T3.813
+## Tue Sep 19 16:17:19 2017	Calculating diversity for sample 30/48 --- E2T3.814
+## Tue Sep 19 16:17:22 2017	Done with sample E2T3.814
+## Tue Sep 19 16:17:22 2017	Calculating diversity for sample 31/48 --- E3T0.1214
+## Tue Sep 19 16:17:23 2017	Done with sample E3T0.1214
+## Tue Sep 19 16:17:23 2017	Calculating diversity for sample 32/48 --- E3T0.813
+## Tue Sep 19 16:17:24 2017	Done with sample E3T0.813
+## Tue Sep 19 16:17:24 2017	Calculating diversity for sample 33/48 --- E3T0.814
+## Tue Sep 19 16:17:26 2017	Done with sample E3T0.814
+## Tue Sep 19 16:17:26 2017	Calculating diversity for sample 34/48 --- E3T3.1214
+## Tue Sep 19 16:17:27 2017	Done with sample E3T3.1214
+## Tue Sep 19 16:17:27 2017	Calculating diversity for sample 35/48 --- E3T3.813
+## Tue Sep 19 16:17:28 2017	Done with sample E3T3.813
+## Tue Sep 19 16:17:28 2017	Calculating diversity for sample 36/48 --- E3T3.814
+## Tue Sep 19 16:17:29 2017	Done with sample E3T3.814
+## Tue Sep 19 16:17:29 2017	Calculating diversity for sample 37/48 --- E4T0.1214
+## Tue Sep 19 16:17:30 2017	Done with sample E4T0.1214
+## Tue Sep 19 16:17:30 2017	Calculating diversity for sample 38/48 --- E4T0.813
+## Tue Sep 19 16:17:31 2017	Done with sample E4T0.813
+## Tue Sep 19 16:17:31 2017	Calculating diversity for sample 39/48 --- E4T0.814
+## Tue Sep 19 16:17:32 2017	Done with sample E4T0.814
+## Tue Sep 19 16:17:32 2017	Calculating diversity for sample 40/48 --- E4T3.1214
+## Tue Sep 19 16:17:33 2017	Done with sample E4T3.1214
+## Tue Sep 19 16:17:34 2017	Calculating diversity for sample 41/48 --- E4T3.813
+## Tue Sep 19 16:17:35 2017	Done with sample E4T3.813
+## Tue Sep 19 16:17:35 2017	Calculating diversity for sample 42/48 --- E4T3.814
+## Tue Sep 19 16:17:36 2017	Done with sample E4T3.814
+## Tue Sep 19 16:17:37 2017	Calculating diversity for sample 43/48 --- W1FR.814
+## Tue Sep 19 16:17:38 2017	Done with sample W1FR.814
+## Tue Sep 19 16:17:38 2017	Calculating diversity for sample 44/48 --- W1WH.814
+## Tue Sep 19 16:17:41 2017	Done with sample W1WH.814
+## Tue Sep 19 16:17:41 2017	Calculating diversity for sample 45/48 --- W2FR.814
+## Tue Sep 19 16:17:43 2017	Done with sample W2FR.814
+## Tue Sep 19 16:17:43 2017	Calculating diversity for sample 46/48 --- W2WH.814
+## Tue Sep 19 16:17:45 2017	Done with sample W2WH.814
+## Tue Sep 19 16:17:45 2017	Calculating diversity for sample 47/48 --- W3FR.814
+## Tue Sep 19 16:17:46 2017	Done with sample W3FR.814
+## Tue Sep 19 16:17:46 2017	Calculating diversity for sample 48/48 --- W3WH.814
+## Tue Sep 19 16:17:48 2017	Done with sample W3WH.814
+## Tue Sep 19 16:17:48 2017 	Closing workers
+## Tue Sep 19 16:17:48 2017 	Done with all 48 samples
 ```
 
 ```r
@@ -3192,7 +2907,7 @@ mean(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere
 ```
 
 ```
-## [1] 5.316571
+## [1] 5.292512
 ```
 
 ```r
@@ -3201,7 +2916,7 @@ sd(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$T
 ```
 
 ```
-## [1] 4.670415
+## [1] 4.650357
 ```
 
 ```r
@@ -3211,7 +2926,7 @@ mean(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere
 ```
 
 ```
-## [1] 7.460833
+## [1] 7.441836
 ```
 
 ```r
@@ -3220,7 +2935,7 @@ sd(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$T
 ```
 
 ```
-## [1] 4.161891
+## [1] 4.12253
 ```
 
 ## Figure 4: Predict diversity and put in juxtaposition of literature (DOI: 10.1128/mSphere.00189-17)
@@ -3231,38 +2946,40 @@ df_mp <- data.frame(D2.fcm = results$D2[results$Time==3 | results$Time==0],
                  time= results$Time[results$Time==3 | results$Time==0],
                  Treatment = results$Treatment[results$Time==3 | results$Time==0])
 df_mp_pred <- data.frame(D2.16S = predict(lm.F, df_mp, se=TRUE)$fit, D2.16S.error = predict(lm.F, df_mp, se=TRUE)$se.fit, time = df_mp$time, treatment = df_mp$Treatment)
+df_mp_pred$D2.16S.up <- df_mp_pred$D2.16S + df_mp_pred$D2.16S.error
+df_mp_pred$D2.16S.lo <- df_mp_pred$D2.16S - df_mp_pred$D2.16S.error
 df_mp_pred$D2.16S <- 2^df_mp_pred$D2.16S
+df_mp_pred$D2.16S.up <- 2^df_mp_pred$D2.16S.up
+df_mp_pred$D2.16S.lo <- 2^df_mp_pred$D2.16S.lo
 df_mp_pred$time[df_mp_pred$time == 0] <- "T0"
 df_mp_pred$time[df_mp_pred$time == 3] <- "T3"
-df_mp_pred$Date <- "Nov18"
+df_mp_pred$Date <- "November '16"
+levels(results_msphere$Date) <- c("July '13", "August '14", "December '14")
+  
 # Merge these predicted values into the data set from (DOI: 10.1128/mSphere.00189-17)
 results_prediction <- data.frame(D2 = c(results_msphere$D2, df_mp_pred$D2.16S),
                                  Time_point = c(as.character(results_msphere$Time_point), df_mp_pred$time),
                                  Treatment = c(as.character(results_msphere$Treatment), as.character(df_mp_pred$treatment)),
                                  Measurement = as.factor(c(rep("Measured",42), rep("Predicted", 10))),
-                                 Date = c(as.character(results_msphere$Date), df_mp_pred$Date)
+                                 Date = c(as.character(results_msphere$Date), df_mp_pred$Date),
+                                 error.up = c(rep(NA, nrow(results_msphere)), df_mp_pred$D2.16S.up),
+                                 error.lo = c(rep(NA, nrow(results_msphere)), df_mp_pred$D2.16S.lo)
+                                 
                                  )
-results_prediction$Date <- factor(results_prediction$Date, levels = c("Jul13", "Aug14", "Nov18", "Dec14"))
+results_prediction$Date <- factor(results_prediction$Date, levels = c("July '13", "August '14", "November '16", "December '14"))
 
 # Create a data frame with the faceting variables
 # and some dummy data (that will be overwritten)
 tp <- results_prediction
-# Annotation text
-ann_text <- data.frame(D2 = 15, Time_point = 5,lab = "Text",
-                       cyl = factor(8,levels = c("4","6","8")))
-p + geom_text(data = ann_text,label = "Text")
-```
 
-```
-## Error in eval(expr, envir, enclos): object 'p' not found
-```
-
-```r
+# Make Figure 5: compare predictions to literature data
 p_msphere_predict <- ggplot(data = results_prediction, aes(x = Time_point, y = D2))+
   geom_rect(data = tp, aes(fill = Measurement), xmin = -Inf, xmax = Inf,
             ymin = -Inf,ymax = Inf, alpha = 0.005, show.legend =FALSE, inherit.aes = FALSE)+
-  geom_boxplot(alpha = 0.5, aes(fill = Treatment), position = position_dodge(width = .8))+
+  geom_boxplot(alpha = 0.5, aes(fill = Treatment), position = position_dodge(width = .8), width =0.75)+
   geom_point(size = 4, shape = 21, position = position_dodge(width=0.8), aes(fill = Treatment))+
+  geom_errorbar(aes(ymin = error.lo, ymax = error.up, group = Treatment), width = 0.1,
+                position = position_dodge(width = 0.8))+
   theme_bw()+
   facet_grid(.~Date)+
   scale_fill_manual(breaks = c("Control","Feeding"), values=c(myColours[c(1:2)], "blue","red"))+
@@ -3275,10 +2992,13 @@ p_msphere_predict <- ggplot(data = results_prediction, aes(x = Time_point, y = D
         )+ 
   geom_text(data = tp, aes(x=1.5,y=11,label=Measurement), size = 8, inherit.aes = FALSE,
             hjust = 0.5)
-
 # png(file="Fig5_PROPS.png",width=12,height=6,res=500,units="in", pointsize=12)
 # pdf(file="Fig5_PROPS.pdf",width=12,height=6)
 p_msphere_predict
+```
+
+```
+## Warning: Removed 42 rows containing missing values (geom_errorbar).
 ```
 
 <img src="Figures/cached/predict-diversity-1.png" style="display: block; margin: auto;" />

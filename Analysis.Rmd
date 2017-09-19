@@ -630,7 +630,8 @@ fbasis <- flowBasis(flowData_transformed, param, nbin=128,
 # Densities will be normalized to the interval [0,1]
 # d = rounding factor
 # Diversity.fbasis <- Diversity(fbasis, d = 3, plot = TRUE, R = 999)
-Diversity.fbasis <- Diversity_rf(flowData_transformed, d=3, param = param, R = R.main)
+Diversity.fbasis <- Diversity_rf(flowData_transformed, d=3, param = param, R = R.main,
+                                 parallel = TRUE, ncores = 10)
 
 # make metadata table
 tmp <- strsplit(rownames(Diversity.fbasis)[1:42], "_")
@@ -660,8 +661,10 @@ rGate_LNA <- polygonGate(.gate=sqrcut1, filterId = "LNA")
 flowData_HNA <- split(flowData_transformed, rGate_HNA)$`HNA+`
 flowData_LNA <- split(flowData_transformed, rGate_LNA)$`LNA+`
 
-Diversity.HNA <- Diversity_rf(flowData_HNA, d=3, param = param, R = R.main)
-Diversity.LNA <- Diversity_rf(flowData_LNA, d=3, param = param, R = R.main)
+Diversity.HNA <- Diversity_rf(flowData_HNA, d=3, param = param, R = R.main,
+                                 parallel = TRUE, ncores = 10)
+Diversity.LNA <- Diversity_rf(flowData_LNA, d=3, param = param, R = R.main,
+                                 parallel = TRUE, ncores = 10)
 
 # Counts
 # Normalize total cell gate
@@ -953,8 +956,8 @@ sample_data(physeq_msphere) <- sample_data(meta_msphere)
 physeq_msphere <- subset_samples(physeq_msphere, Group == "Experiment")
 
 # Calculate diversity before and after rescaling
-div_msphere <- Diversity_16S(physeq_msphere, R=100, parallel = TRUE, ncores = 2)
-div_msphere_scaled <- Diversity_16S(scale_reads(physeq_msphere), R=100, parallel = TRUE, ncores = 2)
+div_msphere <- Diversity_16S(physeq_msphere, R=100, parallel = TRUE, ncores = 10)
+div_msphere_scaled <- Diversity_16S(scale_reads(physeq_msphere), R=100, parallel = TRUE, ncores = 10)
 div_msphere_scaled <- data.frame(div_msphere_scaled, Sample_ID = rownames(div_msphere_scaled))
 div_msphere <- data.frame(div_msphere, Sample_ID = rownames(div_msphere))
 
@@ -1023,32 +1026,40 @@ df_mp <- data.frame(D2.fcm = results$D2[results$Time==3 | results$Time==0],
                  time= results$Time[results$Time==3 | results$Time==0],
                  Treatment = results$Treatment[results$Time==3 | results$Time==0])
 df_mp_pred <- data.frame(D2.16S = predict(lm.F, df_mp, se=TRUE)$fit, D2.16S.error = predict(lm.F, df_mp, se=TRUE)$se.fit, time = df_mp$time, treatment = df_mp$Treatment)
+df_mp_pred$D2.16S.up <- df_mp_pred$D2.16S + df_mp_pred$D2.16S.error
+df_mp_pred$D2.16S.lo <- df_mp_pred$D2.16S - df_mp_pred$D2.16S.error
 df_mp_pred$D2.16S <- 2^df_mp_pred$D2.16S
+df_mp_pred$D2.16S.up <- 2^df_mp_pred$D2.16S.up
+df_mp_pred$D2.16S.lo <- 2^df_mp_pred$D2.16S.lo
 df_mp_pred$time[df_mp_pred$time == 0] <- "T0"
 df_mp_pred$time[df_mp_pred$time == 3] <- "T3"
-df_mp_pred$Date <- "Nov18"
+df_mp_pred$Date <- "November '16"
+levels(results_msphere$Date) <- c("July '13", "August '14", "December '14")
+  
 # Merge these predicted values into the data set from (DOI: 10.1128/mSphere.00189-17)
 results_prediction <- data.frame(D2 = c(results_msphere$D2, df_mp_pred$D2.16S),
                                  Time_point = c(as.character(results_msphere$Time_point), df_mp_pred$time),
                                  Treatment = c(as.character(results_msphere$Treatment), as.character(df_mp_pred$treatment)),
                                  Measurement = as.factor(c(rep("Measured",42), rep("Predicted", 10))),
-                                 Date = c(as.character(results_msphere$Date), df_mp_pred$Date)
+                                 Date = c(as.character(results_msphere$Date), df_mp_pred$Date),
+                                 error.up = c(rep(NA, nrow(results_msphere)), df_mp_pred$D2.16S.up),
+                                 error.lo = c(rep(NA, nrow(results_msphere)), df_mp_pred$D2.16S.lo)
+                                 
                                  )
-results_prediction$Date <- factor(results_prediction$Date, levels = c("Jul13", "Aug14", "Nov18", "Dec14"))
+results_prediction$Date <- factor(results_prediction$Date, levels = c("July '13", "August '14", "November '16", "December '14"))
 
 # Create a data frame with the faceting variables
 # and some dummy data (that will be overwritten)
 tp <- results_prediction
-# Annotation text
-ann_text <- data.frame(D2 = 15, Time_point = 5,lab = "Text",
-                       cyl = factor(8,levels = c("4","6","8")))
-p + geom_text(data = ann_text,label = "Text")
 
+# Make Figure 5: compare predictions to literature data
 p_msphere_predict <- ggplot(data = results_prediction, aes(x = Time_point, y = D2))+
   geom_rect(data = tp, aes(fill = Measurement), xmin = -Inf, xmax = Inf,
             ymin = -Inf,ymax = Inf, alpha = 0.005, show.legend =FALSE, inherit.aes = FALSE)+
-  geom_boxplot(alpha = 0.5, aes(fill = Treatment), position = position_dodge(width = .8))+
+  geom_boxplot(alpha = 0.5, aes(fill = Treatment), position = position_dodge(width = .8), width =0.75)+
   geom_point(size = 4, shape = 21, position = position_dodge(width=0.8), aes(fill = Treatment))+
+  geom_errorbar(aes(ymin = error.lo, ymax = error.up, group = Treatment), width = 0.1,
+                position = position_dodge(width = 0.8))+
   theme_bw()+
   facet_grid(.~Date)+
   scale_fill_manual(breaks = c("Control","Feeding"), values=c(myColours[c(1:2)], "blue","red"))+
@@ -1061,7 +1072,6 @@ p_msphere_predict <- ggplot(data = results_prediction, aes(x = Time_point, y = D
         )+ 
   geom_text(data = tp, aes(x=1.5,y=11,label=Measurement), size = 8, inherit.aes = FALSE,
             hjust = 0.5)
-
 # png(file="Fig5_PROPS.png",width=12,height=6,res=500,units="in", pointsize=12)
 # pdf(file="Fig5_PROPS.pdf",width=12,height=6)
 p_msphere_predict
