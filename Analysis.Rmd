@@ -199,9 +199,9 @@ my_grob2 = grobTree(textGrob(bquote(r[p] == .(round(cor(y=log2(data.total.final$
 p5 <- ggplot(data=data.total.final,aes(x=D2.fcm,y=D2, fill=Lake))+ scale_fill_manual(values=c("#88419d","#a6cee3","#fc8d62")) +
   geom_point(shape=21,size=6,alpha=0.6,aes(fill=Lake))+
   theme_bw()+labs(y=expression('Taxonomic diversity - D'[2]),x=expression('Phenotypic diversity - D'[2]), fill="Environment")+
-  theme(axis.text=element_text(size=15),axis.title=element_text(size=20,face="bold"),legend.text=element_text(size=15),
+  theme(axis.text=element_text(size=12.5),axis.title=element_text(size=20,face="bold"),legend.text=element_text(size=15),
         legend.title=element_text(size=16),strip.text.x = element_text(size = 22),
-         legend.position = c(0.05, .98), legend.justification = c(0, 1),
+         legend.position = c(0.05, .97), legend.justification = c(0, 1),
         legend.background = element_rect(fill="transparent"))+
   scale_y_continuous(trans='log2', breaks = seq(5,60, 10),minor_breaks =NULL) +
   scale_x_continuous(trans='log2', breaks = seq(1000,4250,250),minor_breaks =NULL, limits = c(NA, 2700)) +
@@ -843,13 +843,13 @@ disper.test # average distance to mean 0.03 for both groups
 anova(disper.test) # P = 0.892
 perma.beta <- adonis(dist.S~Treatment*Time, data=results)
 my_grob = grobTree(textGrob(bquote(paste(r[Feeding]^2 == .(round(100 * perma.beta$aov.tab[1, 
-    5], 1)), "%")), x = 0.68, y = 0.95, hjust = 0, gp = gpar(col = "black", fontsize = 14, 
+    5], 1)), "%")), x = 0.67, y = 0.95, hjust = 0, gp = gpar(col = "black", fontsize = 14, 
     fontface = "italic")))
 my_grob2 = grobTree(textGrob(bquote(paste(r[Time]^2 == .(format(round(100 * perma.beta$aov.tab[2, 
-    5], 1), nsmall = 1)), "%")), x = 0.68, y = 0.87, hjust = 0, gp = gpar(col = "black", 
+    5], 1), nsmall = 1)), "%")), x = 0.67, y = 0.87, hjust = 0, gp = gpar(col = "black", 
     fontsize = 14, fontface = "italic")))
 my_grob3 = grobTree(textGrob(bquote(paste(r[Feeding:Time]^2 == .(round(100 * perma.beta$aov.tab[3, 
-    5], 1)), "%")), x = 0.68, y = 0.79, hjust = 0, gp = gpar(col = "black", fontsize = 14, 
+    5], 1)), "%")), x = 0.67, y = 0.79, hjust = 0, gp = gpar(col = "black", fontsize = 14, 
     fontface = "italic")))
 
 beta.div.data.S <- data.frame(beta.div.S$points, tmp[!tmp$Treatment=="Feeding - T",])
@@ -1017,38 +1017,46 @@ sd(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$T
 ```
 
 ## Figure 5: Predict diversity and put in juxtaposition of literature (DOI: 10.1128/mSphere.00189-17)
-```{r Gating, fig.width = 15, fig.height = 10}
+```{r Predict diversity, fig.width = 15, fig.height = 10}
 # Predict the shift in taxonomic diversity based on FCM for the T0 and T3 samples
 df_mp <- data.frame(D2.fcm = results$D2[results$Time==3 | results$Time==0],
                  time= results$Time[results$Time==3 | results$Time==0],
                  Treatment = results$Treatment[results$Time==3 | results$Time==0])
 df_mp_pred <- data.frame(D2.16S = predict(lm.F, df_mp, se=TRUE)$fit, D2.16S.error = predict(lm.F, df_mp, se=TRUE)$se.fit, time = df_mp$time, treatment = df_mp$Treatment)
+df_mp_pred$D2.16S.up <- df_mp_pred$D2.16S + df_mp_pred$D2.16S.error
+df_mp_pred$D2.16S.lo <- df_mp_pred$D2.16S - df_mp_pred$D2.16S.error
 df_mp_pred$D2.16S <- 2^df_mp_pred$D2.16S
+df_mp_pred$D2.16S.up <- 2^df_mp_pred$D2.16S.up
+df_mp_pred$D2.16S.lo <- 2^df_mp_pred$D2.16S.lo
 df_mp_pred$time[df_mp_pred$time == 0] <- "T0"
 df_mp_pred$time[df_mp_pred$time == 3] <- "T3"
-df_mp_pred$Date <- "Nov18"
+df_mp_pred$Date <- "November '16"
+levels(results_msphere$Date) <- c("July '13", "August '14", "December '14")
+  
 # Merge these predicted values into the data set from (DOI: 10.1128/mSphere.00189-17)
 results_prediction <- data.frame(D2 = c(results_msphere$D2, df_mp_pred$D2.16S),
                                  Time_point = c(as.character(results_msphere$Time_point), df_mp_pred$time),
                                  Treatment = c(as.character(results_msphere$Treatment), as.character(df_mp_pred$treatment)),
                                  Measurement = as.factor(c(rep("Measured",42), rep("Predicted", 10))),
-                                 Date = c(as.character(results_msphere$Date), df_mp_pred$Date)
+                                 Date = c(as.character(results_msphere$Date), df_mp_pred$Date),
+                                 error.up = c(rep(NA, nrow(results_msphere)), df_mp_pred$D2.16S.up),
+                                 error.lo = c(rep(NA, nrow(results_msphere)), df_mp_pred$D2.16S.lo)
+                                 
                                  )
-results_prediction$Date <- factor(results_prediction$Date, levels = c("Jul13", "Aug14", "Nov18", "Dec14"))
+results_prediction$Date <- factor(results_prediction$Date, levels = c("July '13", "August '14", "November '16", "December '14"))
 
 # Create a data frame with the faceting variables
 # and some dummy data (that will be overwritten)
 tp <- results_prediction
-# Annotation text
-ann_text <- data.frame(D2 = 15, Time_point = 5,lab = "Text",
-                       cyl = factor(8,levels = c("4","6","8")))
-p + geom_text(data = ann_text,label = "Text")
 
+# Make Figure 5: compare predictions to literature data
 p_msphere_predict <- ggplot(data = results_prediction, aes(x = Time_point, y = D2))+
   geom_rect(data = tp, aes(fill = Measurement), xmin = -Inf, xmax = Inf,
             ymin = -Inf,ymax = Inf, alpha = 0.005, show.legend =FALSE, inherit.aes = FALSE)+
-  geom_boxplot(alpha = 0.5, aes(fill = Treatment), position = position_dodge(width = .8))+
+  geom_boxplot(alpha = 0.5, aes(fill = Treatment), position = position_dodge(width = .8), width =0.75)+
   geom_point(size = 4, shape = 21, position = position_dodge(width=0.8), aes(fill = Treatment))+
+  geom_errorbar(aes(ymin = error.lo, ymax = error.up, group = Treatment), width = 0.1,
+                position = position_dodge(width = 0.8))+
   theme_bw()+
   facet_grid(.~Date)+
   scale_fill_manual(breaks = c("Control","Feeding"), values=c(myColours[c(1:2)], "blue","red"))+
@@ -1061,7 +1069,6 @@ p_msphere_predict <- ggplot(data = results_prediction, aes(x = Time_point, y = D
         )+ 
   geom_text(data = tp, aes(x=1.5,y=11,label=Measurement), size = 8, inherit.aes = FALSE,
             hjust = 0.5)
-
 png(file="Fig5_PROPS.png",width=12,height=6,res=500,units="in", pointsize=12)
 pdf(file="Fig5_PROPS.pdf",width=12,height=6)
 p_msphere_predict
@@ -1133,13 +1140,13 @@ print(xyplot(`FL3-H`~`FL1-H`, data=flowData_transformed,index.cond=list(c(1:6)),
 ``` {r Contrasts, fig.width = 15, fig.height = 12, warning = FALSE}
 comp_t0 <- fp_contrasts(x=fbasis, comp2=(pos=="C1_t0.fcs" | pos== "C2_t0.fcs"),
                         comp1=(pos=="Q1_T_t0.fcs" | pos== "Q2_T_t0.fcs" | pos== "Q3_T_t0.fcs"), 
-                        thresh=0.05)
+                        thresh=0.04)
 comp_t1.5 <- fp_contrasts(x=fbasis, comp2=(pos=="C1_t1.5.fcs" | pos== "C2_t1.5.fcs"),
                           comp1=(pos=="Q1_T_t1.5.fcs" | pos== "Q2_T_t1.5.fcs" | pos== "Q3_T_t1.5.fcs"), 
-                          thresh=0.05)
+                          thresh=0.04)
 comp_t3 <- fp_contrasts(x=fbasis, comp2=(pos=="C1_t3.fcs" | pos== "C2_t3.fcs"),
                         comp1=(pos=="Q1_T_t3.fcs" | pos== "Q2_T_t3.fcs" | pos== "Q3_T_t3.fcs"), 
-                        thresh=0.05)
+                        thresh=0.04)
 
 # Merge data frames
 comp_total <- rbind(comp_t0, comp_t1.5, comp_t3)
