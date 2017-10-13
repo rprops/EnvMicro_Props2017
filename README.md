@@ -2,7 +2,7 @@
 
 The full analysis of the submitted paper: ***Invasive dreissenid mussels induce shifts in bacterioplankton diversity through selective feeding on high nucleic acid bacteria*** can be found in the **Analysis.Rmd** RMarkdown. 
 
-Before starting the analysis please unzip **16S.zip** and download the FCM data for the mussel experiment from [here](https://flowrepository.org/experiments/1034) and store them in a directory named **data_mussel**. The reference FCM data (approx. 1GB) for the cooling water system and Lake Michigan/Muskegon Lake are available from [here](https://flowrepository.org/experiments/746) and [here](https://flowrepository.org/experiments/1047). These data should be stored in a directory called **data_reference** with subdirectories **FCM_CW** for the cooling water data and **FCM_MI** for the Lake Michigan and Muskegon Lake data.
+Before starting the analysis please unzip **16S.zip** (generated using the `mothur.batch.taxass` script available from [here](https://github.com/rprops/Mothur_oligo_batch/blob/master/mothur.batch.taxass)) and download the FCM data for the mussel experiment from [here](https://flowrepository.org/experiments/1034) and store them in a directory named **data_mussel**. The reference FCM data (approx. 1GB) for the cooling water system and Lake Michigan/Muskegon Lake are available from [here](https://flowrepository.org/experiments/746) and [here](https://flowrepository.org/experiments/1047). These data should be stored in a directory called **data_reference** with subdirectories **FCM_CW** for the cooling water data and **FCM_MI** for the Lake Michigan and Muskegon Lake data.
 
 File structure should be 
 

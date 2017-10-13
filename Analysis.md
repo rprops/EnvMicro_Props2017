@@ -42,6 +42,7 @@ library("egg")
 library("phyloseq")
 library("splines")
 library("caret") # for cross validation
+library("foreach") # for parallelization
 source("functions.R")
 my.settings <- list(
   strip.background=list(col="transparent"),
@@ -90,8 +91,8 @@ data.16s <- inner_join(div.16S, metadata, by=c("Sample"="Sample_16S"))
 ```
 
 ```
-## Warning in inner_join_impl(x, y, by$x, by$y, suffix$x, suffix$y): joining
-## character vector and factor, coercing into character vector
+## Warning: Column `Sample`/`Sample_16S` joining character vector and factor,
+## coercing into character vector
 ```
 
 ```r
@@ -101,8 +102,8 @@ data.total <- inner_join(div.FCM.merged, data.16s, by="Sample_fcm")
 ```
 
 ```
-## Warning in inner_join_impl(x, y, by$x, by$y, suffix$x, suffix$y): joining
-## factor and character vector, coercing into character vector
+## Warning: Column `Sample_fcm` joining factor and character vector, coercing
+## into character vector
 ```
 
 ```r
@@ -123,8 +124,8 @@ tmp <- left_join(data.total.final,lb, by=c("Sample_fcm"="Sample_fcm"))
 ```
 
 ```
-## Warning in left_join_impl(x, y, by$x, by$y, suffix$x, suffix$y): joining
-## factor and character vector, coercing into character vector
+## Warning: Column `Sample_fcm` joining character vector and factor, coercing
+## into character vector
 ```
 
 ```r
@@ -212,7 +213,7 @@ R.cv.D2$results
 
 ```
 ##   intercept      RMSE  Rsquared     RMSESD RsquaredSD
-## 1      TRUE 0.5691594 0.8865255 0.07960459 0.03646854
+## 1      TRUE 0.5698783 0.8867696 0.07681919 0.03545571
 ```
 
 ```r
@@ -221,8 +222,8 @@ R.cv.D1$results
 ```
 
 ```
-##   intercept      RMSE  Rsquared     RMSESD RsquaredSD
-## 1      TRUE 0.6090747 0.8930933 0.09842492 0.03769675
+##   intercept     RMSE  Rsquared     RMSESD RsquaredSD
+## 1      TRUE 0.609562 0.8928659 0.09606413 0.03537097
 ```
 
 ```r
@@ -232,7 +233,7 @@ R.cv.D0$results
 
 ```
 ##   intercept      RMSE  Rsquared    RMSESD RsquaredSD
-## 1      TRUE 0.7049194 0.3233556 0.1350186   0.171629
+## 1      TRUE 0.7042838 0.3245008 0.1383552  0.1679219
 ```
 
 ```r
@@ -300,16 +301,97 @@ my_grob2 = grobTree(textGrob(bquote(r[p] == .(round(cor(y=log2(data.total.final$
 p5 <- ggplot(data=data.total.final,aes(x=D2.fcm,y=D2, fill=Lake))+ scale_fill_manual(values=c("#88419d","#a6cee3","#fc8d62")) +
   geom_point(shape=21,size=6,alpha=0.6,aes(fill=Lake))+
   theme_bw()+labs(y=expression('Taxonomic diversity - D'[2]),x=expression('Phenotypic diversity - D'[2]), fill="Environment")+
-  theme(axis.text=element_text(size=15),axis.title=element_text(size=20,face="bold"),legend.text=element_text(size=15),legend.title=element_text(size=16),strip.text.x = element_text(size = 22))+
+  theme(axis.text=element_text(size=15),axis.title=element_text(size=20,face="bold"),legend.text=element_text(size=15),
+        legend.title=element_text(size=16),strip.text.x = element_text(size = 22),
+         legend.position = c(0.05, .98), legend.justification = c(0, 1),
+        legend.background = element_rect(fill="transparent"))+
   scale_y_continuous(trans='log2', breaks = seq(5,60, 10),minor_breaks =NULL) +
-  scale_x_continuous(trans='log2', breaks = seq(1000,4250,250),minor_breaks =NULL) +
-  geom_smooth(method="lm",color="black",fill="lightblue",formula=y~x)+
+  scale_x_continuous(trans='log2', breaks = seq(1000,4250,250),minor_breaks =NULL, limits = c(NA, 2700)) +
+  geom_smooth(method="lm",color="black", fill ="lightblue", formula=y~x)+
   annotation_custom(my_grob)+
   annotation_custom(my_grob2)
+
+# pdf("Fig1.pdf", width = 7, height = 6)
 print(p5)
 ```
 
 <img src="Figures/cached/Plot D2 regression-1.png" style="display: block; margin: auto;" />
+
+```r
+# dev.off()
+```
+## Figure S1: Compare slopes of individual regressions
+
+```r
+# Supplementary figure for showing that the slopes for individual regressions of each lake are not significantly different
+# from each other. This allows us to make one global regression for further analysis.
+
+p5.si <- ggplot(data=data.total.final,aes(x=D2.fcm,y=D2, fill=Lake))+ scale_fill_manual(values=c("#88419d","#a6cee3","#fc8d62")) +
+  geom_point(shape=21,size=6,alpha=0.6,aes(fill=Lake))+
+  theme_bw()+labs(y=expression('Taxonomic diversity - D'[2]),x=expression('Phenotypic diversity - D'[2]), fill="Environment")+
+  theme(axis.text=element_text(size=15),axis.title=element_text(size=20,face="bold"),legend.text=element_text(size=15),
+        legend.title=element_text(size=16),strip.text.x = element_text(size = 22))+
+  scale_y_continuous(trans='log2', breaks = seq(5,60, 10),minor_breaks =NULL) +
+  scale_x_continuous(trans='log2', breaks = seq(1000,4250,250),minor_breaks =NULL, limits = c(NA, 2700)) +
+  geom_smooth(method="lm",color="black",formula=y~x)
+
+
+lm_comp <- lm(log2(D2)~log2(D2.fcm)*Lake, data=data.total.final)
+contrast_matrix <- rbind(
+  "Cooling water vs Muskegon Lake" = c(0,0,0,0,-1,1),
+  "Lake Michigan vs Cooling water" = c(0,0,0,0,0,1),
+  "Lake Michigan vs Muskegon Lake" = c(0,0,0,0,1,0)
+)
+
+# Adjusted R squared of individual models
+summary(lm_comp)$adj.r.squared
+```
+
+```
+## [1] 0.9269932
+```
+
+```r
+# Adjusted R squared of single model
+summary(lm(log2(D2)~log2(D2.fcm), data=data.total.final))$adj.r.squared
+```
+
+```
+## [1] 0.8784529
+```
+
+```r
+# Adjusted p-values using Benjamini & Hochberg (1995) correction
+summary(glht(model = lm_comp, contrast_matrix), test = adjusted("BH"))
+```
+
+```
+## 
+## 	 Simultaneous Tests for General Linear Hypotheses
+## 
+## Fit: lm(formula = log2(D2) ~ log2(D2.fcm) * Lake, data = data.total.final)
+## 
+## Linear Hypotheses:
+##                                     Estimate Std. Error t value Pr(>|t|)  
+## Cooling water vs Muskegon Lake == 0   1.3229     0.5908   2.239   0.0647 .
+## Lake Michigan vs Cooling water == 0   1.4795     0.7245   2.042   0.0647 .
+## Lake Michigan vs Muskegon Lake == 0   0.1566     0.8692   0.180   0.8573  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## (Adjusted p values reported -- BH method)
+```
+
+```r
+# pdf("Fig1_SI.pdf", width = 9, height = 6)
+# png("Fig1_SI.png", width = 9, height = 6, res = 500, units = "in")
+print(p5.si)
+```
+
+<img src="Figures/cached/Compare slopes of individual regressions-1.png" style="display: block; margin: auto;" />
+
+```r
+# dev.off()
+```
 
 ## Figure S2: Regression of D0/D1
 
@@ -448,393 +530,74 @@ sample_names(physeq.otu) <- gsub(sample_names(physeq.otu), pattern=".renamed", r
 sample_names(physeq.otu) <- gsub(sample_names(physeq.otu), pattern=".renamed", replacement="")
 meta.seq <- read.csv2("files/Lakes_metadata.csv")
 physeq.otu <- prune_samples(sample_names(physeq.otu) %in% data.total.final$Sample, physeq.otu)
-```
 
-```
-## Error in sample_names(physeq.otu) %in% data.total.final$Sample: object 'data.total.final' not found
-```
-
-```r
 # Annotate with metadata
 rownames(data.total.final) <- data.total.final$Sample
-```
-
-```
-## Error in eval(expr, envir, enclos): object 'data.total.final' not found
-```
-
-```r
 sample_data(physeq.otu) <- data.total.final
-```
 
-```
-## Error in eval(expr, envir, enclos): object 'data.total.final' not found
-```
-
-```r
 # Rescale
 sample_sums(physeq.otu)
 ```
 
 ```
-##             110D2F115             110D2F515             110D2F615 
-##                 19688                 15990                 19549 
-##             110D2F715             110D2F815             110D2F915 
-##                 16536                 21815                 16505 
-##            110D2W115D            110D2W115R            110D2W415D 
-##                 14433                 13914                 15383 
-##            110D2W415R            110D2W515D            110D2W515R 
-##                 12373                 19944                 13292 
-##            110D2W615R            110D2W715D            110D2W715R 
-##                 17480                 15290                 15132 
-##            110D2W815D            110D2W815R            110D2W915D 
-##                 39243                 11221                 17665 
-##            110D2W915R             110M2F115             110M2F415 
-##                 18867                 13836                 13875 
-##             110M2F515             110M2F615             110M2F715 
-##                 14547                 19437                 14070 
-##             110M2F915             110M2P515            110M2W115R 
-##                 17819                 11314                 24795 
-##            110M2W415D            110M2W515D            110M2W515R 
-##                 21143                 19386                 11559 
-##            110M2W615D            110M2W615R            110M2W715D 
-##                 14745                 19589                 19745 
-##            110M2W815D            110M2W815R            110M2W915D 
-##                 12617                 20090                 14228 
-##            110M2W915R             110S2F115             110S2F415 
-##                 13486                 14079                 15451 
-##             110S2F515             110S2F615            110S2F815D 
-##                 13655                 20088                 16823 
-##             110S2P415             110S2P515            110S2W115D 
-##                 16946                 12401                 14688 
-##            110S2W115R            110S2W415D            110S2W415R 
-##                 10908                 26951                 10934 
-##            110S2W515D            110S2W515R            110S2W615R 
-##                 19218                 16187                 12818 
-##            110S2W715D            110S2W815D            110S2W815R 
-##                 13521                 11047                 16869 
-##      Fa13.BD.MLB.DN.1      Fa13.BD.MLB.SN.1    Fa13.BD.MM110.DN.1 
-##                 34307                 33378                 38461 
-##    Fa13.BD.MM110.DN.2    Fa13.BD.MM110.SD.1    Fa13.BD.MM110.SD.2 
-##                 37896                 33727                 33729 
-##    Fa13.BD.MM110.SN.1    Fa13.BD.MM110.SN.2     Fa13.BD.MM15.DN.1 
-##                 35194                 35083                 34979 
-##     Fa13.BD.MM15.DN.2     Fa13.BD.MM15.SD.1     Fa13.BD.MM15.SD.2 
-##                 35263                 32169                 33073 
-##     Fa13.BD.MM15.SN.1     Fa13.BD.MM15.SN.2     Fa13.BcD.MLB.DN.1 
-##                 31872                 32961                 34358 
-##     Fa13.BcD.MLB.SN.1   Fa13.BcD.MM110.DN.1   Fa13.BcD.MM110.DN.2 
-##                 33644                 36109                 36714 
-##   Fa13.BcD.MM110.SD.1   Fa13.BcD.MM110.SD.2   Fa13.BcD.MM110.SN.1 
-##                 32119                 34305                 33470 
-##   Fa13.BcD.MM110.SN.2    Fa13.BcD.MM15.DN.1    Fa13.BcD.MM15.DN.2 
-##                 34270                 33525                 34698 
-##    Fa13.BcD.MM15.SD.1    Fa13.BcD.MM15.SD.2    Fa13.BcD.MM15.SN.1 
-##                 31501                 31162                 32989 
-##    Fa13.BcD.MM15.SN.2      Fa13.ED.MLB.DN.1      Fa13.ED.MLB.DN.2 
-##                 32464                 27176                 25966 
-##      Fa13.ED.MLB.SN.1      Fa13.ED.MLB.SN.2    Fa13.ED.MM110.DN.1 
-##                 23634                 26297                 21291 
-##    Fa13.ED.MM110.DN.2    Fa13.ED.MM110.SD.1    Fa13.ED.MM110.SD.2 
-##                 23104                 21721                 23545 
-##    Fa13.ED.MM110.SN.1    Fa13.ED.MM110.SN.2     Fa13.ED.MM15.DN.1 
-##                 22898                 21490                 16105 
-##     Fa13.ED.MM15.DN.2     Fa13.ED.MM15.SD.1     Fa13.ED.MM15.SD.2 
-##                 17855                 19260                 19527 
-##     Fa13.ED.MM15.SN.1     Fa13.ED.MM15.SN.2     Fa13.EcD.MLB.DN.1 
-##                 15940                 16029                 30385 
-##     Fa13.EcD.MLB.DN.2     Fa13.EcD.MLB.SN.2   Fa13.EcD.MM110.DN.1 
-##                 31280                 25744                 28212 
-##   Fa13.EcD.MM110.DN.2   Fa13.EcD.MM110.SD.1   Fa13.EcD.MM110.SD.2 
-##                 28627                 31206                 31737 
-##   Fa13.EcD.MM110.SN.1   Fa13.EcD.MM110.SN.2    Fa13.EcD.MM15.DN.1 
-##                 28834                 30149                 30593 
-##    Fa13.EcD.MM15.DN.2    Fa13.EcD.MM15.SD.1    Fa13.EcD.MM15.SD.2 
-##                 27227                 28351                 31609 
-##    Fa13.EcD.MM15.SN.1    Fa13.EcD.MM15.SN.2             M15S2F115 
-##                 30245                 27878                 15229 
-##             M15S2F415             M15S2F515             M15S2F615 
-##                 14856                 14730                 18566 
-##             M15S2F815             M15S2F915             M15S2P115 
-##                 12456                 12629                 11756 
-##             M15S2P615            M15S2W115D            M15S2W115R 
-##                 13392                 10565                 10580 
-##            M15S2W415R            M15S2W515D            M15S2W615D 
-##                 21397                 13148                 15989 
-##            M15S2W615R            M15S2W715D            M15S2W715R 
-##                 13598                 14429                 10643 
-##            M15S2W815D            M15S2W815R            M15S2W915D 
-##                 12224                 15664                 37485 
-##            M15S2W915R             M45D2F115             M45D2F515 
-##                 16543                 22415                 15392 
-##             M45D2F615             M45D2F715             M45D2F815 
-##                 19416                 15393                 11619 
-##             M45D2F915            M45D2W115R            M45D2W415D 
-##                 17434                 11145                 10621 
-##            M45D2W415R            M45D2W515D            M45D2W615D 
-##                 13712                 12923                 10098 
-##            M45D2W615R            M45D2W715D            M45D2W715R 
-##                 14938                 16372                 12197 
-##            M45D2W815D            M45D2W815R            M45D2W915D 
-##                 18126                 11525                 10554 
-##            M45D2W915R             M45S2F115             M45S2F415 
-##                 11024                 10954                 19377 
-##             M45S2F515             M45S2F615             M45S2F715 
-##                 12282                 10093                 16160 
-##             M45S2F815             M45S2F915            M45S2W115R 
-##                 16068                 10718                 21140 
-##            M45S2W415D            M45S2W415R            M45S2W515D 
-##                 28878                 10289                 17226 
-##            M45S2W615D            M45S2W715D            M45S2W815D 
-##                 14329                 10221                 17851 
-##            M45S2W815R            M45S2W915D            M45S2W915R 
-##                 13357                 11081                 11380 
-##              MBR1S714              MBR1S914              MBR2S914 
-##                 22981                 18160                 22201 
-##             MBRE1F515             MBRE1F714             MBRE1F715 
-##                 15848                 33085                 17553 
-##             MBRE1F914             MBRE1F915             MBRE1P714 
-##                 24648                 19493                 23487 
-##             MBRE1P715             MBRE1P914             MBRE1P915 
-##                 12983                 19381                 30207 
-##             MBRE2F515             MBRE2F714             MBRE2F715 
-##                 27886                 30443                 18461 
-##             MBRE2F914             MBRE2F915             MBRE2P714 
-##                 17753                 21968                 25354 
-##             MBRE2P914             MBRE2P915             MBRE3J515 
-##                 18831                 18366                 11830 
-##             MBRE3J715             MBRE3J915             MBRE3K515 
-##                 21636                 13741                 23390 
-##             MBRE3K715             MBRE3K915             MBRH1F515 
-##                 19268                 17438                 11951 
-##             MBRH1F714             MBRH1F715             MBRH1F914 
-##                 33640                 17222                 27095 
-##             MBRH1F915             MBRH1P515             MBRH1P714 
-##                 26219                 13528                 36918 
-##             MBRH1P914             MBRH1P915             MBRH2F515 
-##                 13643                 20975                 26074 
-##             MBRH2F714             MBRH2F715             MBRH2F914 
-##                 22096                 24178                 19514 
-##             MBRH2F915             MBRH2P714             MBRH2P914 
-##                 19342                 32237                 22938 
-##             MBRH3J515             MBRH3J715             MBRH3J915 
-##                 10994                 16596                 16341 
-##             MBRH3K515             MBRH3K715             MBRH3K915 
-##                 21778                 24452                 17373 
-##              MDP1S514              MDP1S714              MDP1S914 
-##                 33270                 25912                 24541 
-##              MDP2S514              MDP2S714              MDP2S914 
-##                 26326                 22537                 23245 
-##             MDPE1F514             MDPE1F515             MDPE1F714 
-##                106167                 12435                 24136 
-##             MDPE1F715             MDPE1F914             MDPE1F915 
-##                 18337                 26251                 16556 
-##             MDPE1P514             MDPE1P515             MDPE1P714 
-##                 25916                 13068                 18955 
-##             MDPE1P715             MDPE1P914             MDPE1P915 
-##                 18117                 21151                 21915 
-##             MDPE2F514             MDPE2F714             MDPE2F715 
-##                 27472                 18814                 11382 
-##             MDPE2F914             MDPE2F915             MDPE2P714 
-##                 24486                 21500                 20089 
-##             MDPE2P715             MDPE2P914             MDPE2P915 
-##                 15558                 20837                 10947 
-##             MDPE3J715             MDPE3J915             MDPE3K515 
-##                 14158                 21692                 17263 
-##             MDPE3K715             MDPE3K915             MDPH1F514 
-##                 12161                 23520                 36651 
-##             MDPH1F515             MDPH1F714             MDPH1F715 
-##                 29847                 28656                 20006 
-##             MDPH1F914             MDPH1F915             MDPH1P514 
-##                 30768                 21758                 40218 
-##             MDPH1P515             MDPH1P714             MDPH1P715 
-##                 21924                 29913                 22631 
-##             MDPH1P914             MDPH1P915             MDPH2F514 
-##                 14887                 21501                 21473 
-##             MDPH2F515             MDPH2F714             MDPH2F715 
-##                 21782                 18973                 12125 
-##             MDPH2F914             MDPH2F915             MDPH2P514 
-##                 19390                 22252                 10425 
-##             MDPH2P515             MDPH2P714             MDPH2P914 
-##                 15647                 29983                 15366 
-##             MDPH2P915             MDPH3J715             MDPH3K515 
-##                 32802                 18795                 17272 
-##             MDPH3K715             MDPH3K915              MIN1S514 
-##                 24850                 21390                 34914 
-##              MIN1S714              MIN1S914              MIN2S514 
-##                 30849                 31303                 37695 
-##              MIN2S714              MIN2S914             MINE1F514 
-##                 28506                 30379                 54347 
-##             MINE1F515             MINE1F714             MINE1F715 
-##                 12343                 11147                 28549 
-##             MINE1F914             MINE1F915             MINE1P714 
-##                 24892                 19318                 22888 
-##             MINE1P914             MINE1P915             MINE2F514 
-##                 21362                 22080                 18191 
-##             MINE2F515             MINE2F714             MINE2F715 
-##                 11224                 20564                 21058 
-##             MINE2F914             MINE2F915             MINE2P714 
-##                 26470                 18584                 16713 
-##             MINE2P914             MINE2P915             MINE3J515 
-##                 21744                 18637                 21801 
-##             MINE3J715             MINE3K515             MINE3K715 
-##                 11106                 15808                 14064 
-##             MINE3K915             MINH1F514             MINH1F515 
-##                 14415                 39119                 15303 
-##             MINH1F714             MINH1F715             MINH1F914 
-##                 30650                 23635                 26647 
-##             MINH1F915             MINH1P514             MINH1P515 
-##                 20856                 48696                 12823 
-##             MINH1P714             MINH1P715             MINH1P914 
-##                 28633                 10768                 11784 
-##             MINH2F514             MINH2F515             MINH2F714 
-##                 14459                 13599                 14498 
-##             MINH2F715             MINH2F914             MINH2F915 
-##                 13898                 20340                 22262 
-##             MINH2P514             MINH2P515             MINH2P714 
-##                 15012                 17715                 29854 
-##             MINH2P715             MINH2P914             MINH2P915 
-##                 23987                 29069                 17813 
-##             MINH3J515             MINH3J715             MINH3K515 
-##                 14319                 23046                 16538 
-##             MINH3K715             MINH3K915             MLBD2F115 
-##                 11224                 12864                 13959 
-##             MLBD2F515             MLBD2F715             MLBD2F915 
-##                 13971                 15557                 24208 
-##             MLBD2P115             MLBD2P715             MLBD2P815 
-##                 16881                 21945                 15091 
-##             MLBD2P915            MLBD2W115D            MLBD2W115R 
-##                 13311                 13296                 13583 
-##            MLBD2W415D            MLBD2W515D            MLBD2W715D 
-##                 11170                 38476                 21879 
-##            MLBD2W915D            MLBD2W915R            MLBD4W615D 
-##                 20978                 10750                 15523 
-##             MLBS2F115             MLBS2F415             MLBS2F815 
-##                 11569                 15562                 11834 
-##             MLBS2F915             MLBS2P115             MLBS2P415 
-##                 24681                 12123                 10262 
-##             MLBS2P515             MLBS2P715             MLBS2P815 
-##                 10003                 19932                 17841 
-##             MLBS2P915            MLBS2W115D            MLBS2W415D 
-##                 16154                 19248                 11906 
-##            MLBS2W515D            MLBS2W715D            MLBS2W815D 
-##                 15006                 24003                 13520 
-##            MLBS2W915D             MLBS4F615             MLBS4P615 
-##                 18719                 17218                 11685 
-##            MLBS4W615D            MLBS4W615R              MOT1S514 
-##                 23852                 17451                 41190 
-##              MOT1S714              MOT1S914              MOT2S514 
-##                 29800                 31726                 29969 
-##              MOT2S714              MOT2S914             MOTE1F514 
-##                 36169                 25817                 41401 
-##             MOTE1F515             MOTE1F714             MOTE1F715 
-##                 20156                 19672                 22107 
-##             MOTE1F914             MOTE1F915             MOTE1P514 
-##                 26792                 16075                 29782 
-##             MOTE1P714             MOTE1P715             MOTE1P914 
-##                 22026                 14744                 17482 
-##             MOTE1P915             MOTE2F514             MOTE2F515 
-##                 22988                 24083                 16698 
-##             MOTE2F714             MOTE2F715             MOTE2F914 
-##                 15793                 14416                 23064 
-##             MOTE2F915             MOTE2P515             MOTE2P714 
-##                 20850                 17867                 26231 
-##             MOTE2P914             MOTE2P915             MOTE3J515 
-##                 22697                 13935                 12087 
-##             MOTE3J715             MOTE3J915             MOTE3K515 
-##                 12670                 16226                 20197 
-##             MOTE3K715             MOTE3K915             MOTH1F514 
-##                 14194                 17385                 42489 
-##             MOTH1F515             MOTH1F714             MOTH1F715 
-##                 18033                 30164                 17235 
-##             MOTH1F914             MOTH1F915             MOTH1P514 
-##                 25123                 23287                 55782 
-##             MOTH1P714             MOTH1P715             MOTH1P914 
-##                 37805                 10702                 22639 
-##             MOTH2F514             MOTH2F515             MOTH2F714 
-##                 31548                 22608                 11389 
-##             MOTH2F715             MOTH2F914             MOTH2F915 
-##                 18583                 23504                 18893 
-##             MOTH2P514             MOTH2P515             MOTH2P714 
-##                 17218                 16679                 29554 
-##             MOTH2P914             MOTH2P915             MOTH3J515 
-##                 23814                 22322                 12398 
-##             MOTH3J915             MOTH3K515             MOTH3K715 
-##                 16482                 33902                 19141 
-##      Sp13.BD.MLB.SN.1      Sp13.BD.MLB.SN.2    Sp13.BD.MM110.DD.1 
-##                 37613                 37551                 36111 
-##    Sp13.BD.MM110.SD.1    Sp13.BD.MM110.SD.2    Sp13.BD.MM110.SN.1 
-##                 35836                 35591                 36283 
-##    Sp13.BD.MM110.SN.2     Sp13.BD.MM15.DD.1     Sp13.BD.MM15.SD.1 
-##                 36001                 36580                 34122 
-##     Sp13.BD.MM15.SN.1     Sp13.BD.MM15.SN.2     Sp13.BcD.MLB.SN.1 
-##                 36650                 37086                 35996 
-##     Sp13.BcD.MLB.SN.2   Sp13.BcD.MM110.DD.1   Sp13.BcD.MM110.DD.2 
-##                 35912                 35736                 36176 
-##   Sp13.BcD.MM110.SD.1   Sp13.BcD.MM110.SD.2   Sp13.BcD.MM110.SN.1 
-##                 33178                 32998                 32832 
-##   Sp13.BcD.MM110.SN.2    Sp13.BcD.MM15.DD.1    Sp13.BcD.MM15.DD.2 
-##                 32859                 30865                 31574 
-##    Sp13.BcD.MM15.SD.1    Sp13.BcD.MM15.SD.2    Sp13.BcD.MM15.SN.1 
-##                 30662                 29714                 29647 
-##    Sp13.BcD.MM15.SN.2      Sp13.ED.MLB.SN.1     Sp13.ED.MM15.DD.1 
-##                 32214                 18463                 19758 
-##     Sp13.ED.MM15.DD.2     Sp13.ED.MM15.SD.1     Sp13.ED.MM15.SD.2 
-##                 25231                 17100                 19163 
-##     Sp13.ED.MM15.SN.2     Sp13.EcD.MLB.SN.1     Sp13.EcD.MLB.SN.2 
-##                 27792                 26192                 26797 
-##   Sp13.EcD.MM110.DD.1   Sp13.EcD.MM110.DD.2   Sp13.EcD.MM110.SN.1 
-##                 11638                 16934                 14450 
-##   Sp13.EcD.MM110.SN.2    Sp13.EcD.MM15.DD.1    Sp13.EcD.MM15.DD.2 
-##                 11056                 16148                 18880 
-##    Sp13.EcD.MM15.SD.1    Sp13.EcD.MM15.SD.2    Sp13.EcD.MM15.SN.1 
-##                 13539                 17333                 28336 
-##    Sp13.EcD.MM15.SN.2      Su13.BD.MLB.DD.1      Su13.BD.MLB.SD.1 
-##                 26300                 34605                 33366 
-##  Su13.BD.MM110.DCMD.1  Su13.BD.MM110.DCMD.2    Su13.BD.MM110.DN.1 
-##                 35333                 34070                 38602 
-##    Su13.BD.MM110.DN.2    Su13.BD.MM110.SD.1    Su13.BD.MM110.SD.2 
-##                 38321                 32014                 32444 
-##    Su13.BD.MM110.SN.1    Su13.BD.MM110.SN.2     Su13.BD.MM15.DN.1 
-##                 34076                 34243                 31872 
-##     Su13.BD.MM15.DN.2     Su13.BD.MM15.SD.1     Su13.BD.MM15.SD.2 
-##                 32206                 32172                 31945 
-##     Su13.BD.MM15.SN.1     Su13.BD.MM15.SN.2     Su13.BcD.MLB.DD.1 
-##                 35076                 35077                 33919 
-##     Su13.BcD.MLB.SD.1 Su13.BcD.MM110.DCMD.1 Su13.BcD.MM110.DCMD.2 
-##                 35683                 35485                 35544 
-##   Su13.BcD.MM110.DN.1   Su13.BcD.MM110.DN.2   Su13.BcD.MM110.SD.1 
-##                 37421                 36732                 32187 
-##   Su13.BcD.MM110.SD.2   Su13.BcD.MM110.SN.1   Su13.BcD.MM110.SN.2 
-##                 32496                 32577                 33272 
-##    Su13.BcD.MM15.DN.1    Su13.BcD.MM15.DN.2    Su13.BcD.MM15.SD.1 
-##                 34564                 34637                 34301 
-##    Su13.BcD.MM15.SD.2    Su13.BcD.MM15.SN.1    Su13.BcD.MM15.SN.2 
-##                 32977                 34315                 32735 
-##      Su13.ED.MLB.DD.1      Su13.ED.MLB.DD.2      Su13.ED.MLB.SD.1 
-##                 28531                 26785                 28962 
-##      Su13.ED.MLB.SD.2  Su13.ED.MM110.DCMD.1  Su13.ED.MM110.DCMD.2 
-##                 29036                 16531                 20068 
-##    Su13.ED.MM110.SD.1    Su13.ED.MM110.SD.2    Su13.ED.MM110.SN.1 
-##                 24142                 25179                 23401 
-##    Su13.ED.MM110.SN.2     Su13.ED.MM15.DN.1     Su13.ED.MM15.DN.2 
-##                 25741                 14658                 14876 
-##     Su13.ED.MM15.SD.1     Su13.ED.MM15.SD.2     Su13.ED.MM15.SN.1 
-##                 18853                 20501                 21791 
-##     Su13.ED.MM15.SN.2     Su13.EcD.MLB.DD.1     Su13.EcD.MLB.DD.2 
-##                 17229                 30355                 28437 
-##     Su13.EcD.MLB.SD.1     Su13.EcD.MLB.SD.2 Su13.EcD.MM110.DCMD.1 
-##                 33879                 35211                 27040 
-## Su13.EcD.MM110.DCMD.2   Su13.EcD.MM110.DN.1   Su13.EcD.MM110.DN.2 
-##                 27296                 29368                 30512 
-##   Su13.EcD.MM110.SD.1   Su13.EcD.MM110.SD.2   Su13.EcD.MM110.SN.1 
-##                 32611                 31328                 31757 
-##   Su13.EcD.MM110.SN.2    Su13.EcD.MM15.DN.1    Su13.EcD.MM15.DN.2 
-##                 33491                 27849                 31995 
-##    Su13.EcD.MM15.SD.1    Su13.EcD.MM15.SD.2    Su13.EcD.MM15.SN.1 
-##                 29808                 29673                 30197 
-##    Su13.EcD.MM15.SN.2 
-##                 26465
+##          110D2F515          110D2F715          110D2F815 
+##              15990              16536              21815 
+##          110M2F115          110M2F415          110M2F515 
+##              13836              13875              14547 
+##          110M2F715          110S2F415          110S2F515 
+##              14070              15451              13655 
+##   Fa13.BD.MLB.DN.1   Fa13.BD.MLB.SN.1 Fa13.BD.MM110.SD.1 
+##              34307              33378              33727 
+## Fa13.BD.MM110.SN.1  Fa13.BD.MM15.DN.1  Fa13.BD.MM15.SD.1 
+##              35194              34979              32169 
+##  Fa13.BD.MM15.SN.1          M15S2F115          M15S2F515 
+##              31872              15229              14730 
+##          M15S2F815          M45D2F515          M45D2F715 
+##              12456              15392              15393 
+##          M45D2F815          M45S2F415          M45S2F515 
+##              11619              19377              12282 
+##          M45S2F715          M45S2F815          MBRE1F714 
+##              16160              16068              33085 
+##          MBRE1F715          MBRE1F914          MBRE2F515 
+##              17553              24648              27886 
+##          MBRE2F915          MBRH1F714          MBRH1F715 
+##              21968              33640              17222 
+##          MBRH1F914          MBRH2F515          MBRH2F915 
+##              27095              26074              19342 
+##          MDPE1F514          MDPE1F714          MDPE1F715 
+##             106167              24136              18337 
+##          MDPE1F914          MDPE2F915          MDPH1F714 
+##              26251              21500              28656 
+##          MDPH1F715          MDPH1F914          MDPH2F514 
+##              20006              30768              21473 
+##          MDPH2F515          MDPH2F915          MINE1F514 
+##              21782              22252              54347 
+##          MINE1F714          MINE1F715          MINE1F914 
+##              11147              28549              24892 
+##          MINE2F515          MINE2F915          MINH1F514 
+##              11224              18584              39119 
+##          MINH1F714          MINH1F715          MINH1F914 
+##              30650              23635              26647 
+##          MINH2F515          MINH2F915          MLBD2F115 
+##              13599              22262              13959 
+##          MLBD2F515          MLBD2F715          MLBD2F915 
+##              13971              15557              24208 
+##          MLBS2F115          MLBS2F815          MLBS2F915 
+##              11569              11834              24681 
+##          MOTE1F514          MOTE1F714          MOTE1F715 
+##              41401              19672              22107 
+##          MOTE1F914          MOTE2F515          MOTE2F915 
+##              26792              16698              20850 
+##          MOTH1F714          MOTH1F715          MOTH1F914 
+##              30164              17235              25123 
+##          MOTH1F915          MOTH2F514          MOTH2F515 
+##              23287              31548              22608 
+##   Sp13.BD.MLB.SN.1  Sp13.BD.MM15.DD.1  Sp13.BD.MM15.SD.1 
+##              37613              36580              34122 
+##  Sp13.BD.MM15.SN.1   Su13.BD.MLB.DD.1   Su13.BD.MLB.SD.1 
+##              36650              34605              33366 
+##  Su13.BD.MM15.DN.1  Su13.BD.MM15.SD.1  Su13.BD.MM15.SN.1 
+##              31872              32172              35076
 ```
 
 ```r
@@ -843,364 +606,64 @@ sample_sums(physeq.otu)
 ```
 
 ```
-##             110D2F115             110D2F515             110D2F615 
-##                  9855                  9881                  9900 
-##             110D2F715             110D2F815             110D2F915 
-##                  9857                  9785                  9822 
-##            110D2W115D            110D2W115R            110D2W415D 
-##                  9830                  9665                  9820 
-##            110D2W415R            110D2W515D            110D2W515R 
-##                  9748                  9892                  9800 
-##            110D2W615R            110D2W715D            110D2W715R 
-##                  9797                  9835                  9772 
-##            110D2W815D            110D2W815R            110D2W915D 
-##                  9752                  9703                  9803 
-##            110D2W915R             110M2F115             110M2F415 
-##                  9774                  9870                  9864 
-##             110M2F515             110M2F615             110M2F715 
-##                  9885                  9912                  9879 
-##             110M2F915             110M2P515            110M2W115R 
-##                  9855                  9759                  9791 
-##            110M2W415D            110M2W515D            110M2W515R 
-##                  9803                  9881                  9776 
-##            110M2W615D            110M2W615R            110M2W715D 
-##                  9877                  9863                  9880 
-##            110M2W815D            110M2W815R            110M2W915D 
-##                  9826                  9716                  9831 
-##            110M2W915R             110S2F115             110S2F415 
-##                  9745                  9858                  9870 
-##             110S2F515             110S2F615            110S2F815D 
-##                  9879                  9841                  9789 
-##             110S2P415             110S2P515            110S2W115D 
-##                  9759                  9699                  9832 
-##            110S2W115R            110S2W415D            110S2W415R 
-##                  9737                  9823                  9743 
-##            110S2W515D            110S2W515R            110S2W615R 
-##                  9860                  9796                  9797 
-##            110S2W715D            110S2W815D            110S2W815R 
-##                  9855                  9819                  9798 
-##      Fa13.BD.MLB.DN.1      Fa13.BD.MLB.SN.1    Fa13.BD.MM110.DN.1 
-##                  9433                  9489                  9747 
-##    Fa13.BD.MM110.DN.2    Fa13.BD.MM110.SD.1    Fa13.BD.MM110.SD.2 
-##                  9729                  9813                  9765 
-##    Fa13.BD.MM110.SN.1    Fa13.BD.MM110.SN.2     Fa13.BD.MM15.DN.1 
-##                  9805                  9799                  9714 
-##     Fa13.BD.MM15.DN.2     Fa13.BD.MM15.SD.1     Fa13.BD.MM15.SD.2 
-##                  9704                  9742                  9753 
-##     Fa13.BD.MM15.SN.1     Fa13.BD.MM15.SN.2     Fa13.BcD.MLB.DN.1 
-##                  9676                  9692                  9337 
-##     Fa13.BcD.MLB.SN.1   Fa13.BcD.MM110.DN.1   Fa13.BcD.MM110.DN.2 
-##                  9403                  9562                  9582 
-##   Fa13.BcD.MM110.SD.1   Fa13.BcD.MM110.SD.2   Fa13.BcD.MM110.SN.1 
-##                  9676                  9704                  9665 
-##   Fa13.BcD.MM110.SN.2    Fa13.BcD.MM15.DN.1    Fa13.BcD.MM15.DN.2 
-##                  9699                  9568                  9577 
-##    Fa13.BcD.MM15.SD.1    Fa13.BcD.MM15.SD.2    Fa13.BcD.MM15.SN.1 
-##                  9648                  9603                  9559 
-##    Fa13.BcD.MM15.SN.2      Fa13.ED.MLB.DN.1      Fa13.ED.MLB.DN.2 
-##                  9559                  9053                  9033 
-##      Fa13.ED.MLB.SN.1      Fa13.ED.MLB.SN.2    Fa13.ED.MM110.DN.1 
-##                  9053                  9080                  9406 
-##    Fa13.ED.MM110.DN.2    Fa13.ED.MM110.SD.1    Fa13.ED.MM110.SD.2 
-##                  9471                  9684                  9718 
-##    Fa13.ED.MM110.SN.1    Fa13.ED.MM110.SN.2     Fa13.ED.MM15.DN.1 
-##                  9609                  9575                  9464 
-##     Fa13.ED.MM15.DN.2     Fa13.ED.MM15.SD.1     Fa13.ED.MM15.SD.2 
-##                  9397                  9571                  9577 
-##     Fa13.ED.MM15.SN.1     Fa13.ED.MM15.SN.2     Fa13.EcD.MLB.DN.1 
-##                  9431                  9574                  8946 
-##     Fa13.EcD.MLB.DN.2     Fa13.EcD.MLB.SN.2   Fa13.EcD.MM110.DN.1 
-##                  9059                  9172                  9368 
-##   Fa13.EcD.MM110.DN.2   Fa13.EcD.MM110.SD.1   Fa13.EcD.MM110.SD.2 
-##                  9415                  9659                  9666 
-##   Fa13.EcD.MM110.SN.1   Fa13.EcD.MM110.SN.2    Fa13.EcD.MM15.DN.1 
-##                  9618                  9529                  9163 
-##    Fa13.EcD.MM15.DN.2    Fa13.EcD.MM15.SD.1    Fa13.EcD.MM15.SD.2 
-##                  9198                  9461                  9404 
-##    Fa13.EcD.MM15.SN.1    Fa13.EcD.MM15.SN.2             M15S2F115 
-##                  9203                  9236                  9834 
-##             M15S2F415             M15S2F515             M15S2F615 
-##                  9837                  9826                  9784 
-##             M15S2F815             M15S2F915             M15S2P115 
-##                  9832                  9849                  9455 
-##             M15S2P615            M15S2W115D            M15S2W115R 
-##                  9550                  9712                  9579 
-##            M15S2W415R            M15S2W515D            M15S2W615D 
-##                  9539                  9710                  9654 
-##            M15S2W615R            M15S2W715D            M15S2W715R 
-##                  9558                  9813                  9713 
-##            M15S2W815D            M15S2W815R            M15S2W915D 
-##                  9815                  9745                  9797 
-##            M15S2W915R             M45D2F115             M45D2F515 
-##                  9782                  9805                  9830 
-##             M45D2F615             M45D2F715             M45D2F815 
-##                  9874                  9802                  9828 
-##             M45D2F915            M45D2W115R            M45D2W415D 
-##                  9842                  9660                  9822 
-##            M45D2W415R            M45D2W515D            M45D2W615D 
-##                  9821                  9817                  9719 
-##            M45D2W615R            M45D2W715D            M45D2W715R 
-##                  9631                  9804                  9731 
-##            M45D2W815D            M45D2W815R            M45D2W915D 
-##                  9819                  9716                  9766 
-##            M45D2W915R             M45S2F115             M45S2F415 
-##                  9679                  9855                  9900 
-##             M45S2F515             M45S2F615             M45S2F715 
-##                  9866                  9734                  9865 
-##             M45S2F815             M45S2F915            M45S2W115R 
-##                  9836                  9792                  9674 
-##            M45S2W415D            M45S2W415R            M45S2W515D 
-##                  9816                  9705                  9804 
-##            M45S2W615D            M45S2W715D            M45S2W815D 
-##                  9757                  9789                  9822 
-##            M45S2W815R            M45S2W915D            M45S2W915R 
-##                  9752                  9784                  9716 
-##              MBR1S714              MBR1S914              MBR2S914 
-##                  8156                  8699                  8159 
-##             MBRE1F515             MBRE1F714             MBRE1F715 
-##                  9749                  9703                  9759 
-##             MBRE1F914             MBRE1F915             MBRE1P714 
-##                  9683                  9705                  9534 
-##             MBRE1P715             MBRE1P914             MBRE1P915 
-##                  9438                  9674                  9272 
-##             MBRE2F515             MBRE2F714             MBRE2F715 
-##                  9669                  9750                  9810 
-##             MBRE2F914             MBRE2F915             MBRE2P714 
-##                  9758                  9603                  9467 
-##             MBRE2P914             MBRE2P915             MBRE3J515 
-##                  9648                  9512                  9003 
-##             MBRE3J715             MBRE3J915             MBRE3K515 
-##                  9348                  9577                  9629 
-##             MBRE3K715             MBRE3K915             MBRH1F515 
-##                  9807                  9693                  9585 
-##             MBRH1F714             MBRH1F715             MBRH1F914 
-##                  9535                  9581                  9265 
-##             MBRH1F915             MBRH1P515             MBRH1P714 
-##                  9384                  9148                  9419 
-##             MBRH1P914             MBRH1P915             MBRH2F515 
-##                  9420                  9370                  9546 
-##             MBRH2F714             MBRH2F715             MBRH2F914 
-##                  9630                  9512                  9757 
-##             MBRH2F915             MBRH2P714             MBRH2P914 
-##                  9750                  9339                  9294 
-##             MBRH3J515             MBRH3J715             MBRH3J915 
-##                  8690                  9541                  9280 
-##             MBRH3K515             MBRH3K715             MBRH3K915 
-##                  9518                  9577                  9393 
-##              MDP1S514              MDP1S714              MDP1S914 
-##                  7930                  8098                  8201 
-##              MDP2S514              MDP2S714              MDP2S914 
-##                  8354                  8009                  8161 
-##             MDPE1F514             MDPE1F515             MDPE1F714 
-##                  9411                  9747                  9705 
-##             MDPE1F715             MDPE1F914             MDPE1F915 
-##                  9767                  9690                  9697 
-##             MDPE1P514             MDPE1P515             MDPE1P714 
-##                  9008                  9341                  9703 
-##             MDPE1P715             MDPE1P914             MDPE1P915 
-##                  9583                  9482                  9389 
-##             MDPE2F514             MDPE2F714             MDPE2F715 
-##                  9626                  9745                  9737 
-##             MDPE2F914             MDPE2F915             MDPE2P714 
-##                  9696                  9585                  9446 
-##             MDPE2P715             MDPE2P914             MDPE2P915 
-##                  9544                  9525                  9469 
-##             MDPE3J715             MDPE3J915             MDPE3K515 
-##                  9601                  9454                  9727 
-##             MDPE3K715             MDPE3K915             MDPH1F514 
-##                  9722                  9589                  9414 
-##             MDPH1F515             MDPH1F714             MDPH1F715 
-##                  9590                  9545                  9649 
-##             MDPH1F914             MDPH1F915             MDPH1P514 
-##                  9045                  9106                  9444 
-##             MDPH1P515             MDPH1P714             MDPH1P715 
-##                  9277                  9513                  9470 
-##             MDPH1P914             MDPH1P915             MDPH2F514 
-##                  9629                  9196                  9554 
-##             MDPH2F515             MDPH2F714             MDPH2F715 
-##                  9453                  9693                  9508 
-##             MDPH2F914             MDPH2F915             MDPH2P514 
-##                  9480                  9210                  9574 
-##             MDPH2P515             MDPH2P714             MDPH2P914 
-##                  9308                  9523                  9488 
-##             MDPH2P915             MDPH3J715             MDPH3K515 
-##                  9252                  9461                  9552 
-##             MDPH3K715             MDPH3K915              MIN1S514 
-##                  9499                  9169                  7202 
-##              MIN1S714              MIN1S914              MIN2S514 
-##                  7188                  7921                  7578 
-##              MIN2S714              MIN2S914             MINE1F514 
-##                  7755                  7192                  8603 
-##             MINE1F515             MINE1F714             MINE1F715 
-##                  9318                  9664                  9430 
-##             MINE1F914             MINE1F915             MINE1P714 
-##                  9409                  9496                  9373 
-##             MINE1P914             MINE1P915             MINE2F514 
-##                  8993                  9042                  9510 
-##             MINE2F515             MINE2F714             MINE2F715 
-##                  9304                  9528                  9264 
-##             MINE2F914             MINE2F915             MINE2P714 
-##                  9354                  9442                  9534 
-##             MINE2P914             MINE2P915             MINE3J515 
-##                  9118                  9347                  8786 
-##             MINE3J715             MINE3K515             MINE3K715 
-##                  9024                  9351                  9459 
-##             MINE3K915             MINH1F514             MINH1F515 
-##                  9311                  8976                  9431 
-##             MINH1F714             MINH1F715             MINH1F914 
-##                  9389                  9215                  9413 
-##             MINH1F915             MINH1P514             MINH1P515 
-##                  9163                  9105                  9095 
-##             MINH1P714             MINH1P715             MINH1P914 
-##                  9429                  9036                  9295 
-##             MINH2F514             MINH2F515             MINH2F714 
-##                  9457                  9384                  9673 
-##             MINH2F715             MINH2F914             MINH2F915 
-##                  9508                  9322                  9234 
-##             MINH2P514             MINH2P515             MINH2P714 
-##                  9238                  9230                  9283 
-##             MINH2P715             MINH2P914             MINH2P915 
-##                  9230                  9107                  9280 
-##             MINH3J515             MINH3J715             MINH3K515 
-##                  9059                  8955                  9446 
-##             MINH3K715             MINH3K915             MLBD2F115 
-##                  9355                  9329                  9599 
-##             MLBD2F515             MLBD2F715             MLBD2F915 
-##                  9667                  9686                  9546 
-##             MLBD2P115             MLBD2P715             MLBD2P815 
-##                  9429                  9459                  9391 
-##             MLBD2P915            MLBD2W115D            MLBD2W115R 
-##                  9568                  9470                  9404 
-##            MLBD2W415D            MLBD2W515D            MLBD2W715D 
-##                  9309                  9407                  9509 
-##            MLBD2W915D            MLBD2W915R            MLBD4W615D 
-##                  9405                  9561                  9479 
-##             MLBS2F115             MLBS2F415             MLBS2F815 
-##                  9562                  9632                  9639 
-##             MLBS2F915             MLBS2P115             MLBS2P415 
-##                  9629                  9331                  9266 
-##             MLBS2P515             MLBS2P715             MLBS2P815 
-##                 10003                  9821                  9483 
-##             MLBS2P915            MLBS2W115D            MLBS2W415D 
-##                  9589                  9556                  9417 
-##            MLBS2W515D            MLBS2W715D            MLBS2W815D 
-##                  9537                  9715                  9555 
-##            MLBS2W915D             MLBS4F615             MLBS4P615 
-##                  9680                  9765                  9540 
-##            MLBS4W615D            MLBS4W615R              MOT1S514 
-##                  9626                  9760                  7585 
-##              MOT1S714              MOT1S914              MOT2S514 
-##                  8717                  8248                  9050 
-##              MOT2S714              MOT2S914             MOTE1F514 
-##                  8416                  8510                  9392 
-##             MOTE1F515             MOTE1F714             MOTE1F715 
-##                  9632                  9835                  9747 
-##             MOTE1F914             MOTE1F915             MOTE1P514 
-##                  9689                  9650                  9236 
-##             MOTE1P714             MOTE1P715             MOTE1P914 
-##                  9614                  9709                  9657 
-##             MOTE1P915             MOTE2F514             MOTE2F515 
-##                  9499                  9602                  9723 
-##             MOTE2F714             MOTE2F715             MOTE2F914 
-##                  9789                  9769                  9660 
-##             MOTE2F915             MOTE2P515             MOTE2P714 
-##                  9601                  9622                  9666 
-##             MOTE2P914             MOTE2P915             MOTE3J515 
-##                  9553                  9623                  9454 
-##             MOTE3J715             MOTE3J915             MOTE3K515 
-##                  9671                  9575                  9649 
-##             MOTE3K715             MOTE3K915             MOTH1F514 
-##                  9784                  9675                  9428 
-##             MOTH1F515             MOTH1F714             MOTH1F715 
-##                  9767                  9655                  9751 
-##             MOTH1F914             MOTH1F915             MOTH1P514 
-##                  9684                  9789                  8835 
-##             MOTH1P714             MOTH1P715             MOTH1P914 
-##                  9522                  9492                  9516 
-##             MOTH2F514             MOTH2F515             MOTH2F714 
-##                  9620                  9649                  9739 
-##             MOTH2F715             MOTH2F914             MOTH2F915 
-##                  9743                  9674                  9735 
-##             MOTH2P514             MOTH2P515             MOTH2P714 
-##                  9561                  9450                  9638 
-##             MOTH2P914             MOTH2P915             MOTH3J515 
-##                  9541                  9526                  9367 
-##             MOTH3J915             MOTH3K515             MOTH3K715 
-##                  9615                  9613                  9731 
-##      Sp13.BD.MLB.SN.1      Sp13.BD.MLB.SN.2    Sp13.BD.MM110.DD.1 
-##                  9008                  8866                  9737 
-##    Sp13.BD.MM110.SD.1    Sp13.BD.MM110.SD.2    Sp13.BD.MM110.SN.1 
-##                  9794                  9782                  9808 
-##    Sp13.BD.MM110.SN.2     Sp13.BD.MM15.DD.1     Sp13.BD.MM15.SD.1 
-##                  9854                  9259                  9524 
-##     Sp13.BD.MM15.SN.1     Sp13.BD.MM15.SN.2     Sp13.BcD.MLB.SN.1 
-##                  9371                  9437                  9226 
-##     Sp13.BcD.MLB.SN.2   Sp13.BcD.MM110.DD.1   Sp13.BcD.MM110.DD.2 
-##                  9205                  9664                  9692 
-##   Sp13.BcD.MM110.SD.1   Sp13.BcD.MM110.SD.2   Sp13.BcD.MM110.SN.1 
-##                  9726                  9703                  9741 
-##   Sp13.BcD.MM110.SN.2    Sp13.BcD.MM15.DD.1    Sp13.BcD.MM15.DD.2 
-##                  9705                  9325                  9341 
-##    Sp13.BcD.MM15.SD.1    Sp13.BcD.MM15.SD.2    Sp13.BcD.MM15.SN.1 
-##                  9493                  9587                  9462 
-##    Sp13.BcD.MM15.SN.2      Sp13.ED.MLB.SN.1     Sp13.ED.MM15.DD.1 
-##                  9401                  9086                  9557 
-##     Sp13.ED.MM15.DD.2     Sp13.ED.MM15.SD.1     Sp13.ED.MM15.SD.2 
-##                  8951                  9515                  9319 
-##     Sp13.ED.MM15.SN.2     Sp13.EcD.MLB.SN.1     Sp13.EcD.MLB.SN.2 
-##                  9124                  8623                  8989 
-##   Sp13.EcD.MM110.DD.1   Sp13.EcD.MM110.DD.2   Sp13.EcD.MM110.SN.1 
-##                  8321                  8681                  9061 
-##   Sp13.EcD.MM110.SN.2    Sp13.EcD.MM15.DD.1    Sp13.EcD.MM15.DD.2 
-##                  8956                  9110                  9183 
-##    Sp13.EcD.MM15.SD.1    Sp13.EcD.MM15.SD.2    Sp13.EcD.MM15.SN.1 
-##                  8951                  9202                  9051 
-##    Sp13.EcD.MM15.SN.2      Su13.BD.MLB.DD.1      Su13.BD.MLB.SD.1 
-##                  8969                  9619                  9634 
-##  Su13.BD.MM110.DCMD.1  Su13.BD.MM110.DCMD.2    Su13.BD.MM110.DN.1 
-##                  9813                  9792                  9778 
-##    Su13.BD.MM110.DN.2    Su13.BD.MM110.SD.1    Su13.BD.MM110.SD.2 
-##                  9774                  9830                  9832 
-##    Su13.BD.MM110.SN.1    Su13.BD.MM110.SN.2     Su13.BD.MM15.DN.1 
-##                  9845                  9850                  9760 
-##     Su13.BD.MM15.DN.2     Su13.BD.MM15.SD.1     Su13.BD.MM15.SD.2 
-##                  9766                  9768                  9756 
-##     Su13.BD.MM15.SN.1     Su13.BD.MM15.SN.2     Su13.BcD.MLB.DD.1 
-##                  9768                  9765                  9487 
-##     Su13.BcD.MLB.SD.1 Su13.BcD.MM110.DCMD.1 Su13.BcD.MM110.DCMD.2 
-##                  9612                  9711                  9721 
-##   Su13.BcD.MM110.DN.1   Su13.BcD.MM110.DN.2   Su13.BcD.MM110.SD.1 
-##                  9636                  9616                  9763 
-##   Su13.BcD.MM110.SD.2   Su13.BcD.MM110.SN.1   Su13.BcD.MM110.SN.2 
-##                  9781                  9747                  9744 
-##    Su13.BcD.MM15.DN.1    Su13.BcD.MM15.DN.2    Su13.BcD.MM15.SD.1 
-##                  9646                  9698                  9669 
-##    Su13.BcD.MM15.SD.2    Su13.BcD.MM15.SN.1    Su13.BcD.MM15.SN.2 
-##                  9664                  9642                  9627 
-##      Su13.ED.MLB.DD.1      Su13.ED.MLB.DD.2      Su13.ED.MLB.SD.1 
-##                  9280                  9198                  9342 
-##      Su13.ED.MLB.SD.2  Su13.ED.MM110.DCMD.1  Su13.ED.MM110.DCMD.2 
-##                  9391                  9717                  9621 
-##    Su13.ED.MM110.SD.1    Su13.ED.MM110.SD.2    Su13.ED.MM110.SN.1 
-##                  9705                  9698                  9780 
-##    Su13.ED.MM110.SN.2     Su13.ED.MM15.DN.1     Su13.ED.MM15.DN.2 
-##                  9787                  9473                  9477 
-##     Su13.ED.MM15.SD.1     Su13.ED.MM15.SD.2     Su13.ED.MM15.SN.1 
-##                  9679                  9566                  9575 
-##     Su13.ED.MM15.SN.2     Su13.EcD.MLB.DD.1     Su13.EcD.MLB.DD.2 
-##                  9613                  9129                  9261 
-##     Su13.EcD.MLB.SD.1     Su13.EcD.MLB.SD.2 Su13.EcD.MM110.DCMD.1 
-##                  9386                  9370                  9654 
-## Su13.EcD.MM110.DCMD.2   Su13.EcD.MM110.DN.1   Su13.EcD.MM110.DN.2 
-##                  9647                  9296                  9134 
-##   Su13.EcD.MM110.SD.1   Su13.EcD.MM110.SD.2   Su13.EcD.MM110.SN.1 
-##                  9796                  9792                  9753 
-##   Su13.EcD.MM110.SN.2    Su13.EcD.MM15.DN.1    Su13.EcD.MM15.DN.2 
-##                  9787                  9338                  9316 
-##    Su13.EcD.MM15.SD.1    Su13.EcD.MM15.SD.2    Su13.EcD.MM15.SN.1 
-##                  9726                  9704                  9468 
-##    Su13.EcD.MM15.SN.2 
-##                  9548
+##          110D2F515          110D2F715          110D2F815 
+##              11027              11005              10996 
+##          110M2F115          110M2F415          110M2F515 
+##              11008              11007              11013 
+##          110M2F715          110S2F415          110S2F515 
+##              11009              11013              11027 
+##   Fa13.BD.MLB.DN.1   Fa13.BD.MLB.SN.1 Fa13.BD.MM110.SD.1 
+##              10502              10695              10925 
+## Fa13.BD.MM110.SN.1  Fa13.BD.MM15.DN.1  Fa13.BD.MM15.SD.1 
+##              10935              10820              10902 
+##  Fa13.BD.MM15.SN.1          M15S2F115          M15S2F515 
+##              10830              10972              10951 
+##          M15S2F815          M45D2F515          M45D2F715 
+##              10952              10982              10946 
+##          M45D2F815          M45S2F415          M45S2F515 
+##              10936              11022              10989 
+##          M45S2F715          M45S2F815          MBRE1F714 
+##              11016              10987              10897 
+##          MBRE1F715          MBRE1F914          MBRE2F515 
+##              10892              10785              10753 
+##          MBRE2F915          MBRH1F714          MBRH1F715 
+##              10877              10599              10662 
+##          MBRH1F914          MBRH2F515          MBRH2F915 
+##              10347              10625              10833 
+##          MDPE1F514          MDPE1F714          MDPE1F715 
+##              10503              10827              10866 
+##          MDPE1F914          MDPE2F915          MDPH1F714 
+##              10802              10841              10652 
+##          MDPH1F715          MDPH1F914          MDPH2F514 
+##              10653              10268              10851 
+##          MDPH2F515          MDPH2F915          MINE1F514 
+##              10783              10680               9705 
+##          MINE1F714          MINE1F715          MINE1F914 
+##              11147              10493              10459 
+##          MINE2F515          MINE2F915          MINH1F514 
+##              10270              10470               9970 
+##          MINH1F714          MINH1F715          MINH1F914 
+##              10611              10251              10485 
+##          MINH2F515          MINH2F915          MLBD2F115 
+##              10451              10646              10675 
+##          MLBD2F515          MLBD2F715          MLBD2F915 
+##              10761              10823              10634 
+##          MLBS2F115          MLBS2F815          MLBS2F915 
+##              10612              10722              10729 
+##          MOTE1F514          MOTE1F714          MOTE1F715 
+##              10525              10920              10960 
+##          MOTE1F914          MOTE2F515          MOTE2F915 
+##              10823              10888              10838 
+##          MOTH1F714          MOTH1F715          MOTH1F914 
+##              10848              10865              10819 
+##          MOTH1F915          MOTH2F514          MOTH2F515 
+##              10904              10822              10745 
+##   Sp13.BD.MLB.SN.1  Sp13.BD.MM15.DD.1  Sp13.BD.MM15.SD.1 
+##              10054              10325              10617 
+##  Sp13.BD.MM15.SN.1   Su13.BD.MLB.DD.1   Su13.BD.MLB.SD.1 
+##              10432              10718              10816 
+##  Su13.BD.MM15.DN.1  Su13.BD.MM15.SD.1  Su13.BD.MM15.SN.1 
+##              10913              10930              10892
 ```
 
 ```r
@@ -1216,13 +679,6 @@ pcoa <- ordinate(
 )
 
 pcoa.df <- data.frame(pcoa$vectors, sample_data(physeq.otu))
-```
-
-```
-## Error in access(object, "sam_data", errorIfNULL): sam_data slot is empty.
-```
-
-```r
 var <- round(pcoa$values$Eigenvalues/sum(pcoa$values$Eigenvalues)*100,1)
 
 # Start beta diversity analysis on FCM data
@@ -1275,13 +731,6 @@ beta.div <- beta_div_fcm(fbasis, INDICES=pos, ord.type="PCoA")
 df.beta.fcm <- data.frame(Sample = rownames(beta.div$points), beta.div$points)
 df.beta.fcm$Sample <- gsub(df.beta.fcm$Sample, pattern="MI5", replacement = "M15")
 df.beta.fcm <- inner_join(df.beta.fcm, data.total.final, by=c("Sample"="Sample_fcm"))
-```
-
-```
-## Error in is.data.frame(y): object 'data.total.final' not found
-```
-
-```r
 var2 <- round(beta.div$eig/sum(beta.div$eig)*100, 1)
 df.beta.fcm <- droplevels(df.beta.fcm)
 
@@ -1293,48 +742,22 @@ x <- by(fbasis1@basis, INDICES = pos, FUN = colMeans)
 x <- do.call(rbind, x)
 rownames(x) <- gsub(rownames(x), pattern = "MI5", replacement = "M15")
 x <- x[(rownames(x) %in% data.total.final$Sample_fcm), ]
-```
 
-```
-## Error in rownames(x) %in% data.total.final$Sample_fcm: object 'data.total.final' not found
-```
-
-```r
 # Rename and order rows of fcm/seq data
 tmp <- data.frame(sample_fcm=rownames(x))
 tmp <- left_join(tmp, data.total.final, by=c("sample_fcm"="Sample_fcm"))
 ```
 
 ```
-## Error in is.data.frame(y): object 'data.total.final' not found
+## Warning: Column `sample_fcm`/`Sample_fcm` joining factor and character
+## vector, coercing into character vector
 ```
 
 ```r
 rownames(x) <- tmp$Sample; remove(tmp)
 x <- x[order(rownames(x)),]
-```
-
-```
-## Error in order(rownames(x)): argument 1 is not a vector
-```
-
-```r
 x.data <- data.total.final[data.total.final$Sample %in% rownames(x),]
-```
-
-```
-## Error in eval(expr, envir, enclos): object 'data.total.final' not found
-```
-
-```r
 x.data <- x.data[order(x.data$Sample),]
-```
-
-```
-## Error in eval(expr, envir, enclos): object 'x.data' not found
-```
-
-```r
 otu_table(physeq.otu) <- otu_table(physeq.otu)[order(rownames(otu_table(physeq.otu))),]
 
 # Run PcoA
@@ -1376,8 +799,8 @@ summary(dist.prot)
 ## [2,] 0.1212331 -0.9926241
 ## 
 ## Translation of averages:
-##              [,1]         [,2]
-## [1,] 3.520687e-18 8.366384e-19
+##               [,1]          [,2]
+## [1,] -1.368612e-18 -1.536175e-18
 ## 
 ## Scaling of target:
 ## [1] 0.651965
@@ -1578,14 +1001,16 @@ fbasis <- flowBasis(flowData_transformed, param, nbin=128,
 # Densities will be normalized to the interval [0,1]
 # d = rounding factor
 # Diversity.fbasis <- Diversity(fbasis, d = 3, plot = TRUE, R = 999)
-Diversity.fbasis <- Diversity_rf(flowData_transformed, d=3, param = param, R = R.main)
+Diversity.fbasis <- Diversity_rf(flowData_transformed, d=3, param = param, R = R.main,
+                                 parallel = TRUE, ncores = 10)
 ```
 
 ```
-## Sat Feb 25 00:00:17 2017 ---- Starting resample run 1
-## Sat Feb 25 00:01:26 2017 ---- Starting resample run 2
-## Sat Feb 25 00:02:39 2017 ---- Starting resample run 3
-## Sat Feb 25 00:03:40 2017 ---- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
+## Tue Sep 19 16:03:24 2017 --- Using 10 cores for calculations
+## Tue Sep 19 16:05:08 2017 --- Closing workers
+## Tue Sep 19 16:05:08 2017 --- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
+## -----------------------------------------------------------------------------------------------------
+## 
 ```
 
 ```r
@@ -1617,25 +1042,29 @@ rGate_LNA <- polygonGate(.gate=sqrcut1, filterId = "LNA")
 flowData_HNA <- split(flowData_transformed, rGate_HNA)$`HNA+`
 flowData_LNA <- split(flowData_transformed, rGate_LNA)$`LNA+`
 
-Diversity.HNA <- Diversity_rf(flowData_HNA, d=3, param = param, R = R.main)
+Diversity.HNA <- Diversity_rf(flowData_HNA, d=3, param = param, R = R.main,
+                                 parallel = TRUE, ncores = 10)
 ```
 
 ```
-## Sat Feb 25 00:03:49 2017 ---- Starting resample run 1
-## Sat Feb 25 00:04:39 2017 ---- Starting resample run 2
-## Sat Feb 25 00:05:24 2017 ---- Starting resample run 3
-## Sat Feb 25 00:06:12 2017 ---- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
+## Tue Sep 19 16:05:23 2017 --- Using 10 cores for calculations
+## Tue Sep 19 16:06:37 2017 --- Closing workers
+## Tue Sep 19 16:06:37 2017 --- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
+## -----------------------------------------------------------------------------------------------------
+## 
 ```
 
 ```r
-Diversity.LNA <- Diversity_rf(flowData_LNA, d=3, param = param, R = R.main)
+Diversity.LNA <- Diversity_rf(flowData_LNA, d=3, param = param, R = R.main,
+                                 parallel = TRUE, ncores = 10)
 ```
 
 ```
-## Sat Feb 25 00:06:12 2017 ---- Starting resample run 1
-## Sat Feb 25 00:07:02 2017 ---- Starting resample run 2
-## Sat Feb 25 00:07:45 2017 ---- Starting resample run 3
-## Sat Feb 25 00:08:29 2017 ---- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
+## Tue Sep 19 16:06:42 2017 --- Using 10 cores for calculations
+## Tue Sep 19 16:08:04 2017 --- Closing workers
+## Tue Sep 19 16:08:04 2017 --- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
+## -----------------------------------------------------------------------------------------------------
+## 
 ```
 
 ```r
@@ -2706,14 +2135,54 @@ fbasis2<-fbasis; fbasis2@basis <- fbasis@basis[!Diversity.fbasis$Treatment=="S",
 beta.div.S <- beta_div_fcm(fbasis1, INDICES=pos[!Diversity.fbasis$Treatment=="T"], ord.type="PCoA")
 # Take average fingerprint for technical replicates
 fbasis1@basis <- fbasis1@basis/apply(fbasis1@basis, 1, max)
-fbasis1@basis <- round(fbasis1@basis, 4)
+fbasis1@basis <- round(fbasis1@basis, 3)
+
+# Remove shared zeroes for Bray-curtis
+fbasis1@basis <- fbasis1@basis[, !apply(fbasis1@basis==0, 2, all)]
 x <- by(fbasis1@basis, INDICES = pos[!Diversity.fbasis$Treatment=="T"], FUN = colMeans)
 x <- do.call(rbind, x)
+
+
 # Calculate distance matrix
 dist.S <- vegdist(x, method="bray")
 
-beta.div.T <- beta_div_fcm(fbasis2, INDICES=pos[!Diversity.fbasis$Treatment=="S"], ord.type="PCoA")
+int_Treat_Time <- interaction(Diversity.fbasis$Treatment,Diversity.fbasis$Time)
+dist.S.formatted <- as.matrix(dist.S)
+dist.S_C_T0 <- dist.S.formatted[colnames(dist.S.formatted) == "C1_t0.fcs" | colnames(dist.S.formatted) == "C2_t0.fcs", colnames(dist.S.formatted) == "Q2_S_t0.fcs" | colnames(dist.S.formatted) == "Q1_S_t0.fcs"| colnames(dist.S.formatted) == "Q3_S_t3.fcs"]
+mean(dist.S_C_T0)
+```
 
+```
+## [1] 0.04973753
+```
+
+```r
+sd(dist.S_C_T0)
+```
+
+```
+## [1] 0.008512372
+```
+
+```r
+dist.S_C_T3 <- dist.S.formatted[colnames(dist.S.formatted) == "C1_t3.fcs" | colnames(dist.S.formatted) == "C2_t3.fcs", colnames(dist.S.formatted) == "Q2_S_t3.fcs" | colnames(dist.S.formatted) == "Q1_S_t3.fcs"| colnames(dist.S.formatted) == "Q3_S_t3.fcs"]
+mean(dist.S_C_T3)
+```
+
+```
+## [1] 0.07092215
+```
+
+```r
+sd(dist.S_C_T3)
+```
+
+```
+## [1] 0.005427802
+```
+
+```r
+beta.div.T <- beta_div_fcm(fbasis2, INDICES=pos[!Diversity.fbasis$Treatment=="S"], ord.type="PCoA")
 
 results <- data.frame(cbind(Sample_names=levels(pos), do.call(rbind,by(results[,c(2,3,4,13,14,15,18,19,20,25,26,27)], INDICES=pos, FUN=colMeans)), 
                    do.call(rbind,by(results[,c(5,6,7,21,22,23,28,29,30)], INDICES=pos, FUN = function(x) sqrt(colSums(x^2))/nrow(x))),
@@ -2816,7 +2285,7 @@ car::Anova(sp_C, vcov = vcovHAC(sp_C)) # p = 0.03795
 ## 
 ## Response: D2
 ##                           Df      F  Pr(>F)  
-## splines::ns(Time, df = 3)  3 3.1181 0.07508 .
+## splines::ns(Time, df = 3)  3 4.1853 0.03677 *
 ## Residuals                 10                 
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
@@ -2831,7 +2300,7 @@ car::Anova(sp_T, vcov = vcovHAC(sp_T)) # p = 5.599e-06
 ## 
 ## Response: D2
 ##                           Df      F    Pr(>F)    
-## splines::ns(Time, df = 3)  3 17.738 1.765e-05 ***
+## splines::ns(Time, df = 3)  3 20.416 7.129e-06 ***
 ## Residuals                 17                     
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
@@ -2845,9 +2314,9 @@ summary(sp_T)$coefficients[,2]
 
 ```
 ##                (Intercept) splines::ns(Time, df = 3)1 
-##                   13.81904                   22.87287 
+##                   13.32100                   22.04852 
 ## splines::ns(Time, df = 3)2 splines::ns(Time, df = 3)3 
-##                   34.74658                   16.07542
+##                   33.49429                   15.49605
 ```
 
 ```r
@@ -2855,7 +2324,7 @@ sqrt(diag(vcovHAC(sp_T)))
 ```
 
 ```
-## [1]  8.772548 25.960825 26.089918 17.544690
+## [1]  8.193508 26.991819 24.843335 15.828021
 ```
 
 ```r
@@ -2865,9 +2334,9 @@ summary(sp_C)$coefficients[,2]
 
 ```
 ##                (Intercept) splines::ns(Time, df = 3)1 
-##                   13.34077                   22.08125 
+##                   10.59909                   17.54331 
 ## splines::ns(Time, df = 3)2 splines::ns(Time, df = 3)3 
-##                   33.54401                   15.51905
+##                   26.65034                   12.32972
 ```
 
 ```r
@@ -2875,7 +2344,7 @@ sqrt(diag(vcovHAC(sp_C)))
 ```
 
 ```
-## [1]  8.017367 21.069012 28.009764 25.632796
+## [1]  7.325304 13.625257 22.009580 18.511649
 ```
 
 ## Figure 3: Diversity analysis during feeding
@@ -2911,11 +2380,11 @@ disper.test # average distance to mean 0.03 for both groups
 ## 
 ## Average distance to median:
 ## Control Feeding 
-## 0.03106 0.03051 
+## 0.03113 0.03057 
 ## 
 ## Eigenvalues for PCoA axes:
 ##  PCoA1  PCoA2  PCoA3  PCoA4  PCoA5  PCoA6  PCoA7  PCoA8 
-## 0.0205 0.0093 0.0086 0.0036 0.0025 0.0013 0.0012 0.0008
+## 0.0206 0.0093 0.0086 0.0037 0.0026 0.0013 0.0012 0.0008
 ```
 
 ```r
@@ -2927,8 +2396,8 @@ anova(disper.test) # P = 0.892
 ## 
 ## Response: Distances
 ##           Df    Sum Sq    Mean Sq F value Pr(>F)
-## Groups     1 0.0000025 2.5440e-06  0.0187 0.8921
-## Residuals 33 0.0044955 1.3623e-04
+## Groups     1 0.0000026 2.5890e-06  0.0189 0.8914
+## Residuals 33 0.0045099 1.3666e-04
 ```
 
 ```r
@@ -2951,40 +2420,37 @@ var <- round(vegan::eigenvals(beta.div.S)/sum(vegan::eigenvals(beta.div.S))*100,
 p.beta.S <- ggplot(data=beta.div.data.S, aes(x=X1, y=X2, fill=Treatment, size=Time))+
   geom_point(shape=21, alpha=1)+
   scale_size(range=c(4,10), breaks=c(0,0.5,1,1.5,2,2.5,3))+ 
-  guides(fill = guide_legend(override.aes = list(size=5)), size=FALSE)+
+  guides(fill = FALSE, size = guide_legend(nrow = 2))+
   theme_bw()+
   scale_fill_manual(values=myColours[c(1,2)])+
   labs(x = paste0("PCoA axis 1 (",var[1], "%)"), y = paste0("PCoA axis 2 (",var[2], "%)"), title="B",
-       fill="")+
+       fill="", size = "Time (h)")+
   theme(axis.text=element_text(size=14), axis.title=element_text(size=20),
         title=element_text(size=20), legend.text=element_text(size=16),
-        legend.direction = "horizontal",legend.position = "bottom")+
+        legend.direction = "horizontal",
+        legend.position = c(0.15, -0.13), 
+        legend.justification = c(0, 1),
+        legend.background = element_rect(fill="transparent"))+
   annotation_custom(my_grob)+
   annotation_custom(my_grob2)+
   annotation_custom(my_grob3)+
   ylim(-0.035,0.045)
 
 ### Plot diversity dynamics
-grid_arrange_shared_legend(p.alpha,p.beta.S, ncol=2)
-```
+p.beta.S.plot <-  p.beta.S + theme(legend.position = "none")
+p.alpha.plot <-  p.alpha + theme(legend.position = "none")
 
-```
-## Warning: Removed 1 rows containing non-finite values (stat_smooth).
-```
-
-```
-## Warning: Removed 1 rows containing missing values (geom_point).
-```
-
-```
-## Warning: Removed 1 rows containing non-finite values (stat_smooth).
-```
-
-```
-## Warning: Removed 1 rows containing missing values (geom_point).
+# pdf("Fig3_revised.pdf", width = 12, height = 6)
+grid.arrange(p.alpha.plot, p.beta.S, g_legend(p.alpha), layout_matrix = rbind(c(1,2),
+                                                                               c(3,3)),
+             heights=c(6, 1))
 ```
 
 <img src="Figures/cached/plot-diversity-1.png" style="display: block; margin: auto;" />
+
+```r
+# dev.off()
+```
 
 ## Infer taxonomic diversity dynamics
 
@@ -3005,7 +2471,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 3.683936
+## [1] 3.616286
 ```
 
 ```r
@@ -3013,7 +2479,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 0.1574644
+## [1] 0.1547901
 ```
 
 ```r
@@ -3022,7 +2488,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 1.714101
+## [1] 1.646354
 ```
 
 ```r
@@ -3030,7 +2496,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 0.07862773
+## [1] 0.07564019
 ```
 
 ```r
@@ -3039,7 +2505,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 2.697703
+## [1] 2.630036
 ```
 
 ```r
@@ -3047,7 +2513,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 0.1189819
+## [1] 0.116154
 ```
 
 ```r
@@ -3067,7 +2533,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 2.805779
+## [1] 2.831286
 ```
 
 ```r
@@ -3075,7 +2541,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 0.1200373
+## [1] 0.1212907
 ```
 
 ```r
@@ -3084,7 +2550,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 0.7785989
+## [1] 0.8099616
 ```
 
 ```r
@@ -3092,7 +2558,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 0.03598053
+## [1] 0.03745726
 ```
 
 ```r
@@ -3101,7 +2567,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 1.79129
+## [1] 1.819714
 ```
 
 ```r
@@ -3109,7 +2575,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 0.07900466
+## [1] 0.08036658
 ```
 
 ```r
@@ -3134,6 +2600,413 @@ df2.res <- predict(lm.F,df2)
 ##        4 
 ## 1.948104
 ```
+## Compare diversity dynamics to literature (DOI: 10.1128/mSphere.00189-17)
+
+```r
+physeq_msphere <- import_mothur(mothur_shared_file = "./data_published/QMexp_IL_LM.contigs.good.unique.good.filter.unique.precluster.pick.pick.an.unique_list.shared", 
+                                mothur_constaxonomy_file = "./data_published/QMexp_IL_LM.contigs.good.unique.good.filter.unique.precluster.pick.pick.an.unique_list.0.03.cons.taxonomy")
+meta_msphere <- read.table("./data_published/QMexp_IL_LM_womockblanks.tsv", header = TRUE)
+rownames(meta_msphere) <- meta_msphere$Sample_ID
+sample_data(physeq_msphere) <- sample_data(meta_msphere)
+# Subset for lab feeding experiment data
+physeq_msphere <- subset_samples(physeq_msphere, Group == "Experiment")
+
+# Calculate diversity before and after rescaling
+div_msphere <- Diversity_16S(physeq_msphere, R=100, parallel = TRUE, ncores = 10)
+```
+
+```
+## 	**WARNING** this functions assumes that rows are samples and columns
+##       	are taxa in your phyloseq object, please verify.
+## Tue Sep 19 16:13:40 2017 	Using 10 cores for calculations
+## Tue Sep 19 16:13:40 2017	Calculating diversity for sample 1/48 --- C1T0.1214
+## Tue Sep 19 16:13:52 2017	Done with sample C1T0.1214
+## Tue Sep 19 16:13:52 2017	Calculating diversity for sample 2/48 --- C1T0.813
+## Tue Sep 19 16:13:56 2017	Done with sample C1T0.813
+## Tue Sep 19 16:13:56 2017	Calculating diversity for sample 3/48 --- C1T0.814
+## Tue Sep 19 16:14:00 2017	Done with sample C1T0.814
+## Tue Sep 19 16:14:00 2017	Calculating diversity for sample 4/48 --- C1T3.1214
+## Tue Sep 19 16:14:03 2017	Done with sample C1T3.1214
+## Tue Sep 19 16:14:03 2017	Calculating diversity for sample 5/48 --- C1T3.813
+## Tue Sep 19 16:14:06 2017	Done with sample C1T3.813
+## Tue Sep 19 16:14:06 2017	Calculating diversity for sample 6/48 --- C1T3.814
+## Tue Sep 19 16:14:09 2017	Done with sample C1T3.814
+## Tue Sep 19 16:14:09 2017	Calculating diversity for sample 7/48 --- C2T0.1214
+## Tue Sep 19 16:14:12 2017	Done with sample C2T0.1214
+## Tue Sep 19 16:14:12 2017	Calculating diversity for sample 8/48 --- C2T0.813
+## Tue Sep 19 16:14:15 2017	Done with sample C2T0.813
+## Tue Sep 19 16:14:15 2017	Calculating diversity for sample 9/48 --- C2T0.814
+## Tue Sep 19 16:14:18 2017	Done with sample C2T0.814
+## Tue Sep 19 16:14:18 2017	Calculating diversity for sample 10/48 --- C2T3.1214
+## Tue Sep 19 16:14:21 2017	Done with sample C2T3.1214
+## Tue Sep 19 16:14:21 2017	Calculating diversity for sample 11/48 --- C2T3.813
+## Tue Sep 19 16:14:23 2017	Done with sample C2T3.813
+## Tue Sep 19 16:14:23 2017	Calculating diversity for sample 12/48 --- C2T3.814
+## Tue Sep 19 16:14:30 2017	Done with sample C2T3.814
+## Tue Sep 19 16:14:30 2017	Calculating diversity for sample 13/48 --- C3T0.1214
+## Tue Sep 19 16:14:34 2017	Done with sample C3T0.1214
+## Tue Sep 19 16:14:34 2017	Calculating diversity for sample 14/48 --- C3T0.813
+## Tue Sep 19 16:14:37 2017	Done with sample C3T0.813
+## Tue Sep 19 16:14:37 2017	Calculating diversity for sample 15/48 --- C3T0.814
+## Tue Sep 19 16:14:40 2017	Done with sample C3T0.814
+## Tue Sep 19 16:14:40 2017	Calculating diversity for sample 16/48 --- C3T3.1214
+## Tue Sep 19 16:14:43 2017	Done with sample C3T3.1214
+## Tue Sep 19 16:14:43 2017	Calculating diversity for sample 17/48 --- C3T3.813
+## Tue Sep 19 16:14:46 2017	Done with sample C3T3.813
+## Tue Sep 19 16:14:46 2017	Calculating diversity for sample 18/48 --- C3T3.814
+## Tue Sep 19 16:14:49 2017	Done with sample C3T3.814
+## Tue Sep 19 16:14:49 2017	Calculating diversity for sample 19/48 --- E1T0.1214
+## Tue Sep 19 16:14:55 2017	Done with sample E1T0.1214
+## Tue Sep 19 16:14:55 2017	Calculating diversity for sample 20/48 --- E1T0.813
+## Tue Sep 19 16:15:00 2017	Done with sample E1T0.813
+## Tue Sep 19 16:15:00 2017	Calculating diversity for sample 21/48 --- E1T0.814
+## Tue Sep 19 16:15:04 2017	Done with sample E1T0.814
+## Tue Sep 19 16:15:04 2017	Calculating diversity for sample 22/48 --- E1T3.1214
+## Tue Sep 19 16:15:09 2017	Done with sample E1T3.1214
+## Tue Sep 19 16:15:09 2017	Calculating diversity for sample 23/48 --- E1T3.813
+## Tue Sep 19 16:15:12 2017	Done with sample E1T3.813
+## Tue Sep 19 16:15:12 2017	Calculating diversity for sample 24/48 --- E1T3.814
+## Tue Sep 19 16:15:15 2017	Done with sample E1T3.814
+## Tue Sep 19 16:15:15 2017	Calculating diversity for sample 25/48 --- E2T0.1214
+## Tue Sep 19 16:15:18 2017	Done with sample E2T0.1214
+## Tue Sep 19 16:15:18 2017	Calculating diversity for sample 26/48 --- E2T0.813
+## Tue Sep 19 16:15:21 2017	Done with sample E2T0.813
+## Tue Sep 19 16:15:21 2017	Calculating diversity for sample 27/48 --- E2T0.814
+## Tue Sep 19 16:15:24 2017	Done with sample E2T0.814
+## Tue Sep 19 16:15:24 2017	Calculating diversity for sample 28/48 --- E2T3.1214
+## Tue Sep 19 16:15:28 2017	Done with sample E2T3.1214
+## Tue Sep 19 16:15:28 2017	Calculating diversity for sample 29/48 --- E2T3.813
+## Tue Sep 19 16:15:31 2017	Done with sample E2T3.813
+## Tue Sep 19 16:15:31 2017	Calculating diversity for sample 30/48 --- E2T3.814
+## Tue Sep 19 16:15:33 2017	Done with sample E2T3.814
+## Tue Sep 19 16:15:33 2017	Calculating diversity for sample 31/48 --- E3T0.1214
+## Tue Sep 19 16:15:36 2017	Done with sample E3T0.1214
+## Tue Sep 19 16:15:36 2017	Calculating diversity for sample 32/48 --- E3T0.813
+## Tue Sep 19 16:15:39 2017	Done with sample E3T0.813
+## Tue Sep 19 16:15:39 2017	Calculating diversity for sample 33/48 --- E3T0.814
+## Tue Sep 19 16:15:42 2017	Done with sample E3T0.814
+## Tue Sep 19 16:15:42 2017	Calculating diversity for sample 34/48 --- E3T3.1214
+## Tue Sep 19 16:15:45 2017	Done with sample E3T3.1214
+## Tue Sep 19 16:15:45 2017	Calculating diversity for sample 35/48 --- E3T3.813
+## Tue Sep 19 16:15:47 2017	Done with sample E3T3.813
+## Tue Sep 19 16:15:47 2017	Calculating diversity for sample 36/48 --- E3T3.814
+## Tue Sep 19 16:15:52 2017	Done with sample E3T3.814
+## Tue Sep 19 16:15:52 2017	Calculating diversity for sample 37/48 --- E4T0.1214
+## Tue Sep 19 16:15:55 2017	Done with sample E4T0.1214
+## Tue Sep 19 16:15:55 2017	Calculating diversity for sample 38/48 --- E4T0.813
+## Tue Sep 19 16:15:58 2017	Done with sample E4T0.813
+## Tue Sep 19 16:15:58 2017	Calculating diversity for sample 39/48 --- E4T0.814
+## Tue Sep 19 16:16:01 2017	Done with sample E4T0.814
+## Tue Sep 19 16:16:01 2017	Calculating diversity for sample 40/48 --- E4T3.1214
+## Tue Sep 19 16:16:04 2017	Done with sample E4T3.1214
+## Tue Sep 19 16:16:04 2017	Calculating diversity for sample 41/48 --- E4T3.813
+## Tue Sep 19 16:16:06 2017	Done with sample E4T3.813
+## Tue Sep 19 16:16:06 2017	Calculating diversity for sample 42/48 --- E4T3.814
+## Tue Sep 19 16:16:09 2017	Done with sample E4T3.814
+## Tue Sep 19 16:16:09 2017	Calculating diversity for sample 43/48 --- W1FR.814
+## Tue Sep 19 16:16:13 2017	Done with sample W1FR.814
+## Tue Sep 19 16:16:13 2017	Calculating diversity for sample 44/48 --- W1WH.814
+## Tue Sep 19 16:16:15 2017	Done with sample W1WH.814
+## Tue Sep 19 16:16:15 2017	Calculating diversity for sample 45/48 --- W2FR.814
+## Tue Sep 19 16:16:18 2017	Done with sample W2FR.814
+## Tue Sep 19 16:16:18 2017	Calculating diversity for sample 46/48 --- W2WH.814
+## Tue Sep 19 16:16:21 2017	Done with sample W2WH.814
+## Tue Sep 19 16:16:21 2017	Calculating diversity for sample 47/48 --- W3FR.814
+## Tue Sep 19 16:16:24 2017	Done with sample W3FR.814
+## Tue Sep 19 16:16:24 2017	Calculating diversity for sample 48/48 --- W3WH.814
+## Tue Sep 19 16:16:27 2017	Done with sample W3WH.814
+## Tue Sep 19 16:16:27 2017 	Closing workers
+## Tue Sep 19 16:16:27 2017 	Done with all 48 samples
+```
+
+```r
+div_msphere_scaled <- Diversity_16S(scale_reads(physeq_msphere), R=100, parallel = TRUE, ncores = 10)
+```
+
+```
+## 	**WARNING** this functions assumes that rows are samples and columns
+##       	are taxa in your phyloseq object, please verify.
+## Tue Sep 19 16:16:31 2017 	Using 10 cores for calculations
+## Tue Sep 19 16:16:31 2017	Calculating diversity for sample 1/48 --- C1T0.1214
+## Tue Sep 19 16:16:39 2017	Done with sample C1T0.1214
+## Tue Sep 19 16:16:39 2017	Calculating diversity for sample 2/48 --- C1T0.813
+## Tue Sep 19 16:16:40 2017	Done with sample C1T0.813
+## Tue Sep 19 16:16:40 2017	Calculating diversity for sample 3/48 --- C1T0.814
+## Tue Sep 19 16:16:42 2017	Done with sample C1T0.814
+## Tue Sep 19 16:16:42 2017	Calculating diversity for sample 4/48 --- C1T3.1214
+## Tue Sep 19 16:16:43 2017	Done with sample C1T3.1214
+## Tue Sep 19 16:16:43 2017	Calculating diversity for sample 5/48 --- C1T3.813
+## Tue Sep 19 16:16:44 2017	Done with sample C1T3.813
+## Tue Sep 19 16:16:44 2017	Calculating diversity for sample 6/48 --- C1T3.814
+## Tue Sep 19 16:16:45 2017	Done with sample C1T3.814
+## Tue Sep 19 16:16:45 2017	Calculating diversity for sample 7/48 --- C2T0.1214
+## Tue Sep 19 16:16:47 2017	Done with sample C2T0.1214
+## Tue Sep 19 16:16:47 2017	Calculating diversity for sample 8/48 --- C2T0.813
+## Tue Sep 19 16:16:48 2017	Done with sample C2T0.813
+## Tue Sep 19 16:16:48 2017	Calculating diversity for sample 9/48 --- C2T0.814
+## Tue Sep 19 16:16:49 2017	Done with sample C2T0.814
+## Tue Sep 19 16:16:49 2017	Calculating diversity for sample 10/48 --- C2T3.1214
+## Tue Sep 19 16:16:51 2017	Done with sample C2T3.1214
+## Tue Sep 19 16:16:51 2017	Calculating diversity for sample 11/48 --- C2T3.813
+## Tue Sep 19 16:16:52 2017	Done with sample C2T3.813
+## Tue Sep 19 16:16:52 2017	Calculating diversity for sample 12/48 --- C2T3.814
+## Tue Sep 19 16:16:54 2017	Done with sample C2T3.814
+## Tue Sep 19 16:16:54 2017	Calculating diversity for sample 13/48 --- C3T0.1214
+## Tue Sep 19 16:16:56 2017	Done with sample C3T0.1214
+## Tue Sep 19 16:16:56 2017	Calculating diversity for sample 14/48 --- C3T0.813
+## Tue Sep 19 16:16:57 2017	Done with sample C3T0.813
+## Tue Sep 19 16:16:57 2017	Calculating diversity for sample 15/48 --- C3T0.814
+## Tue Sep 19 16:16:58 2017	Done with sample C3T0.814
+## Tue Sep 19 16:16:58 2017	Calculating diversity for sample 16/48 --- C3T3.1214
+## Tue Sep 19 16:17:01 2017	Done with sample C3T3.1214
+## Tue Sep 19 16:17:01 2017	Calculating diversity for sample 17/48 --- C3T3.813
+## Tue Sep 19 16:17:02 2017	Done with sample C3T3.813
+## Tue Sep 19 16:17:02 2017	Calculating diversity for sample 18/48 --- C3T3.814
+## Tue Sep 19 16:17:04 2017	Done with sample C3T3.814
+## Tue Sep 19 16:17:04 2017	Calculating diversity for sample 19/48 --- E1T0.1214
+## Tue Sep 19 16:17:07 2017	Done with sample E1T0.1214
+## Tue Sep 19 16:17:07 2017	Calculating diversity for sample 20/48 --- E1T0.813
+## Tue Sep 19 16:17:08 2017	Done with sample E1T0.813
+## Tue Sep 19 16:17:08 2017	Calculating diversity for sample 21/48 --- E1T0.814
+## Tue Sep 19 16:17:09 2017	Done with sample E1T0.814
+## Tue Sep 19 16:17:09 2017	Calculating diversity for sample 22/48 --- E1T3.1214
+## Tue Sep 19 16:17:11 2017	Done with sample E1T3.1214
+## Tue Sep 19 16:17:11 2017	Calculating diversity for sample 23/48 --- E1T3.813
+## Tue Sep 19 16:17:12 2017	Done with sample E1T3.813
+## Tue Sep 19 16:17:12 2017	Calculating diversity for sample 24/48 --- E1T3.814
+## Tue Sep 19 16:17:13 2017	Done with sample E1T3.814
+## Tue Sep 19 16:17:13 2017	Calculating diversity for sample 25/48 --- E2T0.1214
+## Tue Sep 19 16:17:14 2017	Done with sample E2T0.1214
+## Tue Sep 19 16:17:14 2017	Calculating diversity for sample 26/48 --- E2T0.813
+## Tue Sep 19 16:17:15 2017	Done with sample E2T0.813
+## Tue Sep 19 16:17:15 2017	Calculating diversity for sample 27/48 --- E2T0.814
+## Tue Sep 19 16:17:16 2017	Done with sample E2T0.814
+## Tue Sep 19 16:17:16 2017	Calculating diversity for sample 28/48 --- E2T3.1214
+## Tue Sep 19 16:17:18 2017	Done with sample E2T3.1214
+## Tue Sep 19 16:17:18 2017	Calculating diversity for sample 29/48 --- E2T3.813
+## Tue Sep 19 16:17:19 2017	Done with sample E2T3.813
+## Tue Sep 19 16:17:19 2017	Calculating diversity for sample 30/48 --- E2T3.814
+## Tue Sep 19 16:17:22 2017	Done with sample E2T3.814
+## Tue Sep 19 16:17:22 2017	Calculating diversity for sample 31/48 --- E3T0.1214
+## Tue Sep 19 16:17:23 2017	Done with sample E3T0.1214
+## Tue Sep 19 16:17:23 2017	Calculating diversity for sample 32/48 --- E3T0.813
+## Tue Sep 19 16:17:24 2017	Done with sample E3T0.813
+## Tue Sep 19 16:17:24 2017	Calculating diversity for sample 33/48 --- E3T0.814
+## Tue Sep 19 16:17:26 2017	Done with sample E3T0.814
+## Tue Sep 19 16:17:26 2017	Calculating diversity for sample 34/48 --- E3T3.1214
+## Tue Sep 19 16:17:27 2017	Done with sample E3T3.1214
+## Tue Sep 19 16:17:27 2017	Calculating diversity for sample 35/48 --- E3T3.813
+## Tue Sep 19 16:17:28 2017	Done with sample E3T3.813
+## Tue Sep 19 16:17:28 2017	Calculating diversity for sample 36/48 --- E3T3.814
+## Tue Sep 19 16:17:29 2017	Done with sample E3T3.814
+## Tue Sep 19 16:17:29 2017	Calculating diversity for sample 37/48 --- E4T0.1214
+## Tue Sep 19 16:17:30 2017	Done with sample E4T0.1214
+## Tue Sep 19 16:17:30 2017	Calculating diversity for sample 38/48 --- E4T0.813
+## Tue Sep 19 16:17:31 2017	Done with sample E4T0.813
+## Tue Sep 19 16:17:31 2017	Calculating diversity for sample 39/48 --- E4T0.814
+## Tue Sep 19 16:17:32 2017	Done with sample E4T0.814
+## Tue Sep 19 16:17:32 2017	Calculating diversity for sample 40/48 --- E4T3.1214
+## Tue Sep 19 16:17:33 2017	Done with sample E4T3.1214
+## Tue Sep 19 16:17:34 2017	Calculating diversity for sample 41/48 --- E4T3.813
+## Tue Sep 19 16:17:35 2017	Done with sample E4T3.813
+## Tue Sep 19 16:17:35 2017	Calculating diversity for sample 42/48 --- E4T3.814
+## Tue Sep 19 16:17:36 2017	Done with sample E4T3.814
+## Tue Sep 19 16:17:37 2017	Calculating diversity for sample 43/48 --- W1FR.814
+## Tue Sep 19 16:17:38 2017	Done with sample W1FR.814
+## Tue Sep 19 16:17:38 2017	Calculating diversity for sample 44/48 --- W1WH.814
+## Tue Sep 19 16:17:41 2017	Done with sample W1WH.814
+## Tue Sep 19 16:17:41 2017	Calculating diversity for sample 45/48 --- W2FR.814
+## Tue Sep 19 16:17:43 2017	Done with sample W2FR.814
+## Tue Sep 19 16:17:43 2017	Calculating diversity for sample 46/48 --- W2WH.814
+## Tue Sep 19 16:17:45 2017	Done with sample W2WH.814
+## Tue Sep 19 16:17:45 2017	Calculating diversity for sample 47/48 --- W3FR.814
+## Tue Sep 19 16:17:46 2017	Done with sample W3FR.814
+## Tue Sep 19 16:17:46 2017	Calculating diversity for sample 48/48 --- W3WH.814
+## Tue Sep 19 16:17:48 2017	Done with sample W3WH.814
+## Tue Sep 19 16:17:48 2017 	Closing workers
+## Tue Sep 19 16:17:48 2017 	Done with all 48 samples
+```
+
+```r
+div_msphere_scaled <- data.frame(div_msphere_scaled, Sample_ID = rownames(div_msphere_scaled))
+div_msphere <- data.frame(div_msphere, Sample_ID = rownames(div_msphere))
+
+# Compare pre- and postfeeding diversities
+results_msphere <- left_join(div_msphere, meta_msphere, by = "Sample_ID")
+```
+
+```
+## Warning: Column `Sample_ID` joining factors with different levels, coercing
+## to character vector
+```
+
+```r
+results_msphere_scale <- left_join(div_msphere_scaled, meta_msphere, by = "Sample_ID")
+```
+
+```
+## Warning: Column `Sample_ID` joining factors with different levels, coercing
+## to character vector
+```
+
+```r
+results_msphere <- results_msphere[results_msphere$Treatment == "Control" | results_msphere$Treatment == "Mussel", ]
+results_msphere$Treatment <- revalue(results_msphere$Treatment, c("Mussel" = "Feeding"))
+results_msphere <- droplevels(results_msphere)
+results_msphere$Date <- factor(results_msphere$Date,levels(results_msphere$Date)[c(3,1,2)])
+results_msphere_scale <- results_msphere_scale[results_msphere_scale$Treatment == "Control" | results_msphere_scale$Treatment == "Mussel", ]
+results_msphere_scale$Treatment <- revalue(results_msphere_scale$Treatment, c("Mussel" = "Feeding"))
+results_msphere_scale <- droplevels(results_msphere_scale)
+results_msphere_scale$Date <- factor(results_msphere_scale$Date,levels(results_msphere_scale$Date)[c(3,1,2)])
+
+# Plot diversity dynamics from literature study
+p_msphere <- ggplot(data = results_msphere, aes(x = Time_point, y = D2, fill = Treatment))+
+  geom_boxplot(alpha = 0.5)+
+  geom_point(size = 4, shape = 21, position=position_dodge(width=0.75))+
+  theme_bw()+
+  facet_grid(.~Date)+
+  scale_fill_manual(values=myColours[c(1:3)])+
+  labs(y = expression('Taxonomic diversity - D'[2]), x = "Timepoint")+
+  theme(axis.title=element_text(size=16), strip.text.x=element_text(size=16),
+        legend.title=element_text(size=15),legend.text=element_text(size=14),
+        axis.text = element_text(size=14),title=element_text(size=20),
+        strip.background=element_rect(fill=adjustcolor("lightgray",0.2))
+        #,panel.grid.major = element_blank(), panel.grid.minor = element_blank()
+        )
+# png(file="msphere_data.png",width=12,height=6,res=500,units="in", pointsize=12)
+p_msphere
+```
+
+<img src="Figures/cached/compare-diversity-dynamics2MSphere-1.png" style="display: block; margin: auto;" />
+
+```r
+# dev.off()
+
+p_msphere_scale <- ggplot(data = results_msphere_scale, aes(x = Time_point, y = D2, fill = Treatment))+
+  geom_boxplot(alpha = 0.5)+
+  geom_point(size = 4, shape = 21, position=position_dodge(width=0.75))+
+  theme_bw()+
+  facet_grid(.~Date)+
+  scale_fill_manual(values=myColours[c(1:3)])+
+  labs(y = expression('Taxonomic diversity - D'[2]), x = "Timepoint")+
+  theme(axis.title=element_text(size=16), strip.text.x=element_text(size=16),
+        legend.title=element_text(size=15),legend.text=element_text(size=14),
+        axis.text = element_text(size=14),title=element_text(size=20),
+        strip.background=element_rect(fill=adjustcolor("lightgray",0.2))
+        #,panel.grid.major = element_blank(), panel.grid.minor = element_blank()
+        )
+p_msphere_scale
+```
+
+<img src="Figures/cached/compare-diversity-dynamics2MSphere-2.png" style="display: block; margin: auto;" />
+
+```r
+# Continuing with the non-scaled diversity we calculate the average diversity reduction over all experiments
+## Mean reduction
+mean(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T0"] - results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T3"]) # 5.32
+```
+
+```
+## [1] 5.292512
+```
+
+```r
+## Standard deviation
+sd(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T0"] - results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T3"]) # 4.65
+```
+
+```
+## [1] 4.650357
+```
+
+```r
+# Same calculation but without the December experiment
+## Mean reduction
+mean(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T0" & results_msphere$Date != "Dec14"] - results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T3" & results_msphere$Date != "Dec14"]) # 7.46
+```
+
+```
+## [1] 7.441836
+```
+
+```r
+## Standard deviation
+sd(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T0" & results_msphere$Date != "Dec14"] - results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T3" & results_msphere$Date != "Dec14"]) # 4.13
+```
+
+```
+## [1] 4.12253
+```
+
+## Figure 4: Predict diversity and put in juxtaposition of literature (DOI: 10.1128/mSphere.00189-17)
+
+```r
+# Predict the shift in taxonomic diversity based on FCM for the T0 and T3 samples
+df_mp <- data.frame(D2.fcm = results$D2[results$Time==3 | results$Time==0],
+                 time= results$Time[results$Time==3 | results$Time==0],
+                 Treatment = results$Treatment[results$Time==3 | results$Time==0])
+df_mp_pred <- data.frame(D2.16S = predict(lm.F, df_mp, se=TRUE)$fit, D2.16S.error = predict(lm.F, df_mp, se=TRUE)$se.fit, time = df_mp$time, treatment = df_mp$Treatment)
+df_mp_pred$D2.16S.up <- df_mp_pred$D2.16S + df_mp_pred$D2.16S.error
+df_mp_pred$D2.16S.lo <- df_mp_pred$D2.16S - df_mp_pred$D2.16S.error
+df_mp_pred$D2.16S <- 2^df_mp_pred$D2.16S
+df_mp_pred$D2.16S.up <- 2^df_mp_pred$D2.16S.up
+df_mp_pred$D2.16S.lo <- 2^df_mp_pred$D2.16S.lo
+df_mp_pred$time[df_mp_pred$time == 0] <- "T0"
+df_mp_pred$time[df_mp_pred$time == 3] <- "T3"
+df_mp_pred$Date <- "November '16"
+levels(results_msphere$Date) <- c("July '13", "August '14", "December '14")
+  
+# Merge these predicted values into the data set from (DOI: 10.1128/mSphere.00189-17)
+results_prediction <- data.frame(D2 = c(results_msphere$D2, df_mp_pred$D2.16S),
+                                 Time_point = c(as.character(results_msphere$Time_point), df_mp_pred$time),
+                                 Treatment = c(as.character(results_msphere$Treatment), as.character(df_mp_pred$treatment)),
+                                 Measurement = as.factor(c(rep("Measured",42), rep("Predicted", 10))),
+                                 Date = c(as.character(results_msphere$Date), df_mp_pred$Date),
+                                 error.up = c(rep(NA, nrow(results_msphere)), df_mp_pred$D2.16S.up),
+                                 error.lo = c(rep(NA, nrow(results_msphere)), df_mp_pred$D2.16S.lo)
+                                 
+                                 )
+results_prediction$Date <- factor(results_prediction$Date, levels = c("July '13", "August '14", "November '16", "December '14"))
+
+# Create a data frame with the faceting variables
+# and some dummy data (that will be overwritten)
+tp <- results_prediction
+
+# Make Figure 5: compare predictions to literature data
+p_msphere_predict <- ggplot(data = results_prediction, aes(x = Time_point, y = D2))+
+  geom_rect(data = tp, aes(fill = Measurement), xmin = -Inf, xmax = Inf,
+            ymin = -Inf,ymax = Inf, alpha = 0.005, show.legend =FALSE, inherit.aes = FALSE)+
+  geom_boxplot(alpha = 0.5, aes(fill = Treatment), position = position_dodge(width = .8), width =0.75)+
+  geom_point(size = 4, shape = 21, position = position_dodge(width=0.8), aes(fill = Treatment))+
+  geom_errorbar(aes(ymin = error.lo, ymax = error.up, group = Treatment), width = 0.1,
+                position = position_dodge(width = 0.8))+
+  theme_bw()+
+  facet_grid(.~Date)+
+  scale_fill_manual(breaks = c("Control","Feeding"), values=c(myColours[c(1:2)], "blue","red"))+
+  labs(y = expression('Taxonomic diversity - D'[2]), x = "Timepoint", fill = "Treatment")+
+  theme(axis.title=element_text(size=16), strip.text.x=element_text(size=16),
+        legend.title=element_text(size=15),legend.text=element_text(size=14),
+        axis.text = element_text(size=14),title=element_text(size=20),
+        strip.background=element_rect(fill=adjustcolor("lightgray",0.2))
+        #,panel.grid.major = element_blank(), panel.grid.minor = element_blank()
+        )+ 
+  geom_text(data = tp, aes(x=1.5,y=11,label=Measurement), size = 8, inherit.aes = FALSE,
+            hjust = 0.5)
+# png(file="Fig5_PROPS.png",width=12,height=6,res=500,units="in", pointsize=12)
+# pdf(file="Fig5_PROPS.pdf",width=12,height=6)
+p_msphere_predict
+```
+
+```
+## Warning: Removed 42 rows containing missing values (geom_errorbar).
+```
+
+<img src="Figures/cached/predict-diversity-1.png" style="display: block; margin: auto;" />
+
+```r
+# dev.off()
+```
+
 
 ## Figure S3: Gating strategy
 
@@ -3198,7 +3071,7 @@ print(xyplot(`FL3-H`~`FL1-H`, data=flowData_transformed,index.cond=list(c(1:6)),
 
 <img src="Figures/cached/Gating-1.png" style="display: block; margin: auto;" />
 
-## Figure 4: Identify physiological populations
+## Figure 5: Identify physiological populations
 
 ```r
 comp_t0 <- fp_contrasts(x=fbasis, comp2=(pos=="C1_t0.fcs" | pos== "C2_t0.fcs"),
@@ -3282,9 +3155,9 @@ p12b <- ggplot(data=results, aes(x=Time, y=HNA.cells, fill=Treatment)) +
   geom_smooth(method="rlm",color="black", alpha=0.2)+
   scale_x_continuous(breaks=c(0,0.5,1,1.5,2,2.5,3))
 
-p13 <- ggplot(data=results, aes(x=factor(Time), y=LNA.cells, fill=Treatment)) + 
+p13 <- ggplot(data=results, aes(x=Time, y=LNA.cells, fill=Treatment)) + 
   # geom_boxplot(alpha=0.9)+
-  geom_point(shape=21, size=5,alpha=0.9, position=position_dodge(width=0.3))+
+  geom_point(shape=21, size=5,alpha=0.9)+
   scale_fill_manual(values=myColours[c(1,2)])+
   # geom_smooth(formula=y ~ x, color="black")+
   # geom_boxplot(mapping=factor(Time),alpha=0.4,outlier.shape=NA)+
@@ -3293,11 +3166,12 @@ p13 <- ggplot(data=results, aes(x=factor(Time), y=LNA.cells, fill=Treatment)) +
   theme(axis.text=element_text(size=14), axis.title=element_text(size=16),
         title=element_text(size=20), legend.text=element_text(size=14),
         legend.title=element_text(size=15),
-        legend.direction = "horizontal",legend.position = "bottom")+ 
+        legend.direction = "horizontal",legend.position = "bottom",
+        panel.grid.minor = element_blank())+ 
   # guides(fill=FALSE)+
-  geom_errorbar(aes(ymin=LNA.cells-sd.LNA.cells, ymax=LNA.cells+sd.LNA.cells), width=0.075
-                , position=position_dodge(width=0.3))+
-  ylim(1000,1325)
+  geom_errorbar(aes(ymin=LNA.cells-sd.LNA.cells, ymax=LNA.cells+sd.LNA.cells), width=0.075)+
+  ylim(1000,1325)+
+  scale_x_continuous(breaks=c(0,0.5,1,1.5,2,2.5,3))
 
 # Contrast plot
 vtot <- ggplot(comp_total, aes(`FL1.H`, `FL3.H`, z = Density))+
@@ -3326,10 +3200,16 @@ fg12 <- gtable_frame(cbind(fg1,fg2))
 fg3 <- gtable_frame(gv)
 grid.newpage()
 combined <- rbind(fg3, fg12)
+# png(file = "contrasts_0.02.png", width = 12, height = 12, res = 500, 
+    # units = "in", pointsize = 10)
 grid.draw(combined)
 ```
 
 <img src="Figures/cached/Contrasts-1.png" style="display: block; margin: auto;" />
+
+```r
+# dev.off()
+```
 
 ## Calculate removal statistics
 
