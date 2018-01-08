@@ -1,4 +1,4 @@
-# Mussel_feeding
+# EnvMicro_Props2017
 
 The full analysis of the submitted paper: ***Invasive dreissenid mussels induce shifts in bacterioplankton diversity through selective feeding on high nucleic acid bacteria*** can be found in the **Analysis.Rmd** RMarkdown. 
 
