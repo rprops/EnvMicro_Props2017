@@ -1,6 +1,22 @@
-# Analysis
-Ruben Props  
-14 januari 2017  
+---
+title: "Analysis"
+author: "Ruben Props"
+date: "14 januari 2017"
+output:
+  html_document:
+    code_folding: show
+    highlight: haddock
+    keep_md: yes
+    theme: united
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+      toc_depth: 2
+    css: report_styles.css
+editor_options: 
+  chunk_output_type: console
+---
 
 
 
@@ -20,6 +36,7 @@ Adjust this parameter (`R` = number of bootstraps) to increase the accuracy of t
 ```r
 R.main <- 3
 ```
+
 # Load libraries
 
 
@@ -52,7 +69,8 @@ my.settings <- list(
   background=list(col="white"))
 ```
 
-# Part 1: Validation of alpha diversity
+# Part 1: Validation of alpha diversity  
+
 
 ```r
 div.FCM <- read.csv2("files/Lakes_diversityFCM_F.csv")
@@ -212,8 +230,8 @@ R.cv.D2$results
 ```
 
 ```
-##   intercept      RMSE  Rsquared     RMSESD RsquaredSD
-## 1      TRUE 0.5698783 0.8867696 0.07681919 0.03545571
+##   intercept      RMSE  Rsquared       MAE     RMSESD RsquaredSD     MAESD
+## 1      TRUE 0.5694714 0.8864893 0.4790899 0.07833065 0.03649413 0.0745586
 ```
 
 ```r
@@ -222,8 +240,8 @@ R.cv.D1$results
 ```
 
 ```
-##   intercept     RMSE  Rsquared     RMSESD RsquaredSD
-## 1      TRUE 0.609562 0.8928659 0.09606413 0.03537097
+##   intercept      RMSE  Rsquared      MAE     RMSESD RsquaredSD      MAESD
+## 1      TRUE 0.6091693 0.8938301 0.513774 0.09651116  0.0353859 0.08251614
 ```
 
 ```r
@@ -232,8 +250,8 @@ R.cv.D0$results
 ```
 
 ```
-##   intercept      RMSE  Rsquared    RMSESD RsquaredSD
-## 1      TRUE 0.7042838 0.3245008 0.1383552  0.1679219
+##   intercept      RMSE  Rsquared       MAE    RMSESD RsquaredSD     MAESD
+## 1      TRUE 0.7057909 0.3209198 0.5490113 0.1314418  0.1608102 0.1003106
 ```
 
 ```r
@@ -262,7 +280,9 @@ max(data.total.final$D2[data.total.final$Lake=="Cooling water"])/min(data.total.
 ## [1] 10.31645
 ```
 
-## Figure S1: Check model assumptions
+
+## Figure S1: Check model assumptions  
+
 
 ```r
 # D2 and D1 are highly correlated so we only use D2 in the feeding experiment
@@ -288,7 +308,8 @@ plot(y=log2(data.total.final$D2), x=predict(lm.F.D2), col="blue",
 
 <img src="Figures/cached/Plot D2 residuals-1.png" style="display: block; margin: auto;" />
 
-## Figure 1: Regression analysis
+## Figure 1: Regression analysis  
+
 
 ```r
 # Prepare to plot r squared / pearson's correlation
@@ -301,9 +322,9 @@ my_grob2 = grobTree(textGrob(bquote(r[p] == .(round(cor(y=log2(data.total.final$
 p5 <- ggplot(data=data.total.final,aes(x=D2.fcm,y=D2, fill=Lake))+ scale_fill_manual(values=c("#88419d","#a6cee3","#fc8d62")) +
   geom_point(shape=21,size=6,alpha=0.6,aes(fill=Lake))+
   theme_bw()+labs(y=expression('Taxonomic diversity - D'[2]),x=expression('Phenotypic diversity - D'[2]), fill="Environment")+
-  theme(axis.text=element_text(size=15),axis.title=element_text(size=20,face="bold"),legend.text=element_text(size=15),
+  theme(axis.text=element_text(size=12.5),axis.title=element_text(size=20,face="bold"),legend.text=element_text(size=15),
         legend.title=element_text(size=16),strip.text.x = element_text(size = 22),
-         legend.position = c(0.05, .98), legend.justification = c(0, 1),
+         legend.position = c(0.05, .97), legend.justification = c(0, 1),
         legend.background = element_rect(fill="transparent"))+
   scale_y_continuous(trans='log2', breaks = seq(5,60, 10),minor_breaks =NULL) +
   scale_x_continuous(trans='log2', breaks = seq(1000,4250,250),minor_breaks =NULL, limits = c(NA, 2700)) +
@@ -320,7 +341,9 @@ print(p5)
 ```r
 # dev.off()
 ```
-## Figure S1: Compare slopes of individual regressions
+
+## Figure S1: Compare slopes of individual regressions  
+
 
 ```r
 # Supplementary figure for showing that the slopes for individual regressions of each lake are not significantly different
@@ -393,7 +416,8 @@ print(p5.si)
 # dev.off()
 ```
 
-## Figure S2: Regression of D0/D1
+## Figure S2: Regression of D0/D1  
+
 
 ```r
 ### Prepare to plot r squared / pearson's correlation
@@ -438,7 +462,8 @@ grid.arrange(p7, p6, ncol=2)
 
 <img src="Figures/cached/Plot D0 & D1 regression-1.png" style="display: block; margin: auto;" />
 
-## Figure S4: Effect of sample size
+## Figure S4: Effect of sample size  
+
 
 ```r
 # Load data
@@ -513,7 +538,8 @@ grid.arrange(D0, D1, D2, ncol = 3, top = textGrob(paste("Sample used:",flowCore:
 
 <img src="Figures/cached/sample-size-1.png" style="display: block; margin: auto;" />
 
-# Part 2: Validation of beta diversity
+# Part 2: Validation of beta diversity  
+
 
 ```r
 myColours2 <- brewer.pal(n=12,"Paired"); myColours2 <- myColours2[c(2,6,7)]
@@ -767,7 +793,8 @@ dist.seq <- vegan::vegdist(otu_table(physeq.otu))
 pcoa.seq <- cmdscale(dist.seq)
 ```
 
-## Procrustes analysis
+## Procrustes analysis  
+
 
 ```r
 # Run procrustes + permutation
@@ -812,7 +839,8 @@ plot(dist.prot)
 
 <img src="Figures/cached/procrustes-analysis-1.png" style="display: block; margin: auto;" />
 
-## Figure 2: Beta diversity analysis
+## Figure 2: Beta diversity analysis  
+
 
 ```r
 # Run PERMANOVA to evaluate if conclusions are similar between FCM/seq
@@ -1006,9 +1034,10 @@ Diversity.fbasis <- Diversity_rf(flowData_transformed, d=3, param = param, R = R
 ```
 
 ```
-## Tue Sep 19 16:03:24 2017 --- Using 10 cores for calculations
-## Tue Sep 19 16:05:08 2017 --- Closing workers
-## Tue Sep 19 16:05:08 2017 --- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
+## --- parameters are already normalized at: 1
+## Fri Jan 12 13:37:51 2018 --- Using 10 cores for calculations
+## Fri Jan 12 13:39:32 2018 --- Closing workers
+## Fri Jan 12 13:39:32 2018 --- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
 ## -----------------------------------------------------------------------------------------------------
 ## 
 ```
@@ -1047,9 +1076,10 @@ Diversity.HNA <- Diversity_rf(flowData_HNA, d=3, param = param, R = R.main,
 ```
 
 ```
-## Tue Sep 19 16:05:23 2017 --- Using 10 cores for calculations
-## Tue Sep 19 16:06:37 2017 --- Closing workers
-## Tue Sep 19 16:06:37 2017 --- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
+## --- parameters are already normalized at: 1
+## Fri Jan 12 13:39:51 2018 --- Using 10 cores for calculations
+## Fri Jan 12 13:41:04 2018 --- Closing workers
+## Fri Jan 12 13:41:04 2018 --- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
 ## -----------------------------------------------------------------------------------------------------
 ## 
 ```
@@ -1060,9 +1090,10 @@ Diversity.LNA <- Diversity_rf(flowData_LNA, d=3, param = param, R = R.main,
 ```
 
 ```
-## Tue Sep 19 16:06:42 2017 --- Using 10 cores for calculations
-## Tue Sep 19 16:08:04 2017 --- Closing workers
-## Tue Sep 19 16:08:04 2017 --- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
+## --- parameters are already normalized at: 0.675405293390532
+## Fri Jan 12 13:41:11 2018 --- Using 10 cores for calculations
+## Fri Jan 12 13:42:33 2018 --- Closing workers
+## Fri Jan 12 13:42:33 2018 --- Alpha diversity metrics (D0,D1,D2) have been computed after 3 bootstraps
 ## -----------------------------------------------------------------------------------------------------
 ## 
 ```
@@ -2263,7 +2294,8 @@ attr(splines::ns(results$Time, df=3), "knots")
 ##         1         2
 ```
 
-## Figure S5: Check for autocorrelation
+## Figure S5: Check for autocorrelation  
+
 
 ```r
 # Check for temporal autocorrelation in model residuals
@@ -2285,7 +2317,7 @@ car::Anova(sp_C, vcov = vcovHAC(sp_C)) # p = 0.03795
 ## 
 ## Response: D2
 ##                           Df      F  Pr(>F)  
-## splines::ns(Time, df = 3)  3 4.1853 0.03677 *
+## splines::ns(Time, df = 3)  3 2.8069 0.09423 .
 ## Residuals                 10                 
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
@@ -2300,7 +2332,7 @@ car::Anova(sp_T, vcov = vcovHAC(sp_T)) # p = 5.599e-06
 ## 
 ## Response: D2
 ##                           Df      F    Pr(>F)    
-## splines::ns(Time, df = 3)  3 20.416 7.129e-06 ***
+## splines::ns(Time, df = 3)  3 12.634 0.0001372 ***
 ## Residuals                 17                     
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
@@ -2314,9 +2346,9 @@ summary(sp_T)$coefficients[,2]
 
 ```
 ##                (Intercept) splines::ns(Time, df = 3)1 
-##                   13.32100                   22.04852 
+##                   13.57531                   22.46945 
 ## splines::ns(Time, df = 3)2 splines::ns(Time, df = 3)3 
-##                   33.49429                   15.49605
+##                   34.13373                   15.79189
 ```
 
 ```r
@@ -2324,7 +2356,7 @@ sqrt(diag(vcovHAC(sp_T)))
 ```
 
 ```
-## [1]  8.193508 26.991819 24.843335 15.828021
+## [1] 10.92364 24.72847 29.67099 16.69775
 ```
 
 ```r
@@ -2334,9 +2366,9 @@ summary(sp_C)$coefficients[,2]
 
 ```
 ##                (Intercept) splines::ns(Time, df = 3)1 
-##                   10.59909                   17.54331 
+##                   12.05829                   19.95853 
 ## splines::ns(Time, df = 3)2 splines::ns(Time, df = 3)3 
-##                   26.65034                   12.32972
+##                   30.31935                   14.02717
 ```
 
 ```r
@@ -2344,10 +2376,11 @@ sqrt(diag(vcovHAC(sp_C)))
 ```
 
 ```
-## [1]  7.325304 13.625257 22.009580 18.511649
+## [1]  8.001633 16.487676 25.016010 21.926641
 ```
 
-## Figure 3: Diversity analysis during feeding
+## Figure 3: Diversity analysis during feeding  
+
 
 ```r
 # Prepare plots
@@ -2403,13 +2436,13 @@ anova(disper.test) # P = 0.892
 ```r
 perma.beta <- adonis(dist.S~Treatment*Time, data=results)
 my_grob = grobTree(textGrob(bquote(paste(r[Feeding]^2 == .(round(100 * perma.beta$aov.tab[1, 
-    5], 1)), "%")), x = 0.68, y = 0.95, hjust = 0, gp = gpar(col = "black", fontsize = 14, 
+    5], 1)), "%")), x = 0.67, y = 0.95, hjust = 0, gp = gpar(col = "black", fontsize = 14, 
     fontface = "italic")))
 my_grob2 = grobTree(textGrob(bquote(paste(r[Time]^2 == .(format(round(100 * perma.beta$aov.tab[2, 
-    5], 1), nsmall = 1)), "%")), x = 0.68, y = 0.87, hjust = 0, gp = gpar(col = "black", 
+    5], 1), nsmall = 1)), "%")), x = 0.67, y = 0.87, hjust = 0, gp = gpar(col = "black", 
     fontsize = 14, fontface = "italic")))
 my_grob3 = grobTree(textGrob(bquote(paste(r[Feeding:Time]^2 == .(round(100 * perma.beta$aov.tab[3, 
-    5], 1)), "%")), x = 0.68, y = 0.79, hjust = 0, gp = gpar(col = "black", fontsize = 14, 
+    5], 1)), "%")), x = 0.67, y = 0.79, hjust = 0, gp = gpar(col = "black", fontsize = 14, 
     fontface = "italic")))
 
 beta.div.data.S <- data.frame(beta.div.S$points, tmp[!tmp$Treatment=="Feeding - T",])
@@ -2452,7 +2485,8 @@ grid.arrange(p.alpha.plot, p.beta.S, g_legend(p.alpha), layout_matrix = rbind(c(
 # dev.off()
 ```
 
-## Infer taxonomic diversity dynamics
+## Infer taxonomic diversity dynamics  
+
 
 ```r
 # D2 regression from part I
@@ -2471,7 +2505,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 3.616286
+## [1] 3.621665
 ```
 
 ```r
@@ -2479,7 +2513,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 0.1547901
+## [1] 0.1546826
 ```
 
 ```r
@@ -2488,7 +2522,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 1.646354
+## [1] 1.645414
 ```
 
 ```r
@@ -2496,7 +2530,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 0.07564019
+## [1] 0.07544289
 ```
 
 ```r
@@ -2505,7 +2539,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 2.630036
+## [1] 2.63225
 ```
 
 ```r
@@ -2513,7 +2547,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 0.116154
+## [1] 0.1160036
 ```
 
 ```r
@@ -2533,7 +2567,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 2.831286
+## [1] 2.838505
 ```
 
 ```r
@@ -2541,7 +2575,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 0.1212907
+## [1] 0.1213341
 ```
 
 ```r
@@ -2550,7 +2584,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 0.8099616
+## [1] 0.8109439
 ```
 
 ```r
@@ -2558,7 +2592,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 0.03745726
+## [1] 0.03742805
 ```
 
 ```r
@@ -2567,7 +2601,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 1.819714
+## [1] 1.823809
 ```
 
 ```r
@@ -2575,7 +2609,7 @@ df.pred.res <- df.pred
 ```
 
 ```
-## [1] 0.08036658
+## [1] 0.08037551
 ```
 
 ```r
@@ -2600,7 +2634,9 @@ df2.res <- predict(lm.F,df2)
 ##        4 
 ## 1.948104
 ```
-## Compare diversity dynamics to literature (DOI: 10.1128/mSphere.00189-17)
+
+## Compare diversity dynamics to literature (DOI: 10.1128/mSphere.00189-17)  
+
 
 ```r
 physeq_msphere <- import_mothur(mothur_shared_file = "./data_published/QMexp_IL_LM.contigs.good.unique.good.filter.unique.precluster.pick.pick.an.unique_list.shared", 
@@ -2618,105 +2654,105 @@ div_msphere <- Diversity_16S(physeq_msphere, R=100, parallel = TRUE, ncores = 10
 ```
 ## 	**WARNING** this functions assumes that rows are samples and columns
 ##       	are taxa in your phyloseq object, please verify.
-## Tue Sep 19 16:13:40 2017 	Using 10 cores for calculations
-## Tue Sep 19 16:13:40 2017	Calculating diversity for sample 1/48 --- C1T0.1214
-## Tue Sep 19 16:13:52 2017	Done with sample C1T0.1214
-## Tue Sep 19 16:13:52 2017	Calculating diversity for sample 2/48 --- C1T0.813
-## Tue Sep 19 16:13:56 2017	Done with sample C1T0.813
-## Tue Sep 19 16:13:56 2017	Calculating diversity for sample 3/48 --- C1T0.814
-## Tue Sep 19 16:14:00 2017	Done with sample C1T0.814
-## Tue Sep 19 16:14:00 2017	Calculating diversity for sample 4/48 --- C1T3.1214
-## Tue Sep 19 16:14:03 2017	Done with sample C1T3.1214
-## Tue Sep 19 16:14:03 2017	Calculating diversity for sample 5/48 --- C1T3.813
-## Tue Sep 19 16:14:06 2017	Done with sample C1T3.813
-## Tue Sep 19 16:14:06 2017	Calculating diversity for sample 6/48 --- C1T3.814
-## Tue Sep 19 16:14:09 2017	Done with sample C1T3.814
-## Tue Sep 19 16:14:09 2017	Calculating diversity for sample 7/48 --- C2T0.1214
-## Tue Sep 19 16:14:12 2017	Done with sample C2T0.1214
-## Tue Sep 19 16:14:12 2017	Calculating diversity for sample 8/48 --- C2T0.813
-## Tue Sep 19 16:14:15 2017	Done with sample C2T0.813
-## Tue Sep 19 16:14:15 2017	Calculating diversity for sample 9/48 --- C2T0.814
-## Tue Sep 19 16:14:18 2017	Done with sample C2T0.814
-## Tue Sep 19 16:14:18 2017	Calculating diversity for sample 10/48 --- C2T3.1214
-## Tue Sep 19 16:14:21 2017	Done with sample C2T3.1214
-## Tue Sep 19 16:14:21 2017	Calculating diversity for sample 11/48 --- C2T3.813
-## Tue Sep 19 16:14:23 2017	Done with sample C2T3.813
-## Tue Sep 19 16:14:23 2017	Calculating diversity for sample 12/48 --- C2T3.814
-## Tue Sep 19 16:14:30 2017	Done with sample C2T3.814
-## Tue Sep 19 16:14:30 2017	Calculating diversity for sample 13/48 --- C3T0.1214
-## Tue Sep 19 16:14:34 2017	Done with sample C3T0.1214
-## Tue Sep 19 16:14:34 2017	Calculating diversity for sample 14/48 --- C3T0.813
-## Tue Sep 19 16:14:37 2017	Done with sample C3T0.813
-## Tue Sep 19 16:14:37 2017	Calculating diversity for sample 15/48 --- C3T0.814
-## Tue Sep 19 16:14:40 2017	Done with sample C3T0.814
-## Tue Sep 19 16:14:40 2017	Calculating diversity for sample 16/48 --- C3T3.1214
-## Tue Sep 19 16:14:43 2017	Done with sample C3T3.1214
-## Tue Sep 19 16:14:43 2017	Calculating diversity for sample 17/48 --- C3T3.813
-## Tue Sep 19 16:14:46 2017	Done with sample C3T3.813
-## Tue Sep 19 16:14:46 2017	Calculating diversity for sample 18/48 --- C3T3.814
-## Tue Sep 19 16:14:49 2017	Done with sample C3T3.814
-## Tue Sep 19 16:14:49 2017	Calculating diversity for sample 19/48 --- E1T0.1214
-## Tue Sep 19 16:14:55 2017	Done with sample E1T0.1214
-## Tue Sep 19 16:14:55 2017	Calculating diversity for sample 20/48 --- E1T0.813
-## Tue Sep 19 16:15:00 2017	Done with sample E1T0.813
-## Tue Sep 19 16:15:00 2017	Calculating diversity for sample 21/48 --- E1T0.814
-## Tue Sep 19 16:15:04 2017	Done with sample E1T0.814
-## Tue Sep 19 16:15:04 2017	Calculating diversity for sample 22/48 --- E1T3.1214
-## Tue Sep 19 16:15:09 2017	Done with sample E1T3.1214
-## Tue Sep 19 16:15:09 2017	Calculating diversity for sample 23/48 --- E1T3.813
-## Tue Sep 19 16:15:12 2017	Done with sample E1T3.813
-## Tue Sep 19 16:15:12 2017	Calculating diversity for sample 24/48 --- E1T3.814
-## Tue Sep 19 16:15:15 2017	Done with sample E1T3.814
-## Tue Sep 19 16:15:15 2017	Calculating diversity for sample 25/48 --- E2T0.1214
-## Tue Sep 19 16:15:18 2017	Done with sample E2T0.1214
-## Tue Sep 19 16:15:18 2017	Calculating diversity for sample 26/48 --- E2T0.813
-## Tue Sep 19 16:15:21 2017	Done with sample E2T0.813
-## Tue Sep 19 16:15:21 2017	Calculating diversity for sample 27/48 --- E2T0.814
-## Tue Sep 19 16:15:24 2017	Done with sample E2T0.814
-## Tue Sep 19 16:15:24 2017	Calculating diversity for sample 28/48 --- E2T3.1214
-## Tue Sep 19 16:15:28 2017	Done with sample E2T3.1214
-## Tue Sep 19 16:15:28 2017	Calculating diversity for sample 29/48 --- E2T3.813
-## Tue Sep 19 16:15:31 2017	Done with sample E2T3.813
-## Tue Sep 19 16:15:31 2017	Calculating diversity for sample 30/48 --- E2T3.814
-## Tue Sep 19 16:15:33 2017	Done with sample E2T3.814
-## Tue Sep 19 16:15:33 2017	Calculating diversity for sample 31/48 --- E3T0.1214
-## Tue Sep 19 16:15:36 2017	Done with sample E3T0.1214
-## Tue Sep 19 16:15:36 2017	Calculating diversity for sample 32/48 --- E3T0.813
-## Tue Sep 19 16:15:39 2017	Done with sample E3T0.813
-## Tue Sep 19 16:15:39 2017	Calculating diversity for sample 33/48 --- E3T0.814
-## Tue Sep 19 16:15:42 2017	Done with sample E3T0.814
-## Tue Sep 19 16:15:42 2017	Calculating diversity for sample 34/48 --- E3T3.1214
-## Tue Sep 19 16:15:45 2017	Done with sample E3T3.1214
-## Tue Sep 19 16:15:45 2017	Calculating diversity for sample 35/48 --- E3T3.813
-## Tue Sep 19 16:15:47 2017	Done with sample E3T3.813
-## Tue Sep 19 16:15:47 2017	Calculating diversity for sample 36/48 --- E3T3.814
-## Tue Sep 19 16:15:52 2017	Done with sample E3T3.814
-## Tue Sep 19 16:15:52 2017	Calculating diversity for sample 37/48 --- E4T0.1214
-## Tue Sep 19 16:15:55 2017	Done with sample E4T0.1214
-## Tue Sep 19 16:15:55 2017	Calculating diversity for sample 38/48 --- E4T0.813
-## Tue Sep 19 16:15:58 2017	Done with sample E4T0.813
-## Tue Sep 19 16:15:58 2017	Calculating diversity for sample 39/48 --- E4T0.814
-## Tue Sep 19 16:16:01 2017	Done with sample E4T0.814
-## Tue Sep 19 16:16:01 2017	Calculating diversity for sample 40/48 --- E4T3.1214
-## Tue Sep 19 16:16:04 2017	Done with sample E4T3.1214
-## Tue Sep 19 16:16:04 2017	Calculating diversity for sample 41/48 --- E4T3.813
-## Tue Sep 19 16:16:06 2017	Done with sample E4T3.813
-## Tue Sep 19 16:16:06 2017	Calculating diversity for sample 42/48 --- E4T3.814
-## Tue Sep 19 16:16:09 2017	Done with sample E4T3.814
-## Tue Sep 19 16:16:09 2017	Calculating diversity for sample 43/48 --- W1FR.814
-## Tue Sep 19 16:16:13 2017	Done with sample W1FR.814
-## Tue Sep 19 16:16:13 2017	Calculating diversity for sample 44/48 --- W1WH.814
-## Tue Sep 19 16:16:15 2017	Done with sample W1WH.814
-## Tue Sep 19 16:16:15 2017	Calculating diversity for sample 45/48 --- W2FR.814
-## Tue Sep 19 16:16:18 2017	Done with sample W2FR.814
-## Tue Sep 19 16:16:18 2017	Calculating diversity for sample 46/48 --- W2WH.814
-## Tue Sep 19 16:16:21 2017	Done with sample W2WH.814
-## Tue Sep 19 16:16:21 2017	Calculating diversity for sample 47/48 --- W3FR.814
-## Tue Sep 19 16:16:24 2017	Done with sample W3FR.814
-## Tue Sep 19 16:16:24 2017	Calculating diversity for sample 48/48 --- W3WH.814
-## Tue Sep 19 16:16:27 2017	Done with sample W3WH.814
-## Tue Sep 19 16:16:27 2017 	Closing workers
-## Tue Sep 19 16:16:27 2017 	Done with all 48 samples
+## Fri Jan 12 13:48:19 2018 	Using 10 cores for calculations
+## Fri Jan 12 13:48:19 2018	Calculating diversity for sample 1/48 --- C1T0.1214
+## Fri Jan 12 13:48:30 2018	Done with sample C1T0.1214
+## Fri Jan 12 13:48:30 2018	Calculating diversity for sample 2/48 --- C1T0.813
+## Fri Jan 12 13:48:35 2018	Done with sample C1T0.813
+## Fri Jan 12 13:48:35 2018	Calculating diversity for sample 3/48 --- C1T0.814
+## Fri Jan 12 13:48:39 2018	Done with sample C1T0.814
+## Fri Jan 12 13:48:39 2018	Calculating diversity for sample 4/48 --- C1T3.1214
+## Fri Jan 12 13:48:42 2018	Done with sample C1T3.1214
+## Fri Jan 12 13:48:42 2018	Calculating diversity for sample 5/48 --- C1T3.813
+## Fri Jan 12 13:48:45 2018	Done with sample C1T3.813
+## Fri Jan 12 13:48:45 2018	Calculating diversity for sample 6/48 --- C1T3.814
+## Fri Jan 12 13:48:49 2018	Done with sample C1T3.814
+## Fri Jan 12 13:48:49 2018	Calculating diversity for sample 7/48 --- C2T0.1214
+## Fri Jan 12 13:48:52 2018	Done with sample C2T0.1214
+## Fri Jan 12 13:48:52 2018	Calculating diversity for sample 8/48 --- C2T0.813
+## Fri Jan 12 13:48:55 2018	Done with sample C2T0.813
+## Fri Jan 12 13:48:55 2018	Calculating diversity for sample 9/48 --- C2T0.814
+## Fri Jan 12 13:48:57 2018	Done with sample C2T0.814
+## Fri Jan 12 13:48:57 2018	Calculating diversity for sample 10/48 --- C2T3.1214
+## Fri Jan 12 13:49:01 2018	Done with sample C2T3.1214
+## Fri Jan 12 13:49:01 2018	Calculating diversity for sample 11/48 --- C2T3.813
+## Fri Jan 12 13:49:04 2018	Done with sample C2T3.813
+## Fri Jan 12 13:49:04 2018	Calculating diversity for sample 12/48 --- C2T3.814
+## Fri Jan 12 13:49:10 2018	Done with sample C2T3.814
+## Fri Jan 12 13:49:10 2018	Calculating diversity for sample 13/48 --- C3T0.1214
+## Fri Jan 12 13:49:15 2018	Done with sample C3T0.1214
+## Fri Jan 12 13:49:15 2018	Calculating diversity for sample 14/48 --- C3T0.813
+## Fri Jan 12 13:49:18 2018	Done with sample C3T0.813
+## Fri Jan 12 13:49:18 2018	Calculating diversity for sample 15/48 --- C3T0.814
+## Fri Jan 12 13:49:21 2018	Done with sample C3T0.814
+## Fri Jan 12 13:49:21 2018	Calculating diversity for sample 16/48 --- C3T3.1214
+## Fri Jan 12 13:49:24 2018	Done with sample C3T3.1214
+## Fri Jan 12 13:49:24 2018	Calculating diversity for sample 17/48 --- C3T3.813
+## Fri Jan 12 13:49:27 2018	Done with sample C3T3.813
+## Fri Jan 12 13:49:27 2018	Calculating diversity for sample 18/48 --- C3T3.814
+## Fri Jan 12 13:49:30 2018	Done with sample C3T3.814
+## Fri Jan 12 13:49:30 2018	Calculating diversity for sample 19/48 --- E1T0.1214
+## Fri Jan 12 13:49:36 2018	Done with sample E1T0.1214
+## Fri Jan 12 13:49:36 2018	Calculating diversity for sample 20/48 --- E1T0.813
+## Fri Jan 12 13:49:41 2018	Done with sample E1T0.813
+## Fri Jan 12 13:49:41 2018	Calculating diversity for sample 21/48 --- E1T0.814
+## Fri Jan 12 13:49:45 2018	Done with sample E1T0.814
+## Fri Jan 12 13:49:45 2018	Calculating diversity for sample 22/48 --- E1T3.1214
+## Fri Jan 12 13:49:50 2018	Done with sample E1T3.1214
+## Fri Jan 12 13:49:50 2018	Calculating diversity for sample 23/48 --- E1T3.813
+## Fri Jan 12 13:49:53 2018	Done with sample E1T3.813
+## Fri Jan 12 13:49:53 2018	Calculating diversity for sample 24/48 --- E1T3.814
+## Fri Jan 12 13:49:57 2018	Done with sample E1T3.814
+## Fri Jan 12 13:49:57 2018	Calculating diversity for sample 25/48 --- E2T0.1214
+## Fri Jan 12 13:50:00 2018	Done with sample E2T0.1214
+## Fri Jan 12 13:50:00 2018	Calculating diversity for sample 26/48 --- E2T0.813
+## Fri Jan 12 13:50:03 2018	Done with sample E2T0.813
+## Fri Jan 12 13:50:03 2018	Calculating diversity for sample 27/48 --- E2T0.814
+## Fri Jan 12 13:50:06 2018	Done with sample E2T0.814
+## Fri Jan 12 13:50:06 2018	Calculating diversity for sample 28/48 --- E2T3.1214
+## Fri Jan 12 13:50:10 2018	Done with sample E2T3.1214
+## Fri Jan 12 13:50:10 2018	Calculating diversity for sample 29/48 --- E2T3.813
+## Fri Jan 12 13:50:13 2018	Done with sample E2T3.813
+## Fri Jan 12 13:50:13 2018	Calculating diversity for sample 30/48 --- E2T3.814
+## Fri Jan 12 13:50:16 2018	Done with sample E2T3.814
+## Fri Jan 12 13:50:16 2018	Calculating diversity for sample 31/48 --- E3T0.1214
+## Fri Jan 12 13:50:19 2018	Done with sample E3T0.1214
+## Fri Jan 12 13:50:19 2018	Calculating diversity for sample 32/48 --- E3T0.813
+## Fri Jan 12 13:50:22 2018	Done with sample E3T0.813
+## Fri Jan 12 13:50:22 2018	Calculating diversity for sample 33/48 --- E3T0.814
+## Fri Jan 12 13:50:25 2018	Done with sample E3T0.814
+## Fri Jan 12 13:50:25 2018	Calculating diversity for sample 34/48 --- E3T3.1214
+## Fri Jan 12 13:50:28 2018	Done with sample E3T3.1214
+## Fri Jan 12 13:50:28 2018	Calculating diversity for sample 35/48 --- E3T3.813
+## Fri Jan 12 13:50:31 2018	Done with sample E3T3.813
+## Fri Jan 12 13:50:31 2018	Calculating diversity for sample 36/48 --- E3T3.814
+## Fri Jan 12 13:50:35 2018	Done with sample E3T3.814
+## Fri Jan 12 13:50:35 2018	Calculating diversity for sample 37/48 --- E4T0.1214
+## Fri Jan 12 13:50:39 2018	Done with sample E4T0.1214
+## Fri Jan 12 13:50:39 2018	Calculating diversity for sample 38/48 --- E4T0.813
+## Fri Jan 12 13:50:41 2018	Done with sample E4T0.813
+## Fri Jan 12 13:50:41 2018	Calculating diversity for sample 39/48 --- E4T0.814
+## Fri Jan 12 13:50:44 2018	Done with sample E4T0.814
+## Fri Jan 12 13:50:44 2018	Calculating diversity for sample 40/48 --- E4T3.1214
+## Fri Jan 12 13:50:47 2018	Done with sample E4T3.1214
+## Fri Jan 12 13:50:47 2018	Calculating diversity for sample 41/48 --- E4T3.813
+## Fri Jan 12 13:50:50 2018	Done with sample E4T3.813
+## Fri Jan 12 13:50:50 2018	Calculating diversity for sample 42/48 --- E4T3.814
+## Fri Jan 12 13:50:53 2018	Done with sample E4T3.814
+## Fri Jan 12 13:50:53 2018	Calculating diversity for sample 43/48 --- W1FR.814
+## Fri Jan 12 13:50:57 2018	Done with sample W1FR.814
+## Fri Jan 12 13:50:57 2018	Calculating diversity for sample 44/48 --- W1WH.814
+## Fri Jan 12 13:51:00 2018	Done with sample W1WH.814
+## Fri Jan 12 13:51:00 2018	Calculating diversity for sample 45/48 --- W2FR.814
+## Fri Jan 12 13:51:03 2018	Done with sample W2FR.814
+## Fri Jan 12 13:51:03 2018	Calculating diversity for sample 46/48 --- W2WH.814
+## Fri Jan 12 13:51:06 2018	Done with sample W2WH.814
+## Fri Jan 12 13:51:06 2018	Calculating diversity for sample 47/48 --- W3FR.814
+## Fri Jan 12 13:51:09 2018	Done with sample W3FR.814
+## Fri Jan 12 13:51:09 2018	Calculating diversity for sample 48/48 --- W3WH.814
+## Fri Jan 12 13:51:12 2018	Done with sample W3WH.814
+## Fri Jan 12 13:51:12 2018 	Closing workers
+## Fri Jan 12 13:51:12 2018 	Done with all 48 samples
 ```
 
 ```r
@@ -2726,105 +2762,105 @@ div_msphere_scaled <- Diversity_16S(scale_reads(physeq_msphere), R=100, parallel
 ```
 ## 	**WARNING** this functions assumes that rows are samples and columns
 ##       	are taxa in your phyloseq object, please verify.
-## Tue Sep 19 16:16:31 2017 	Using 10 cores for calculations
-## Tue Sep 19 16:16:31 2017	Calculating diversity for sample 1/48 --- C1T0.1214
-## Tue Sep 19 16:16:39 2017	Done with sample C1T0.1214
-## Tue Sep 19 16:16:39 2017	Calculating diversity for sample 2/48 --- C1T0.813
-## Tue Sep 19 16:16:40 2017	Done with sample C1T0.813
-## Tue Sep 19 16:16:40 2017	Calculating diversity for sample 3/48 --- C1T0.814
-## Tue Sep 19 16:16:42 2017	Done with sample C1T0.814
-## Tue Sep 19 16:16:42 2017	Calculating diversity for sample 4/48 --- C1T3.1214
-## Tue Sep 19 16:16:43 2017	Done with sample C1T3.1214
-## Tue Sep 19 16:16:43 2017	Calculating diversity for sample 5/48 --- C1T3.813
-## Tue Sep 19 16:16:44 2017	Done with sample C1T3.813
-## Tue Sep 19 16:16:44 2017	Calculating diversity for sample 6/48 --- C1T3.814
-## Tue Sep 19 16:16:45 2017	Done with sample C1T3.814
-## Tue Sep 19 16:16:45 2017	Calculating diversity for sample 7/48 --- C2T0.1214
-## Tue Sep 19 16:16:47 2017	Done with sample C2T0.1214
-## Tue Sep 19 16:16:47 2017	Calculating diversity for sample 8/48 --- C2T0.813
-## Tue Sep 19 16:16:48 2017	Done with sample C2T0.813
-## Tue Sep 19 16:16:48 2017	Calculating diversity for sample 9/48 --- C2T0.814
-## Tue Sep 19 16:16:49 2017	Done with sample C2T0.814
-## Tue Sep 19 16:16:49 2017	Calculating diversity for sample 10/48 --- C2T3.1214
-## Tue Sep 19 16:16:51 2017	Done with sample C2T3.1214
-## Tue Sep 19 16:16:51 2017	Calculating diversity for sample 11/48 --- C2T3.813
-## Tue Sep 19 16:16:52 2017	Done with sample C2T3.813
-## Tue Sep 19 16:16:52 2017	Calculating diversity for sample 12/48 --- C2T3.814
-## Tue Sep 19 16:16:54 2017	Done with sample C2T3.814
-## Tue Sep 19 16:16:54 2017	Calculating diversity for sample 13/48 --- C3T0.1214
-## Tue Sep 19 16:16:56 2017	Done with sample C3T0.1214
-## Tue Sep 19 16:16:56 2017	Calculating diversity for sample 14/48 --- C3T0.813
-## Tue Sep 19 16:16:57 2017	Done with sample C3T0.813
-## Tue Sep 19 16:16:57 2017	Calculating diversity for sample 15/48 --- C3T0.814
-## Tue Sep 19 16:16:58 2017	Done with sample C3T0.814
-## Tue Sep 19 16:16:58 2017	Calculating diversity for sample 16/48 --- C3T3.1214
-## Tue Sep 19 16:17:01 2017	Done with sample C3T3.1214
-## Tue Sep 19 16:17:01 2017	Calculating diversity for sample 17/48 --- C3T3.813
-## Tue Sep 19 16:17:02 2017	Done with sample C3T3.813
-## Tue Sep 19 16:17:02 2017	Calculating diversity for sample 18/48 --- C3T3.814
-## Tue Sep 19 16:17:04 2017	Done with sample C3T3.814
-## Tue Sep 19 16:17:04 2017	Calculating diversity for sample 19/48 --- E1T0.1214
-## Tue Sep 19 16:17:07 2017	Done with sample E1T0.1214
-## Tue Sep 19 16:17:07 2017	Calculating diversity for sample 20/48 --- E1T0.813
-## Tue Sep 19 16:17:08 2017	Done with sample E1T0.813
-## Tue Sep 19 16:17:08 2017	Calculating diversity for sample 21/48 --- E1T0.814
-## Tue Sep 19 16:17:09 2017	Done with sample E1T0.814
-## Tue Sep 19 16:17:09 2017	Calculating diversity for sample 22/48 --- E1T3.1214
-## Tue Sep 19 16:17:11 2017	Done with sample E1T3.1214
-## Tue Sep 19 16:17:11 2017	Calculating diversity for sample 23/48 --- E1T3.813
-## Tue Sep 19 16:17:12 2017	Done with sample E1T3.813
-## Tue Sep 19 16:17:12 2017	Calculating diversity for sample 24/48 --- E1T3.814
-## Tue Sep 19 16:17:13 2017	Done with sample E1T3.814
-## Tue Sep 19 16:17:13 2017	Calculating diversity for sample 25/48 --- E2T0.1214
-## Tue Sep 19 16:17:14 2017	Done with sample E2T0.1214
-## Tue Sep 19 16:17:14 2017	Calculating diversity for sample 26/48 --- E2T0.813
-## Tue Sep 19 16:17:15 2017	Done with sample E2T0.813
-## Tue Sep 19 16:17:15 2017	Calculating diversity for sample 27/48 --- E2T0.814
-## Tue Sep 19 16:17:16 2017	Done with sample E2T0.814
-## Tue Sep 19 16:17:16 2017	Calculating diversity for sample 28/48 --- E2T3.1214
-## Tue Sep 19 16:17:18 2017	Done with sample E2T3.1214
-## Tue Sep 19 16:17:18 2017	Calculating diversity for sample 29/48 --- E2T3.813
-## Tue Sep 19 16:17:19 2017	Done with sample E2T3.813
-## Tue Sep 19 16:17:19 2017	Calculating diversity for sample 30/48 --- E2T3.814
-## Tue Sep 19 16:17:22 2017	Done with sample E2T3.814
-## Tue Sep 19 16:17:22 2017	Calculating diversity for sample 31/48 --- E3T0.1214
-## Tue Sep 19 16:17:23 2017	Done with sample E3T0.1214
-## Tue Sep 19 16:17:23 2017	Calculating diversity for sample 32/48 --- E3T0.813
-## Tue Sep 19 16:17:24 2017	Done with sample E3T0.813
-## Tue Sep 19 16:17:24 2017	Calculating diversity for sample 33/48 --- E3T0.814
-## Tue Sep 19 16:17:26 2017	Done with sample E3T0.814
-## Tue Sep 19 16:17:26 2017	Calculating diversity for sample 34/48 --- E3T3.1214
-## Tue Sep 19 16:17:27 2017	Done with sample E3T3.1214
-## Tue Sep 19 16:17:27 2017	Calculating diversity for sample 35/48 --- E3T3.813
-## Tue Sep 19 16:17:28 2017	Done with sample E3T3.813
-## Tue Sep 19 16:17:28 2017	Calculating diversity for sample 36/48 --- E3T3.814
-## Tue Sep 19 16:17:29 2017	Done with sample E3T3.814
-## Tue Sep 19 16:17:29 2017	Calculating diversity for sample 37/48 --- E4T0.1214
-## Tue Sep 19 16:17:30 2017	Done with sample E4T0.1214
-## Tue Sep 19 16:17:30 2017	Calculating diversity for sample 38/48 --- E4T0.813
-## Tue Sep 19 16:17:31 2017	Done with sample E4T0.813
-## Tue Sep 19 16:17:31 2017	Calculating diversity for sample 39/48 --- E4T0.814
-## Tue Sep 19 16:17:32 2017	Done with sample E4T0.814
-## Tue Sep 19 16:17:32 2017	Calculating diversity for sample 40/48 --- E4T3.1214
-## Tue Sep 19 16:17:33 2017	Done with sample E4T3.1214
-## Tue Sep 19 16:17:34 2017	Calculating diversity for sample 41/48 --- E4T3.813
-## Tue Sep 19 16:17:35 2017	Done with sample E4T3.813
-## Tue Sep 19 16:17:35 2017	Calculating diversity for sample 42/48 --- E4T3.814
-## Tue Sep 19 16:17:36 2017	Done with sample E4T3.814
-## Tue Sep 19 16:17:37 2017	Calculating diversity for sample 43/48 --- W1FR.814
-## Tue Sep 19 16:17:38 2017	Done with sample W1FR.814
-## Tue Sep 19 16:17:38 2017	Calculating diversity for sample 44/48 --- W1WH.814
-## Tue Sep 19 16:17:41 2017	Done with sample W1WH.814
-## Tue Sep 19 16:17:41 2017	Calculating diversity for sample 45/48 --- W2FR.814
-## Tue Sep 19 16:17:43 2017	Done with sample W2FR.814
-## Tue Sep 19 16:17:43 2017	Calculating diversity for sample 46/48 --- W2WH.814
-## Tue Sep 19 16:17:45 2017	Done with sample W2WH.814
-## Tue Sep 19 16:17:45 2017	Calculating diversity for sample 47/48 --- W3FR.814
-## Tue Sep 19 16:17:46 2017	Done with sample W3FR.814
-## Tue Sep 19 16:17:46 2017	Calculating diversity for sample 48/48 --- W3WH.814
-## Tue Sep 19 16:17:48 2017	Done with sample W3WH.814
-## Tue Sep 19 16:17:48 2017 	Closing workers
-## Tue Sep 19 16:17:48 2017 	Done with all 48 samples
+## Fri Jan 12 13:51:16 2018 	Using 10 cores for calculations
+## Fri Jan 12 13:51:16 2018	Calculating diversity for sample 1/48 --- C1T0.1214
+## Fri Jan 12 13:51:25 2018	Done with sample C1T0.1214
+## Fri Jan 12 13:51:25 2018	Calculating diversity for sample 2/48 --- C1T0.813
+## Fri Jan 12 13:51:26 2018	Done with sample C1T0.813
+## Fri Jan 12 13:51:26 2018	Calculating diversity for sample 3/48 --- C1T0.814
+## Fri Jan 12 13:51:28 2018	Done with sample C1T0.814
+## Fri Jan 12 13:51:28 2018	Calculating diversity for sample 4/48 --- C1T3.1214
+## Fri Jan 12 13:51:29 2018	Done with sample C1T3.1214
+## Fri Jan 12 13:51:29 2018	Calculating diversity for sample 5/48 --- C1T3.813
+## Fri Jan 12 13:51:30 2018	Done with sample C1T3.813
+## Fri Jan 12 13:51:30 2018	Calculating diversity for sample 6/48 --- C1T3.814
+## Fri Jan 12 13:51:31 2018	Done with sample C1T3.814
+## Fri Jan 12 13:51:31 2018	Calculating diversity for sample 7/48 --- C2T0.1214
+## Fri Jan 12 13:51:33 2018	Done with sample C2T0.1214
+## Fri Jan 12 13:51:33 2018	Calculating diversity for sample 8/48 --- C2T0.813
+## Fri Jan 12 13:51:34 2018	Done with sample C2T0.813
+## Fri Jan 12 13:51:34 2018	Calculating diversity for sample 9/48 --- C2T0.814
+## Fri Jan 12 13:51:35 2018	Done with sample C2T0.814
+## Fri Jan 12 13:51:35 2018	Calculating diversity for sample 10/48 --- C2T3.1214
+## Fri Jan 12 13:51:37 2018	Done with sample C2T3.1214
+## Fri Jan 12 13:51:37 2018	Calculating diversity for sample 11/48 --- C2T3.813
+## Fri Jan 12 13:51:38 2018	Done with sample C2T3.813
+## Fri Jan 12 13:51:38 2018	Calculating diversity for sample 12/48 --- C2T3.814
+## Fri Jan 12 13:51:41 2018	Done with sample C2T3.814
+## Fri Jan 12 13:51:41 2018	Calculating diversity for sample 13/48 --- C3T0.1214
+## Fri Jan 12 13:51:42 2018	Done with sample C3T0.1214
+## Fri Jan 12 13:51:43 2018	Calculating diversity for sample 14/48 --- C3T0.813
+## Fri Jan 12 13:51:44 2018	Done with sample C3T0.813
+## Fri Jan 12 13:51:44 2018	Calculating diversity for sample 15/48 --- C3T0.814
+## Fri Jan 12 13:51:45 2018	Done with sample C3T0.814
+## Fri Jan 12 13:51:45 2018	Calculating diversity for sample 16/48 --- C3T3.1214
+## Fri Jan 12 13:51:48 2018	Done with sample C3T3.1214
+## Fri Jan 12 13:51:48 2018	Calculating diversity for sample 17/48 --- C3T3.813
+## Fri Jan 12 13:51:49 2018	Done with sample C3T3.813
+## Fri Jan 12 13:51:49 2018	Calculating diversity for sample 18/48 --- C3T3.814
+## Fri Jan 12 13:51:51 2018	Done with sample C3T3.814
+## Fri Jan 12 13:51:51 2018	Calculating diversity for sample 19/48 --- E1T0.1214
+## Fri Jan 12 13:51:54 2018	Done with sample E1T0.1214
+## Fri Jan 12 13:51:54 2018	Calculating diversity for sample 20/48 --- E1T0.813
+## Fri Jan 12 13:51:55 2018	Done with sample E1T0.813
+## Fri Jan 12 13:51:55 2018	Calculating diversity for sample 21/48 --- E1T0.814
+## Fri Jan 12 13:51:56 2018	Done with sample E1T0.814
+## Fri Jan 12 13:51:56 2018	Calculating diversity for sample 22/48 --- E1T3.1214
+## Fri Jan 12 13:51:58 2018	Done with sample E1T3.1214
+## Fri Jan 12 13:51:58 2018	Calculating diversity for sample 23/48 --- E1T3.813
+## Fri Jan 12 13:51:59 2018	Done with sample E1T3.813
+## Fri Jan 12 13:51:59 2018	Calculating diversity for sample 24/48 --- E1T3.814
+## Fri Jan 12 13:52:00 2018	Done with sample E1T3.814
+## Fri Jan 12 13:52:00 2018	Calculating diversity for sample 25/48 --- E2T0.1214
+## Fri Jan 12 13:52:01 2018	Done with sample E2T0.1214
+## Fri Jan 12 13:52:01 2018	Calculating diversity for sample 26/48 --- E2T0.813
+## Fri Jan 12 13:52:02 2018	Done with sample E2T0.813
+## Fri Jan 12 13:52:02 2018	Calculating diversity for sample 27/48 --- E2T0.814
+## Fri Jan 12 13:52:04 2018	Done with sample E2T0.814
+## Fri Jan 12 13:52:04 2018	Calculating diversity for sample 28/48 --- E2T3.1214
+## Fri Jan 12 13:52:06 2018	Done with sample E2T3.1214
+## Fri Jan 12 13:52:06 2018	Calculating diversity for sample 29/48 --- E2T3.813
+## Fri Jan 12 13:52:07 2018	Done with sample E2T3.813
+## Fri Jan 12 13:52:07 2018	Calculating diversity for sample 30/48 --- E2T3.814
+## Fri Jan 12 13:52:10 2018	Done with sample E2T3.814
+## Fri Jan 12 13:52:10 2018	Calculating diversity for sample 31/48 --- E3T0.1214
+## Fri Jan 12 13:52:12 2018	Done with sample E3T0.1214
+## Fri Jan 12 13:52:12 2018	Calculating diversity for sample 32/48 --- E3T0.813
+## Fri Jan 12 13:52:13 2018	Done with sample E3T0.813
+## Fri Jan 12 13:52:13 2018	Calculating diversity for sample 33/48 --- E3T0.814
+## Fri Jan 12 13:52:14 2018	Done with sample E3T0.814
+## Fri Jan 12 13:52:14 2018	Calculating diversity for sample 34/48 --- E3T3.1214
+## Fri Jan 12 13:52:15 2018	Done with sample E3T3.1214
+## Fri Jan 12 13:52:16 2018	Calculating diversity for sample 35/48 --- E3T3.813
+## Fri Jan 12 13:52:17 2018	Done with sample E3T3.813
+## Fri Jan 12 13:52:17 2018	Calculating diversity for sample 36/48 --- E3T3.814
+## Fri Jan 12 13:52:18 2018	Done with sample E3T3.814
+## Fri Jan 12 13:52:18 2018	Calculating diversity for sample 37/48 --- E4T0.1214
+## Fri Jan 12 13:52:19 2018	Done with sample E4T0.1214
+## Fri Jan 12 13:52:19 2018	Calculating diversity for sample 38/48 --- E4T0.813
+## Fri Jan 12 13:52:20 2018	Done with sample E4T0.813
+## Fri Jan 12 13:52:20 2018	Calculating diversity for sample 39/48 --- E4T0.814
+## Fri Jan 12 13:52:22 2018	Done with sample E4T0.814
+## Fri Jan 12 13:52:22 2018	Calculating diversity for sample 40/48 --- E4T3.1214
+## Fri Jan 12 13:52:23 2018	Done with sample E4T3.1214
+## Fri Jan 12 13:52:23 2018	Calculating diversity for sample 41/48 --- E4T3.813
+## Fri Jan 12 13:52:24 2018	Done with sample E4T3.813
+## Fri Jan 12 13:52:24 2018	Calculating diversity for sample 42/48 --- E4T3.814
+## Fri Jan 12 13:52:27 2018	Done with sample E4T3.814
+## Fri Jan 12 13:52:27 2018	Calculating diversity for sample 43/48 --- W1FR.814
+## Fri Jan 12 13:52:28 2018	Done with sample W1FR.814
+## Fri Jan 12 13:52:28 2018	Calculating diversity for sample 44/48 --- W1WH.814
+## Fri Jan 12 13:52:32 2018	Done with sample W1WH.814
+## Fri Jan 12 13:52:32 2018	Calculating diversity for sample 45/48 --- W2FR.814
+## Fri Jan 12 13:52:34 2018	Done with sample W2FR.814
+## Fri Jan 12 13:52:34 2018	Calculating diversity for sample 46/48 --- W2WH.814
+## Fri Jan 12 13:52:36 2018	Done with sample W2WH.814
+## Fri Jan 12 13:52:36 2018	Calculating diversity for sample 47/48 --- W3FR.814
+## Fri Jan 12 13:52:38 2018	Done with sample W3FR.814
+## Fri Jan 12 13:52:38 2018	Calculating diversity for sample 48/48 --- W3WH.814
+## Fri Jan 12 13:52:39 2018	Done with sample W3WH.814
+## Fri Jan 12 13:52:39 2018 	Closing workers
+## Fri Jan 12 13:52:39 2018 	Done with all 48 samples
 ```
 
 ```r
@@ -2907,7 +2943,7 @@ mean(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere
 ```
 
 ```
-## [1] 5.292512
+## [1] 5.314181
 ```
 
 ```r
@@ -2916,7 +2952,7 @@ sd(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$T
 ```
 
 ```
-## [1] 4.650357
+## [1] 4.684461
 ```
 
 ```r
@@ -2926,7 +2962,7 @@ mean(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere
 ```
 
 ```
-## [1] 7.441836
+## [1] 7.467301
 ```
 
 ```r
@@ -2935,10 +2971,12 @@ sd(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$T
 ```
 
 ```
-## [1] 4.12253
+## [1] 4.170674
 ```
 
-## Figure 4: Predict diversity and put in juxtaposition of literature (DOI: 10.1128/mSphere.00189-17)
+
+## Figure 4: Predict diversity and put in juxtaposition of literature (DOI: 10.1128/mSphere.00189-17)  
+
 
 ```r
 # Predict the shift in taxonomic diversity based on FCM for the T0 and T3 samples
@@ -2992,6 +3030,10 @@ p_msphere_predict <- ggplot(data = results_prediction, aes(x = Time_point, y = D
         )+ 
   geom_text(data = tp, aes(x=1.5,y=11,label=Measurement), size = 8, inherit.aes = FALSE,
             hjust = 0.5)
+
+png(file="Fig5_PROPS.png",width=12,height=6,res=500,units="in", pointsize=12)
+pdf(file="Fig5_PROPS.pdf",width=12,height=6)
+
 # png(file="Fig5_PROPS.png",width=12,height=6,res=500,units="in", pointsize=12)
 # pdf(file="Fig5_PROPS.pdf",width=12,height=6)
 p_msphere_predict
@@ -3001,14 +3043,13 @@ p_msphere_predict
 ## Warning: Removed 42 rows containing missing values (geom_errorbar).
 ```
 
-<img src="Figures/cached/predict-diversity-1.png" style="display: block; margin: auto;" />
-
 ```r
 # dev.off()
 ```
 
 
-## Figure S3: Gating strategy
+## Figure S3: Gating strategy  
+
 
 ```r
 path = "data_mussel"
@@ -3071,7 +3112,8 @@ print(xyplot(`FL3-H`~`FL1-H`, data=flowData_transformed,index.cond=list(c(1:6)),
 
 <img src="Figures/cached/Gating-1.png" style="display: block; margin: auto;" />
 
-## Figure 5: Identify physiological populations
+## Figure 5: Identify physiological populations  
+
 
 ```r
 comp_t0 <- fp_contrasts(x=fbasis, comp2=(pos=="C1_t0.fcs" | pos== "C2_t0.fcs"),
@@ -3196,22 +3238,30 @@ g2 <- ggplotGrob(p12b);
 gv <- ggplotGrob(vtot);
 fg1 <- gtable_frame(g1)
 fg2 <- gtable_frame(g2)
-fg12 <- gtable_frame(cbind(fg1,fg2))
+fg12 <- gtable_cbind(fg1,fg2)
 fg3 <- gtable_frame(gv)
 grid.newpage()
-combined <- rbind(fg3, fg12)
+# combined <- rbind(fg3, fg12)
 # png(file = "contrasts_0.02.png", width = 12, height = 12, res = 500, 
     # units = "in", pointsize = 10)
-grid.draw(combined)
+grid.draw(fg3)
 ```
 
 <img src="Figures/cached/Contrasts-1.png" style="display: block; margin: auto;" />
 
 ```r
+grid.newpage()
+grid.draw(fg12)
+```
+
+<img src="Figures/cached/Contrasts-2.png" style="display: block; margin: auto;" />
+
+```r
 # dev.off()
 ```
 
-## Calculate removal statistics
+## Calculate removal statistics  
+
 
 ```r
 # Calculate coefficient of variation within LNA and DNA of control/treatment

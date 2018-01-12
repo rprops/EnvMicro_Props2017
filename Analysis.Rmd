@@ -14,6 +14,8 @@ output:
       smooth_scroll: yes
       toc_depth: 2
     css: report_styles.css
+editor_options: 
+  chunk_output_type: console
 ---
 
 
@@ -1165,7 +1167,7 @@ print(xyplot(`FL3-H`~`FL1-H`, data=flowData_transformed,index.cond=list(c(1:6)),
 
 ## Figure 5: Identify physiological populations  
 
-``` {r Contrasts, fig.width = 15, fig.height = 12, warning = FALSE}
+``` {r Contrasts, fig.width = 10, fig.height = 6, warning = FALSE, dpi = 300}
 comp_t0 <- fp_contrasts(x=fbasis, comp2=(pos=="C1_t0.fcs" | pos== "C2_t0.fcs"),
                         comp1=(pos=="Q1_T_t0.fcs" | pos== "Q2_T_t0.fcs" | pos== "Q3_T_t0.fcs"), 
                         thresh=0.04)
@@ -1242,13 +1244,15 @@ g2 <- ggplotGrob(p12b);
 gv <- ggplotGrob(vtot);
 fg1 <- gtable_frame(g1)
 fg2 <- gtable_frame(g2)
-fg12 <- gtable_frame(cbind(fg1,fg2))
+fg12 <- gtable_cbind(fg1,fg2)
 fg3 <- gtable_frame(gv)
 grid.newpage()
-combined <- rbind(fg3, fg12)
+# combined <- rbind(fg3, fg12)
 # png(file = "contrasts_0.02.png", width = 12, height = 12, res = 500, 
     # units = "in", pointsize = 10)
-grid.draw(combined)
+grid.draw(fg3)
+grid.newpage()
+grid.draw(fg12)
 # dev.off()
 
 ```
