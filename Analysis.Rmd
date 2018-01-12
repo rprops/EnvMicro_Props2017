@@ -45,6 +45,7 @@ Adjust this parameter (`R` = number of bootstraps) to increase the accuracy of t
 ```{r accuracy, message=FALSE, warning = FALSE}
 R.main <- 3
 ```
+
 # Load libraries
 
 ```{r load-libraries, message=FALSE, warning = FALSE}
@@ -76,7 +77,8 @@ my.settings <- list(
   background=list(col="white"))
 ```
 
-# Part 1: Validation of alpha diversity
+# Part 1: Validation of alpha diversity  
+
 ```{r Regression analysis}
 div.FCM <- read.csv2("files/Lakes_diversityFCM_F.csv")
 div.16S <- read.csv2("files/Lakes_diversity16S_F.csv")
@@ -170,7 +172,9 @@ max(data.total.final$D1)/min(data.total.final$D1)
 max(data.total.final$D2[data.total.final$Lake=="Cooling water"])/min(data.total.final$D2[data.total.final$Lake=="Cooling water"])
 ```
 
-## Figure S1: Check model assumptions
+
+## Figure S1: Check model assumptions  
+
 ```{r Plot D2 residuals, fig.width = 15, fig.height = 5}
 # D2 and D1 are highly correlated so we only use D2 in the feeding experiment
 cor(data.total.final$D1.fcm,data.total.final$D2.fcm)
@@ -187,7 +191,8 @@ plot(y=log2(data.total.final$D2), x=predict(lm.F.D2), col="blue",
      las=1)
 ```
 
-## Figure 1: Regression analysis
+## Figure 1: Regression analysis  
+
 ```{r Plot D2 regression, fig.width = 8, fig.height = 5}
 # Prepare to plot r squared / pearson's correlation
 my_grob = grobTree(textGrob(bquote(r^2 == .(paste(round(R.cv.D2$results$Rsquared, 2)))), x=0.8,  y=0.16, hjust=0,
@@ -214,7 +219,9 @@ print(p5)
 # dev.off()
 
 ```
-## Figure S1: Compare slopes of individual regressions
+
+## Figure S1: Compare slopes of individual regressions  
+
 ```{r Compare slopes of individual regressions, fig.width = 8, fig.height = 5}
 # Supplementary figure for showing that the slopes for individual regressions of each lake are not significantly different
 # from each other. This allows us to make one global regression for further analysis.
@@ -251,7 +258,8 @@ print(p5.si)
 # dev.off()
 ```
 
-## Figure S2: Regression of D0/D1
+## Figure S2: Regression of D0/D1  
+
 ```{r Plot D0 & D1 regression, fig.width = 15, fig.height = 5}
 ### Prepare to plot r squared / pearson's correlation
 my_grob = grobTree(textGrob(bquote(r^2 == .(round(R.cv.D1$results$Rsquared, 2))), x=0.8,  y=0.16, hjust=0,
@@ -293,7 +301,8 @@ p7 <- ggplot(data=data.total.final,aes(x=D0.fcm,y=D0,fill=Lake))+ scale_fill_man
 grid.arrange(p7, p6, ncol=2)
 ```
 
-## Figure S4: Effect of sample size
+## Figure S4: Effect of sample size  
+
 ```{r sample-size, fig.width = 15, fig.height = 5, message = FALSE, warning = FALSE}
 # Load data
 path = "data_mussel"
@@ -365,7 +374,8 @@ D2 <- ggplot(data = results.tot, aes(x = factor(size), y = D2)) + # geom_jitter(
 grid.arrange(D0, D1, D2, ncol = 3, top = textGrob(paste("Sample used:",flowCore::sampleNames(flowData_sc)),                                                   gp = gpar(fontsize = 20, font = 3)))
 ```
 
-# Part 2: Validation of beta diversity
+# Part 2: Validation of beta diversity  
+
 ```{r beta-diversity analysis}
 myColours2 <- brewer.pal(n=12,"Paired"); myColours2 <- myColours2[c(2,6,7)]
 
@@ -478,7 +488,8 @@ dist.seq <- vegan::vegdist(otu_table(physeq.otu))
 pcoa.seq <- cmdscale(dist.seq)
 ```
 
-## Procrustes analysis
+## Procrustes analysis  
+
 ```{r procrustes-analysis, fig.width = 5, fig.height = 5}
 # Run procrustes + permutation
 # Permutations are constrained within each sampling year 
@@ -489,7 +500,8 @@ summary(dist.prot)
 plot(dist.prot)
 ```
 
-## Figure 2: Beta diversity analysis
+## Figure 2: Beta diversity analysis  
+
 ```{r permanova-analysis, fig.width = 12, fig.height = 5}
 # Run PERMANOVA to evaluate if conclusions are similar between FCM/seq
 # Similar variances across seasons
@@ -803,7 +815,8 @@ res.C <- residuals(sp_C, "pearson")[order(results[results$Treatment=="Control",]
 attr(splines::ns(results$Time, df=3), "knots")
 ```
 
-## Figure S5: Check for autocorrelation
+## Figure S5: Check for autocorrelation  
+
 ```{r evaluate auto-correlation, fig.width = 12, fig.height = 5}
 # Check for temporal autocorrelation in model residuals
 par(mfrow=c(1,2))
@@ -824,7 +837,8 @@ summary(sp_C)$coefficients[,2]
 sqrt(diag(vcovHAC(sp_C)))
 ``` 
 
-## Figure 3: Diversity analysis during feeding
+## Figure 3: Diversity analysis during feeding  
+
 ```{r plot-diversity, fig.width = 12, fig.height = 5}
 # Prepare plots
 p.alpha <- ggplot(data=results, aes(x=Time, y=D2, fill=Treatment)) + 
@@ -890,7 +904,8 @@ grid.arrange(p.alpha.plot, p.beta.S, g_legend(p.alpha), layout_matrix = rbind(c(
 # dev.off()
 ```
 
-## Infer taxonomic diversity dynamics
+## Infer taxonomic diversity dynamics  
+
 ```{r calculate-diversity-dynamics}
 # D2 regression from part I
 lm.F <- lm(log2(D2)~log2(D2.fcm), data=data.total.final)
@@ -945,7 +960,9 @@ df2.res <- predict(lm.F,df2)
 # at higher diversities
 2^(df2.res[4] - df2.res[3])
 ```
-## Compare diversity dynamics to literature (DOI: 10.1128/mSphere.00189-17)
+
+## Compare diversity dynamics to literature (DOI: 10.1128/mSphere.00189-17)  
+
 ```{r compare-diversity-dynamics2MSphere}
 physeq_msphere <- import_mothur(mothur_shared_file = "./data_published/QMexp_IL_LM.contigs.good.unique.good.filter.unique.precluster.pick.pick.an.unique_list.shared", 
                                 mothur_constaxonomy_file = "./data_published/QMexp_IL_LM.contigs.good.unique.good.filter.unique.precluster.pick.pick.an.unique_list.0.03.cons.taxonomy")
@@ -1019,13 +1036,10 @@ mean(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere
 sd(results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T0" & results_msphere$Date != "Dec14"] - results_msphere$D2[results_msphere$Treatment == "Feeding" & results_msphere$Time_point == "T3" & results_msphere$Date != "Dec14"]) # 4.13
 ```
 
-<<<<<<< HEAD
-## Figure 5: Predict diversity and put in juxtaposition of literature (DOI: 10.1128/mSphere.00189-17)
+
+## Figure 4: Predict diversity and put in juxtaposition of literature (DOI: 10.1128/mSphere.00189-17)  
+
 ```{r Predict diversity, fig.width = 15, fig.height = 10}
-=======
-## Figure 4: Predict diversity and put in juxtaposition of literature (DOI: 10.1128/mSphere.00189-17)
-```{r predict-diversity, fig.width = 15, fig.height = 10}
->>>>>>> 4b1a5e44cfd2c09811f0ce0b51b8582a0b9ac7e5
 # Predict the shift in taxonomic diversity based on FCM for the T0 and T3 samples
 df_mp <- data.frame(D2.fcm = results$D2[results$Time==3 | results$Time==0],
                  time= results$Time[results$Time==3 | results$Time==0],
@@ -1077,19 +1091,19 @@ p_msphere_predict <- ggplot(data = results_prediction, aes(x = Time_point, y = D
         )+ 
   geom_text(data = tp, aes(x=1.5,y=11,label=Measurement), size = 8, inherit.aes = FALSE,
             hjust = 0.5)
-<<<<<<< HEAD
+
 png(file="Fig5_PROPS.png",width=12,height=6,res=500,units="in", pointsize=12)
 pdf(file="Fig5_PROPS.pdf",width=12,height=6)
-=======
+
 # png(file="Fig5_PROPS.png",width=12,height=6,res=500,units="in", pointsize=12)
 # pdf(file="Fig5_PROPS.pdf",width=12,height=6)
->>>>>>> 4b1a5e44cfd2c09811f0ce0b51b8582a0b9ac7e5
 p_msphere_predict
 # dev.off()
 ```
 
 
-## Figure S3: Gating strategy
+## Figure S3: Gating strategy  
+
 ```{r Gating, fig.width = 15, fig.height = 10}
 path = "data_mussel"
 flowData <- read.flowSet(path = path, transformation = FALSE, pattern=".fcs")
@@ -1149,7 +1163,8 @@ print(xyplot(`FL3-H`~`FL1-H`, data=flowData_transformed,index.cond=list(c(1:6)),
 )
 ```
 
-## Figure 5: Identify physiological populations
+## Figure 5: Identify physiological populations  
+
 ``` {r Contrasts, fig.width = 15, fig.height = 12, warning = FALSE}
 comp_t0 <- fp_contrasts(x=fbasis, comp2=(pos=="C1_t0.fcs" | pos== "C2_t0.fcs"),
                         comp1=(pos=="Q1_T_t0.fcs" | pos== "Q2_T_t0.fcs" | pos== "Q3_T_t0.fcs"), 
@@ -1238,7 +1253,8 @@ grid.draw(combined)
 
 ```
 
-## Calculate removal statistics
+## Calculate removal statistics  
+
 ```{r HNA removal statistics}
 # Calculate coefficient of variation within LNA and DNA of control/treatment
 # CV for control in LNA population
